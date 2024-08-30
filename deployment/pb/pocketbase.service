@@ -1,0 +1,16 @@
+[Unit]
+Description = pocketbase
+
+[Service]
+Type           = simple
+User           = ec2-user
+Group          = ec2-user
+LimitNOFILE    = 4096
+Restart        = always
+RestartSec     = 5s
+StandardOutput = append:/home/ec2-user/coki-app/backend/errors.log
+StandardError  = append:/home/ec2-user/coki-app/backend/errors.log
+ExecStart      = /home/ec2-user/coki-app/backend/pocketbase-linux serve
+
+[Install]
+WantedBy = multi-user.target
