@@ -21,6 +21,11 @@ const COLUMNS: IColumn<Client>[] = [
   },
   {
     minWidth: 100,
+    label: "Dirección",
+    id: "address",
+  },
+  {
+    minWidth: 100,
     label: "Fecha Creación",
     id: "created",
     render: (item) => formatDate(item.created),
