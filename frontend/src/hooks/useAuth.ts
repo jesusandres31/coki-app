@@ -14,14 +14,9 @@ export const useAuth = () => {
 
   const authUser = pb.authStore.model as SignUpRes;
 
-  const setCurrentLocation = (location: string) =>
-    ls.set(key.LOCATION, location);
+  const setCurrentStore = (store: string) => ls.set(key.STORE, store);
 
-  const currentLocation = ls.get(key.LOCATION);
-
-  const setCurrentCanteen = (canteen: string) => ls.set(key.CANTEEN, canteen);
-
-  const currentCanteen = ls.get(key.CANTEEN);
+  const currentStore = ls.get(key.STORE);
 
   const handleSignIn = async (data: SignInReq) => {
     await signIn(data).unwrap();
@@ -39,9 +34,7 @@ export const useAuth = () => {
     isSigningIn,
     isLoggedIn,
     authUser,
-    currentCanteen,
-    currentLocation,
-    setCurrentCanteen,
-    setCurrentLocation,
+    currentStore,
+    setCurrentStore,
   };
 };

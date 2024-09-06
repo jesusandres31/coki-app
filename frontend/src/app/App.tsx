@@ -20,17 +20,14 @@ const ExpenseConcepts = lazy(() =>
 const Clients = lazy(() =>
   import("src/pages").then((module) => ({ default: module.Clients }))
 );
-const Rentals = lazy(() =>
-  import("src/pages").then((module) => ({ default: module.Rentals }))
-);
 const Invoices = lazy(() =>
   import("src/pages").then((module) => ({ default: module.Invoices }))
 );
 const Products = lazy(() =>
   import("src/pages").then((module) => ({ default: module.Products }))
 );
-const ProductsCanteens = lazy(() =>
-  import("src/pages").then((module) => ({ default: module.ProductsCanteens }))
+const ProductsStores = lazy(() =>
+  import("src/pages").then((module) => ({ default: module.ProductsStores }))
 );
 const StatsClients = lazy(() =>
   import("src/pages").then((module) => ({ default: module.StatsClients }))
@@ -40,12 +37,6 @@ const StatsIncomes = lazy(() =>
 );
 const StatsProducts = lazy(() =>
   import("src/pages").then((module) => ({ default: module.StatsProducts }))
-);
-const Fields = lazy(() =>
-  import("src/pages").then((module) => ({ default: module.Fields }))
-);
-const Balls = lazy(() =>
-  import("src/pages").then((module) => ({ default: module.Balls }))
 );
 const Profile = lazy(() =>
   import("src/pages").then((module) => ({ default: module.Profile }))
@@ -69,10 +60,6 @@ const privateRoutes = [
     render: <Clients />,
   },
   {
-    route: AppRoutes.Rentals,
-    render: <Rentals />,
-  },
-  {
     route: AppRoutes.Invoices,
     render: <Invoices />,
   },
@@ -81,16 +68,8 @@ const privateRoutes = [
     render: <Products />,
   },
   {
-    route: AppRoutes.ProductsCanteens,
-    render: <ProductsCanteens />,
-  },
-  {
-    route: AppRoutes.Fields,
-    render: <Fields />,
-  },
-  {
-    route: AppRoutes.Balls,
-    render: <Balls />,
+    route: AppRoutes.ProductsStores,
+    render: <ProductsStores />,
   },
   {
     route: AppRoutes.StatsClients,

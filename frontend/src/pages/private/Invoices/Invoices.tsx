@@ -19,12 +19,12 @@ const COLUMNS: IColumn<InvoiceView>[] = [
     align: "left",
     render: (item) => item.client.name,
   },
-  {
+  /* {
     minWidth: 150,
-    label: "Cantina",
-    id: "canteen",
-    render: (item) => item.canteen.name,
-  },
+    label: "Store",
+    id: "store",
+    render: (item) => item.store.name,
+  }, */
   {
     minWidth: 100,
     label: "Total",

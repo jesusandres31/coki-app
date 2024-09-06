@@ -11,18 +11,12 @@ export const translateTitle = (title?: string) => {
       return "Conceptos de Egresos";
     case AppRoutes.Clients:
       return "Clientes";
-    case AppRoutes.Rentals:
-      return "Alquileres";
     case AppRoutes.Invoices:
       return "Ventas";
     case AppRoutes.Products:
       return "Productos";
-    case AppRoutes.ProductsCanteens:
+    case AppRoutes.ProductsStores:
       return "Stock";
-    case AppRoutes.Fields:
-      return "Canchas";
-    case AppRoutes.Balls:
-      return "Pelotas";
     case AppRoutes.StatsIncomes:
       return "Ventas";
     case AppRoutes.StatsClients:

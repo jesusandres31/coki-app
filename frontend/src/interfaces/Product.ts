@@ -1,4 +1,4 @@
-import { BaseItem, Canteen } from ".";
+import { BaseItem, Store } from ".";
 
 // products
 export interface Product extends BaseItem<{}>, CreateProductReq {}
@@ -8,13 +8,13 @@ export interface CreateProductReq {
   unit_price: NumberOrEmpty;
 }
 
-// products_canteens
-export interface ProductCanteen
-  extends BaseItem<{ product: Product; canteen: Canteen }>,
-    CreateProductCanteenReq {}
+// products_stores
+export interface ProductStore
+  extends BaseItem<{ product: Product; store: Store }>,
+    CreateProductStoreReq {}
 
-export interface CreateProductCanteenReq {
+export interface CreateProductStoreReq {
   product: string;
-  canteen: string;
+  store: string;
   stock: NumberOrEmpty;
 }

@@ -12,8 +12,5 @@ export { default as ExpenseConcepts } from "./private/ExpenseConcepts/ExpenseCon
 export { default as Clients } from "./private/Clients/Clients";
 export { default as Invoices } from "./private/Invoices/Invoices";
 export { default as Products } from "./private/Products/Products";
-export { default as ProductsCanteens } from "./private/ProductsCanteens/ProductsCanteens";
-export { default as Rentals } from "./private/Rentals/Rentals";
-export { default as Fields } from "./private/Fields/Fields";
-export { default as Balls } from "./private/Balls/Balls";
+export { default as ProductsStores } from "./private/ProductsStores/ProductsStores";
 export { default as Profile } from "./private/Profile/Profile";

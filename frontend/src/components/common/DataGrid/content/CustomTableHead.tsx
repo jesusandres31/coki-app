@@ -27,7 +27,7 @@ interface CustomTableHeadProps {
     filter: string,
     order: Order,
     orderBy: string,
-    currentCanteen?: string
+    currentStore?: string
   ) => Promise<void>;
   isCollapsible: boolean;
   styles: any;
@@ -41,7 +41,7 @@ export default function CustomTableHead({
   styles,
 }: CustomTableHeadProps) {
   const dispatch = useAppDispatch();
-  const { currentCanteen } = useAuth();
+  const { currentStore } = useAuth();
   const { selectedItems, filter, order, orderBy, page, perPage } =
     useUISelector((state) => state.ui);
   const theme = useTheme();
@@ -61,7 +61,7 @@ export default function CustomTableHead({
     } else {
       dispatch(setOrderBy(columnId));
     }
-    handleFetchItems(page, perPage, filter, newOrder, columnId, currentCanteen);
+    handleFetchItems(page, perPage, filter, newOrder, columnId, currentStore);
   };
 
   return (

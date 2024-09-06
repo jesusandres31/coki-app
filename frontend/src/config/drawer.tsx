@@ -15,10 +15,6 @@ export const DRAWER_SECTIONS: DrawerSection[] = [
     // title: "Menu",
     menuItems: [
       {
-        icon: <LocalActivityRounded />,
-        to: AppRoutes.Rentals,
-      },
-      {
         icon: <StorefrontRounded />,
         to: AppRoutes.Invoices,
       },
@@ -28,7 +24,7 @@ export const DRAWER_SECTIONS: DrawerSection[] = [
       },
       {
         icon: <ShoppingCartRounded />,
-        to: AppRoutes.ProductsCanteens,
+        to: AppRoutes.ProductsStores,
       },
       {
         icon: <PeopleRounded />,
@@ -48,12 +44,6 @@ export const DRAWER_SECTIONS: DrawerSection[] = [
           },
           {
             to: AppRoutes.Products,
-          },
-          {
-            to: AppRoutes.Balls,
-          },
-          {
-            to: AppRoutes.Fields,
           },
         ],
       },

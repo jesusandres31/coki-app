@@ -32,7 +32,7 @@ interface CustomTableToolbarProps {
     filter: string,
     order: Order,
     orderBy: string,
-    currentCanteen?: string
+    currentStore?: string
   ) => Promise<void>;
   entity: Entity;
   bulkActionForOne?: CustomButtonProps[];
@@ -51,7 +51,7 @@ export default function CustomTableToolbar({
 }: CustomTableToolbarProps) {
   const theme = useTheme();
   const dispatch = useAppDispatch();
-  const { currentCanteen } = useAuth();
+  const { currentStore } = useAuth();
   const { selectedItems, filter, order, orderBy, page, perPage } =
     useUISelector((state) => state.ui);
   const isManySelected = selectedItems.length > 0;
@@ -60,7 +60,7 @@ export default function CustomTableToolbar({
 
   const debounceFetchItems = useCallback(
     debounce(async (filter: string) => {
-      handleFetchItems(page, perPage, filter, order, orderBy, currentCanteen);
+      handleFetchItems(page, perPage, filter, order, orderBy, currentStore);
     }, 300),
     []
   );

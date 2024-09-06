@@ -19,6 +19,7 @@ const theme = createTheme({
     },
     secondary: {
       main: "#001534",
+      // 481449 slack
       // 303030 black
       // 252F3E amazon blue
       // f6a92c beerboard

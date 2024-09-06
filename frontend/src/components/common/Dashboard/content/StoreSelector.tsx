@@ -7,24 +7,22 @@ import {
   CircularProgress,
 } from "@mui/material";
 import { LocationOnOutlined } from "@mui/icons-material";
-import { canteenApi } from "src/app/services/canteenService";
+import { storeApi } from "src/app/services/storeService";
 import { useAuth, useUI } from "src/hooks";
 import { userApi } from "src/app/services/userService";
 
-export default function CanteenSelector() {
+export default function StoreSelector() {
   const theme = useTheme();
-  const { authUser, currentCanteen, setCurrentCanteen, setCurrentLocation } =
-    useAuth();
-  const { data: canteens } = canteenApi.useGetCanteensQuery();
+  const { authUser, currentStore, setCurrentStore } = useAuth();
+  const { data: stores } = storeApi.useGetStoresQuery();
   const [updateUser, { isLoading }] = userApi.useUpdateUserMutation();
   const { resetTableState } = useUI();
 
-  const handleSelect = async (canteen: string, location: string) => {
-    if (currentCanteen !== canteen) {
+  const handleSelect = async (store: string) => {
+    if (currentStore !== store) {
       try {
-        setCurrentCanteen(canteen);
-        setCurrentLocation(location);
-        await updateUser({ id: authUser.id, data: { canteen } });
+        setCurrentStore(store);
+        await updateUser({ id: authUser.id, data: { store } });
         resetTableState();
       } catch (err) {
         throw err;
@@ -48,14 +46,14 @@ export default function CanteenSelector() {
 
   return (
     <Box sx={{ display: "flex", alignItems: "flex-end" }}>
-      {canteens && (
+      {stores && (
         <>
           <LocationOnOutlined sx={{ color: "white", mr: 1 }} />
           <TextField
             select
             size="small"
             sx={styles}
-            value={currentCanteen || ""}
+            value={currentStore || ""}
             variant="standard"
             defaultValue=""
             InputProps={{
@@ -66,13 +64,13 @@ export default function CanteenSelector() {
               ),
             }}
           >
-            {canteens.map((canteen) => (
+            {stores.map((store) => (
               <MenuItem
-                key={canteen.id}
-                value={canteen.id}
-                onClick={() => handleSelect(canteen.id, canteen.location)}
+                key={store.id}
+                value={store.id}
+                onClick={() => handleSelect(store.id)}
               >
-                {canteen.name}
+                {store.name}
               </MenuItem>
             ))}
           </TextField>

@@ -2,13 +2,13 @@ import {
   Product,
   CreateProductReq,
   UpdateItemReq,
-  ProductCanteen,
+  ProductStore,
 } from "src/interfaces";
 import { ApiTag, FLAG, mainApi, pbFilter, pbSort } from "./api";
 import { pb } from "src/libs";
 import { ListResult } from "pocketbase";
 import { GetList } from "src/types";
-import { canteenApi } from "./canteenService";
+import { storeApi } from "./storeService";
 import { store } from "../store";
 
 const tag = ApiTag.Products;
@@ -37,15 +37,15 @@ export const productApi = mainApi.injectEndpoints({
     createProduct: build.mutation<Product, CreateProductReq>({
       queryFn: async (_arg, _api, _options) => {
         const res = await pb.collection(tag).create<Product>(_arg);
-        // create also instances of product in canteens
-        const canteens = canteenApi.endpoints.getCanteens.select()(
+        // create also instances of product in stores
+        const stores = storeApi.endpoints.getstores.select()(
           store.getState()
         ).data;
-        if (canteens) {
-          canteens.forEach(async (canteen) => {
-            pb.collection(ApiTag.ProductsCanteens).create<ProductCanteen>({
+        if (stores) {
+          stores.forEach(async (store) => {
+            pb.collection(ApiTag.ProductsStores).create<ProductStore>({
               product: res.id,
-              canteen: canteen.id,
+              store: store.id,
               stock: 0,
             });
           });

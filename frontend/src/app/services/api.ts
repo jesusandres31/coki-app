@@ -10,17 +10,12 @@ const baseQuery = fetchBaseQuery({});
  */
 export const ApiTag = {
   Users: "users",
-  Locations: "locations",
-  Canteens: "canteens",
+  Stores: "stores",
   Expenses: "expenses",
   ExpenseConcepts: "expenseConcepts",
   Products: "products",
-  ProductsCanteens: "products_canteens",
+  ProductsStores: "products_stores",
   Clients: "clients",
-  Fields: "fields",
-  Balls: "balls",
-  Rentals: "rentals",
-  RentalsPayments: "rentals_payments",
   PaymentMethods: "paymentMethods",
   Invoices: "invoices",
   InvoiceItem: "invoices_items",
@@ -29,7 +24,6 @@ export const ApiTag = {
 
 export const ApiView = {
   Invoices: "v_invoices",
-  Rentals: "v_rentals",
 };
 
 export const mainApi = createApi({
@@ -60,8 +54,7 @@ export const FLAG = {
   refetch: ApiTag.Users,
 };
 
-// to be used in querys to filter by the current canteen
+// to be used in querys to filter by the current store
 export const getCurrent = {
-  Location: () => ` && location = '${ls.get(key.LOCATION)}'`,
-  Canteen: () => ` && canteen.id = '${ls.get(key.CANTEEN)}'`,
+  Store: () => ` && store.id = '${ls.get(key.STORE)}'`,
 };

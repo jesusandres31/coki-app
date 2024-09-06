@@ -1,12 +1,20 @@
-import { CssBaseline, TextField, Box, Container } from "@mui/material";
+import {
+  CssBaseline,
+  TextField,
+  Box,
+  Container,
+  Typography,
+  Avatar,
+} from "@mui/material";
+import { LockOutlined } from "@mui/icons-material";
+import LoadingButton from "@mui/lab/LoadingButton";
 import { useFormik } from "formik";
 import * as Yup from "yup";
 import { SignInReq } from "src/interfaces";
 import { removeSpace } from "src/utils/format";
-import LoadingButton from "@mui/lab/LoadingButton";
 import { useAuth } from "src/hooks";
 import { MSG, VLDN } from "src/utils/FormUtils";
-import logo from "src/assets/logo.png";
+// import logo from "src/assets/logo.png";
 
 export default function SignIn() {
   const { handleSignIn, isSigningIn } = useAuth();
@@ -56,14 +64,14 @@ export default function SignIn() {
           alignItems: "center",
         }}
       >
-        {/* <Avatar sx={{ m: 1, bgcolor: "success.main" }}>
+        <Avatar sx={{ m: 1, bgcolor: "success.main" }}>
           <LockOutlined />
-        </Avatar> */}
+        </Avatar>
 
-        <img alt="logo" height="150px" src={logo} />
-        {/* <Typography component="h1" variant="h5">
+        {/* <img alt="logo" height="150px" src={logo} /> */}
+        <Typography component="h1" variant="h5">
           Sign in
-        </Typography> */}
+        </Typography>
         <Box
           component="form"
           onSubmit={formik.handleSubmit}

@@ -1,6 +1,5 @@
 import { InputAdornment } from "@mui/material";
 import { useFormik } from "formik";
-import { CreateRentalReq, Rental } from "src/interfaces";
 import * as Yup from "yup";
 import CreateOrUpdateModal from "src/components/common/Modals/CreateOrUpdateModal";
 import { MSG, VLDN, NumericFormatFloat } from "src/utils/FormUtils";
@@ -12,14 +11,12 @@ import {
   uiInitialState,
   useUISelector,
 } from "src/slices/ui/uiSlice";
-import { rentalApi } from "src/app/services/rentalService";
 import { Input } from "src/types";
 import { useEffect } from "react";
 import { clientApi } from "src/app/services/clientService";
-import { fieldApi } from "src/app/services/fieldService";
-import { ballApi } from "src/app/services/ballService";
 import { useModal } from "src/hooks";
 import { invoiceApi } from "src/app/services/invoiceService";
+import { CreateInvoiceReq } from "src/interfaces";
 
 interface CreateOrUpdateInvoiceProps {
   open: boolean;
@@ -40,23 +37,19 @@ export default function CreateOrUpdateInvoice({
     invoiceApi.useLazyGetInvoiceQuery();
   const [getClients, { data: clients, isFetching: isFetchingClients }] =
     clientApi.useLazyGetClientsQuery();
-  const [getFields, { data: fields, isFetching: isFetchingFields }] =
-    fieldApi.useLazyGetFieldsQuery();
-  const [getBalls, { data: balls, isFetching: isFetchingBalls }] =
-    ballApi.useLazyGetBallsQuery();
   const { isUpdate } = useModal();
 
   const handleGetExpense = async (id: string) => {
     try {
-      const payload = await getRental(id).unwrap();
+      const payload = await getInvoice(id).unwrap();
       formik.setValues({
-        client: payload.expand.client.id,
+        /*  client: payload.expand.client.id,
         field: payload.expand.field.id,
         ball: payload.ball,
         started_at: payload.started_at,
         hours: payload.hours,
         total: payload.total,
-        rental_payments: payload.rental_payments,
+        rental_payments: payload.rental_payments, */
       });
     } catch (err) {
       throw err;
@@ -77,38 +70,8 @@ export default function CreateOrUpdateInvoice({
     }
   };
 
-  const handleGetFields = async () => {
-    try {
-      await getFields({
-        page: uiInitialState.page,
-        perPage: uiInitialState.perPage,
-        filter: uiInitialState.filter,
-        order: uiInitialState.order,
-        orderBy: uiInitialState.orderBy,
-      }).unwrap();
-    } catch (err) {
-      throw err;
-    }
-  };
-
-  const handleGetBalls = async () => {
-    try {
-      await getBalls({
-        page: uiInitialState.page,
-        perPage: uiInitialState.perPage,
-        filter: uiInitialState.filter,
-        order: uiInitialState.order,
-        orderBy: uiInitialState.orderBy,
-      }).unwrap();
-    } catch (err) {
-      throw err;
-    }
-  };
-
   useEffect(() => {
     handleGetClients();
-    handleGetFields();
-    handleGetBalls();
   }, []);
 
   useEffect(() => {
@@ -129,22 +92,20 @@ export default function CreateOrUpdateInvoice({
   const formik = useFormik({
     enableReinitialize: true,
     initialValues: {
-      client: "",
-      field: "",
-      ball: "",
+      /* client: "", 
       started_at: new Date(),
       hours: "",
       total: "",
-      rental_payments: [],
+      rental_payments: [], */
     },
-    onSubmit: async (data: CreateRentalReq) => {
+    onSubmit: async (data: CreateInvoiceReq) => {
       try {
         if (isUpdate) {
           const id = selectedItems[0];
-          await updateRental({ id, data }).unwrap();
+          await updateInvoice({ id, data }).unwrap();
           dispatch(setSnackbar({ message: MSG.successUpdate() }));
         } else {
-          await createRental(data).unwrap();
+          await createInvoice(data).unwrap();
           dispatch(setSnackbar({ message: MSG.successCreate() }));
         }
         handleClose();
@@ -154,15 +115,7 @@ export default function CreateOrUpdateInvoice({
       dispatch(resetSelectedItems());
     },
     validationSchema: Yup.object({
-      client: Yup.string()
-        .required(MSG.required)
-        .min(VLDN.SHORT_STRING.min, MSG.minLength(VLDN.SHORT_STRING.min))
-        .max(VLDN.SHORT_STRING.max, MSG.maxLength(VLDN.SHORT_STRING.max)),
-      field: Yup.string()
-        .required(MSG.required)
-        .min(VLDN.SHORT_STRING.min, MSG.minLength(VLDN.SHORT_STRING.min))
-        .max(VLDN.SHORT_STRING.max, MSG.maxLength(VLDN.SHORT_STRING.max)),
-      ball: Yup.string()
+      /* client: Yup.string()
         .required(MSG.required)
         .min(VLDN.SHORT_STRING.min, MSG.minLength(VLDN.SHORT_STRING.min))
         .max(VLDN.SHORT_STRING.max, MSG.maxLength(VLDN.SHORT_STRING.max)),
@@ -175,14 +128,14 @@ export default function CreateOrUpdateInvoice({
         .required(MSG.required)
         .min(VLDN.NN_REAL_NUMBER.min, MSG.minLength(VLDN.NN_REAL_NUMBER.min))
         .max(VLDN.NN_REAL_NUMBER.max, MSG.maxLength(VLDN.NN_REAL_NUMBER.max)),
-      rental_payments: Yup.array().required(MSG.required),
+      rental_payments: Yup.array().required(MSG.required), */
     }),
     validateOnChange: false,
     validateOnBlur: false,
   });
 
   const inputs: Input[] = [
-    {
+    /* {
       required: true,
       label: "Concepto",
       id: "client",
@@ -243,7 +196,7 @@ export default function CreateOrUpdateInvoice({
         inputComponent: NumericFormatFloat as any,
         startAdornment: <InputAdornment position="start">$</InputAdornment>,
       },
-    },
+    }, */
   ];
 
   return (

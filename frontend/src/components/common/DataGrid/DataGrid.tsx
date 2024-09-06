@@ -68,7 +68,7 @@ export default function DataGrid({
 }: DataGridProps) {
   const dispatch = useAppDispatch();
   const { route } = useRouter();
-  const { currentCanteen } = useAuth();
+  const { currentStore } = useAuth();
   const { filter, order, orderBy, page, perPage } = useUISelector(
     (state) => state.ui
   );
@@ -81,7 +81,7 @@ export default function DataGrid({
   useEffect(() => {
     // fetch in first render.
     if (orderBy && orderBy === defaultOrderBy) {
-      handleFetchItems(page, perPage, filter, order, orderBy, currentCanteen);
+      handleFetchItems(page, perPage, filter, order, orderBy, currentStore);
     }
   }, [orderBy, page]);
 
@@ -91,7 +91,7 @@ export default function DataGrid({
     filter: string,
     order: Order,
     orderBy: string,
-    currentCanteen?: string
+    currentStore?: string
   ) => {
     try {
       await fetchItemsFunc({
@@ -100,7 +100,7 @@ export default function DataGrid({
         filter,
         order,
         orderBy,
-        currentCanteen,
+        currentStore,
       });
     } catch (err: any) {
       dispatch(setSnackbar({ message: err.data.error, type: "error" }));
@@ -123,6 +123,7 @@ export default function DataGrid({
       {data && data.items && data.items.length > 0 ? (
         <TableContainer sx={{ flex: "1 1 auto" }}>
           <Table
+            stickyHeader
             sx={{
               borderCollapse: "separate",
               tableLayout: "fixed",

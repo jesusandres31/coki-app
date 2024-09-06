@@ -1,5 +1,5 @@
 import { useFormik } from "formik";
-import { CreateProductCanteenReq } from "src/interfaces";
+import { CreateProductStoreReq } from "src/interfaces";
 import * as Yup from "yup";
 import CreateOrUpdateModal from "src/components/common/Modals/CreateOrUpdateModal";
 import { MSG, VLDN } from "src/utils/FormUtils";
@@ -13,7 +13,7 @@ import {
 import { Input } from "src/types";
 import { useEffect } from "react";
 import { useAuth, useModal } from "src/hooks";
-import { productCanteenApi } from "src/app/services/productCanteenService";
+import { productStoreApi } from "src/app/services/productStoreService";
 
 interface UpdateProductStockProps {
   open: boolean;
@@ -25,20 +25,20 @@ export default function UpdateProductStock({
   label,
 }: UpdateProductStockProps) {
   const dispatch = useAppDispatch();
-  const { currentCanteen } = useAuth();
+  const { currentStore } = useAuth();
   const { selectedItems, actionModal } = useUISelector((state) => state.ui);
-  const [updateProductCanteen, { isLoading: isUpdating }] =
-    productCanteenApi.useUpdateProductCanteenMutation();
-  const [getProductCanteen, { isFetching }] =
-    productCanteenApi.useLazyGetProductCanteenQuery();
+  const [updateProductStore, { isLoading: isUpdating }] =
+    productStoreApi.useUpdateProductStoreMutation();
+  const [getProductStore, { isFetching }] =
+    productStoreApi.useLazyGetProductStoreQuery();
   const { isUpdate } = useModal();
 
-  const handleGetProductCanteen = async (id: string) => {
+  const handleGetProductStore = async (id: string) => {
     try {
-      const payload = await getProductCanteen(id).unwrap();
+      const payload = await getProductStore(id).unwrap();
       formik.setValues({
         product: payload.product,
-        canteen: payload.canteen,
+        store: payload.store,
         stock: payload.stock,
       });
     } catch (err) {
@@ -48,7 +48,7 @@ export default function UpdateProductStock({
 
   useEffect(() => {
     if (isUpdate) {
-      handleGetProductCanteen(selectedItems[0]);
+      handleGetProductStore(selectedItems[0]);
     }
   }, [actionModal, selectedItems]);
 
@@ -65,14 +65,14 @@ export default function UpdateProductStock({
     enableReinitialize: true,
     initialValues: {
       product: "",
-      canteen: currentCanteen,
+      store: currentStore,
       stock: 0,
     },
-    onSubmit: async (data: CreateProductCanteenReq) => {
+    onSubmit: async (data: CreateProductStoreReq) => {
       try {
         if (isUpdate) {
           const id = selectedItems[0];
-          await updateProductCanteen({ id, data }).unwrap();
+          await updateProductStore({ id, data }).unwrap();
           dispatch(setSnackbar({ message: MSG.successUpdate() }));
         }
         handleClose();

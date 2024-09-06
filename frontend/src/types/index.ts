@@ -12,13 +12,8 @@ import {
   Expense,
   Client,
   Product,
-  Field,
-  Rental,
-  Ball,
   PaymentMethod,
-  RentalPayment,
-  RentalView,
-  ProductCanteen,
+  ProductStore,
 } from "src/interfaces";
 import {
   Invoice,
@@ -72,7 +67,7 @@ export type GetList = {
   filter?: string;
   order?: Order;
   orderBy?: string;
-  currentCanteen?: string;
+  currentStore?: string;
 };
 
 /**
@@ -150,13 +145,8 @@ export type Entity =
   | "expenses"
   | "expenseConcepts"
   | "products"
-  | "products_canteens"
+  | "products_stores"
   | "clients"
-  | "fields"
-  | "rentals"
-  | "rentals_payments"
-  | "v_rentals"
-  | "balls"
   | "paymentMethods"
   | "invoices"
   | "invoices_items"
@@ -168,13 +158,8 @@ export type Item =
   | Expense
   | ExpenseConcept
   | Product
-  | ProductCanteen
+  | ProductStore
   | Client
-  | Field
-  | Rental
-  | RentalPayment
-  | RentalView
-  | Ball
   | PaymentMethod
   | Invoice
   | InvoiceItem
@@ -188,17 +173,12 @@ export type Column =
   | IColumn<ExpenseConcept>[]
   | IColumn<Product>[]
   | IColumn<Client>[]
-  | IColumn<Field>[]
-  | IColumn<Rental>[]
-  | IColumn<RentalPayment>[]
-  | IColumn<RentalView>[]
-  | IColumn<Ball>[]
   | IColumn<PaymentMethod>[]
   | IColumn<Invoice>[]
   | IColumn<InvoiceItem>[]
   | IColumn<InvoicePayment>[]
   | IColumn<InvoiceView>[]
-  | IColumn<ProductCanteen>[];
+  | IColumn<ProductStore>[];
 
 // any is used because the type of the columns is different for each entity
 export type DetailColumn = IDetailColumn<any, any>[];

@@ -15,8 +15,7 @@ export const version = packageJson.version;
 // application keys
 export const key = {
   DRAWER: "drawer",
-  CANTEEN: "canteen",
-  LOCATION: "location",
+  STORE: "store",
 };
 
 // application routing
@@ -30,12 +29,9 @@ export enum AppRoutes {
   Expenses = "/expenses",
   ExpenseConcepts = "/expense-concepts",
   Clients = "/clients",
-  Rentals = "/rentals",
   Invoices = "/invoices",
   Products = "/products",
-  ProductsCanteens = "/products-canteens",
-  Fields = "/fields",
-  Balls = "/balls",
+  ProductsStores = "/products-stores",
   StatsIncomes = "/stats/incomes",
   StatsClients = "/stats/clients",
   StatsProducts = "/stats/products",
@@ -45,7 +41,7 @@ export const noLayoutRoutes = [AppRoutes.Profile];
 
 // general config
 export const conf = {
-  LANDING_PAGE: AppRoutes.Rentals,
+  LANDING_PAGE: AppRoutes.Invoices,
   AUTHORIZATION: "Authorization",
   TOKEN_PREFIX: "Bearer",
 };

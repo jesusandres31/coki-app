@@ -23,9 +23,7 @@ export const invoiceApi = mainApi.injectEndpoints({
           .collection(view)
           .getList<Invoice>(_arg.page, _arg.perPage, {
             sort: pbSort(_arg.order, _arg.orderBy),
-            filter:
-              pbFilter(_arg.filter, ["client.name", "location.name"]) +
-              getCurrent.Canteen(),
+            filter: pbFilter(_arg.filter, ["client.name"]) + getCurrent.Store(),
           });
         return { data: res };
       },

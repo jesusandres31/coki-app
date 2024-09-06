@@ -4,7 +4,7 @@ import { pb } from "src/libs";
 import { RecordAuthResponse } from "pocketbase";
 
 const tag = ApiTag.Users;
-const expand = "canteen";
+const expand = "store";
 
 export const authApi = mainApi.injectEndpoints({
   endpoints: (build) => ({

@@ -3,7 +3,7 @@ import {
   CreatePaymentMethodReq,
   PaymentMethod,
   Product,
-  Canteen,
+  Store,
   Client,
   Json,
 } from ".";
@@ -12,7 +12,7 @@ import {
 export interface InvoiceView {
   id: string;
   client: Json;
-  canteen: Json;
+  store: Json;
   date: Date;
   discount: NumberOrEmpty;
   total: NumberOrEmpty;
@@ -40,7 +40,7 @@ export interface InvoiceItemView {
 
 // invoices
 export interface Invoice
-  extends BaseItem<{ client: Client; canteen: Canteen }>,
+  extends BaseItem<{ client: Client; store: Store }>,
     GetInvoiceRes {}
 
 export interface CreateInvoiceReq extends GetInvoiceRes {
@@ -50,7 +50,7 @@ export interface CreateInvoiceReq extends GetInvoiceRes {
 
 export interface GetInvoiceRes {
   client: string;
-  canteen: string;
+  store: string;
   date: Date;
   discount: NumberOrEmpty;
   total: NumberOrEmpty;

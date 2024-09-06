@@ -26,7 +26,7 @@ import { useUI } from "src/hooks";
 import { DRAWER_SECTIONS } from "src/config/drawer";
 import { toggleOpenDrawer, useUISelector } from "src/slices/ui/uiSlice";
 import { useAppDispatch } from "src/app/store";
-import CanteenSelector from "./content/CanteenSelector";
+// import StoreSelector from "./content/StoreSelector";
 
 const DRAWER_WIDTH = 220;
 
@@ -182,9 +182,9 @@ export default function Dashboard() {
                 <MenuRounded />
               </IconButton>
             </Grid>
-            <Grid item>
-              <CanteenSelector />
-            </Grid>
+            {/* <Grid item>
+              <StoreSelector />
+            </Grid> */}
             {/* <Grid item>
               <Typography
                 variant="h6"
