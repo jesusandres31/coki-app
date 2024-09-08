@@ -15,11 +15,10 @@ import { setPage, setSnackbar, useUISelector } from "src/slices/ui/uiSlice";
 import { useAppDispatch } from "src/app/store";
 import CustomTableToolbar from "./content/CustomTableToolbar";
 import { CustomButtonProps, CustomGrid } from "./content/utils";
-import { TableContainer, Table, Typography, Box } from "@mui/material";
+import { TableContainer, Table } from "@mui/material";
 import CustomTableHead from "./content/CustomTableHead";
 import CustomTablePagination from "./content/CustomTablePagination";
 import CustomTableBody from "./content/CustomTableBody";
-import { translateTitle } from "src/utils/header";
 import { useAuth, useRouter, useUI } from "src/hooks";
 
 const styles = {
@@ -109,9 +108,9 @@ export default function DataGrid({
 
   return (
     <PageContainer>
-      <Box pl={2} mb={1}>
+      {/* <Box pl={2} mb={1}>
         <Typography variant="h6">{translateTitle(route)}</Typography>
-      </Box>
+      </Box> */}
       <CustomTableToolbar
         handleFetchItems={handleFetchItems}
         entity={entity}

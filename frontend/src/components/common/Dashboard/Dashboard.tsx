@@ -12,6 +12,7 @@ import {
   CSSObject,
   Theme,
   styled,
+  Typography,
 } from "@mui/material";
 import MuiDrawer from "@mui/material/Drawer";
 import MuiAppBar, { AppBarProps as MuiAppBarProps } from "@mui/material/AppBar";
@@ -22,10 +23,11 @@ import {
 } from "@mui/icons-material";
 import CustomList from "./content/CustomList";
 import LoginButton from "./content/LoginButton";
-import { useUI } from "src/hooks";
+import { useRouter, useUI } from "src/hooks";
 import { DRAWER_SECTIONS } from "src/config/drawer";
 import { toggleOpenDrawer, useUISelector } from "src/slices/ui/uiSlice";
 import { useAppDispatch } from "src/app/store";
+import { translateTitle } from "src/utils/header";
 // import StoreSelector from "./content/StoreSelector";
 
 const DRAWER_WIDTH = 220;
@@ -140,6 +142,7 @@ const DrawerContent = () => {
 
 export default function Dashboard() {
   const { isMobile } = useUI();
+  const { route } = useRouter();
   const { openDrawer } = useUISelector((state) => state.ui);
   const dispatch = useAppDispatch();
   const notMobAndOpen = !isMobile && openDrawer;
@@ -185,7 +188,7 @@ export default function Dashboard() {
             {/* <Grid item>
               <StoreSelector />
             </Grid> */}
-            {/* <Grid item>
+            <Grid item>
               <Typography
                 variant="h6"
                 noWrap
@@ -197,7 +200,7 @@ export default function Dashboard() {
               >
                 {translateTitle(route)}
               </Typography>
-            </Grid> */}
+            </Grid>
           </Grid>
           <Grid
             container
