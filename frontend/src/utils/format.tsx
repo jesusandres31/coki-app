@@ -55,7 +55,7 @@ export const formatMoney = (num: NumberOrEmpty) => {
     maximumFractionDigits: formatStyle === "2-digit" ? 2 : 0,
     useGrouping: false,
   };
-  const formattedPrice = num.toLocaleString("en-US", formatOptions);
+  const formattedPrice = num.toLocaleString("en-US", formatOptions as any);
   return formattedPrice;
 };
 

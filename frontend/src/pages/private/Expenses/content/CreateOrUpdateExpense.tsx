@@ -1,6 +1,6 @@
 import { InputAdornment } from "@mui/material";
 import { useFormik } from "formik";
-import { CreateExpenseReq, ExpenseConcept } from "src/interfaces";
+import { CreateExpenseReq } from "src/interfaces";
 import * as Yup from "yup";
 import CreateOrUpdateModal from "src/components/common/Modals/CreateOrUpdateModal";
 import { MSG, VLDN, NumericFormatFloat } from "src/utils/FormUtils";

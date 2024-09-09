@@ -1,5 +1,11 @@
 import React from "react";
-import { Grid, Typography, Button, IconButton, Tooltip } from "@mui/material";
+import {
+  Grid2 as Grid,
+  Typography,
+  Button,
+  IconButton,
+  Tooltip,
+} from "@mui/material";
 import { useUI } from "src/hooks";
 
 type Color =

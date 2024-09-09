@@ -6,8 +6,8 @@ import { Provider } from "react-redux";
 import { store } from "./app/store";
 import { BrowserRouter } from "react-router-dom";
 import "@fontsource/roboto";
-import { ThemeProvider } from "@mui/material";
 import theme from "./theme/theme.ts";
+import { ThemeProvider } from "@mui/material";
 
 ReactDOM.createRoot(document.getElementById("root")!).render(
   <React.StrictMode>

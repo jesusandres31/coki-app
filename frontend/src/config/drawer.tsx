@@ -3,7 +3,6 @@ import {
   ShoppingCartRounded,
   PeopleRounded,
   DataSaverOffRounded,
-  LocalActivityRounded,
   ConstructionRounded,
   CurrencyExchangeRounded,
 } from "@mui/icons-material";

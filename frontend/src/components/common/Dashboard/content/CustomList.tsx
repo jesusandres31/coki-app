@@ -98,7 +98,6 @@ export default function CustomList({
           <React.Fragment key={`${index}-${item.to}`}>
             <ListItem
               disablePadding
-              selected={isSelected(item) || isNestedSelected(item)}
               sx={{
                 pl: isNested ? 1.5 : 0,
                 height: "45px",
@@ -118,6 +117,7 @@ export default function CustomList({
               }}
             >
               <ListItemButton
+                selected={isSelected(item) || isNestedSelected(item)}
                 onClick={(e) => {
                   item.to ? handleGoTo(item.to) : handleCollapse(e);
                 }}
