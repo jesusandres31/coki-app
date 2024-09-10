@@ -1,8 +1,5 @@
-import { BaseItem } from ".";
+import { PaymentMethodsResponse } from "./pocketbase-types";
 
-export interface PaymentMethod extends BaseItem<{}> {
-  id: string;
-  name: string;
-}
+export type PaymentMethod = PaymentMethodsResponse;
 
 export type CreatePaymentMethodReq = Pick<PaymentMethod, "id" | "name">;

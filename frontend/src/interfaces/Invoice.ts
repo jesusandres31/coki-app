@@ -1,34 +1,22 @@
+import { PaymentMethod, Product, Store, Client } from ".";
 import {
-  BaseItem,
-  CreatePaymentMethodReq,
-  PaymentMethod,
-  Product,
-  Store,
-  Client,
-  Json,
-} from ".";
+  ClientsResponse,
+  InvoicesItemsResponse,
+  InvoicesPaymentsResponse,
+  InvoicesResponse,
+  StoresResponse,
+  VInvoicesResponse,
+} from "./pocketbase-types";
 
 // view
-export interface InvoiceView {
-  id: string;
-  client: Json;
-  store: Json;
-  date: Date;
-  discount: NumberOrEmpty;
-  total: NumberOrEmpty;
-  paid: NumberOrEmpty;
-  invoice_payments: InvoicePaymentView[];
-  invoice_items: InvoiceItemView[];
-}
-
-export interface InvoicePaymentView {
+interface InvoicePaymentViewProp {
   id: string;
   payment_method_id: string;
   payment_method_name: string;
   total: NumberOrEmpty;
 }
 
-export interface InvoiceItemView {
+interface InvoiceItemViewProp {
   id: string;
   product_id: string;
   product_name: string;
@@ -38,38 +26,32 @@ export interface InvoiceItemView {
   total: NumberOrEmpty;
 }
 
+export type InvoiceView = VInvoicesResponse<
+  ClientsResponse,
+  InvoiceItemViewProp[],
+  InvoicePaymentViewProp[],
+  number,
+  StoresResponse
+>;
+
+export type InvoiceViewDetails = InvoicePaymentViewProp & InvoiceItemViewProp;
+
 // invoices
-export interface Invoice extends BaseItem<{ client: Client; store: Store }> {
-  client: string;
-  store: string;
-  date: Date;
-  discount: NumberOrEmpty;
-  total: NumberOrEmpty;
-}
+export type Invoice = InvoicesResponse<{ client: Client; store: Store }>;
 
 export type CreateInvoiceReq = Pick<
   Invoice,
   "client" | "store" | "date" | "discount" | "total"
 > & {
-  invoice_payments: CreatePaymentMethodReq[];
+  invoice_payments: CreateInvoicePaymentReq[];
   invoice_items: CreateInvoiceItemReq[];
 };
 
-export type GetInvoiceRes = Pick<
-  Invoice,
-  "client" | "store" | "date" | "discount" | "total"
->;
-
 // invoices_items
-export interface InvoiceItem
-  extends BaseItem<{ invoice: Invoice; product: Product }> {
-  invoice: string;
-  product: string;
-  unit_price: NumberOrEmpty;
-  amount: NumberOrEmpty;
-  discount: NumberOrEmpty;
-  total: NumberOrEmpty;
-}
+export type InvoiceItem = InvoicesItemsResponse<{
+  invoice: Invoice;
+  product: Product;
+}>;
 
 export type CreateInvoiceItemReq = Pick<
   InvoiceItem,
@@ -77,12 +59,10 @@ export type CreateInvoiceItemReq = Pick<
 >;
 
 // invoices_payments
-export interface InvoicePayment
-  extends BaseItem<{ invoice: Invoice; payment_method: PaymentMethod }> {
-  invoice: string;
-  payment_method: string;
-  total: NumberOrEmpty;
-}
+export type InvoicePayment = InvoicesPaymentsResponse<{
+  invoice: Invoice;
+  payment_method: PaymentMethod;
+}>;
 
 export type CreateInvoicePaymentReq = Pick<
   InvoicePayment,

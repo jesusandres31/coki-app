@@ -1,7 +1,5 @@
-import { BaseItem } from ".";
+import { RolesResponse } from "./pocketbase-types";
 
-export interface Role extends BaseItem<{}> {
-  name: string;
-}
+export type Role = RolesResponse;
 
 export type UpsertRoleReq = Pick<Role, "name">;

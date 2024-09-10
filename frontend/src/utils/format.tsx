@@ -3,7 +3,7 @@ import { VLDN } from "./FormUtils";
 import { Chip } from "@mui/material";
 
 // dates
-export const formatDate = (str: Date) => {
+export const formatDate = (str: Date | string) => {
   const date = new Date(str);
   const day = date.getDate().toString().padStart(2, "0");
   const month = (date.getMonth() + 1).toString().padStart(2, "0");
@@ -11,7 +11,7 @@ export const formatDate = (str: Date) => {
   return `${day}/${month}/${year}`;
 };
 
-export const formatTime = (str: Date) => {
+export const formatTime = (str: Date | string) => {
   const date = new Date(str);
   const hours = date.getHours().toString().padStart(2, "0");
   const minutes = date.getMinutes().toString().padStart(2, "0");
@@ -59,7 +59,7 @@ export const formatMoney = (num: NumberOrEmpty) => {
   return formattedPrice;
 };
 
-export const formatPaid = (total: NumberOrEmpty, paid: NumberOrEmpty) => {
+export const formatPaid = (total: number, paid: number) => {
   return (
     <Chip
       variant="outlined"

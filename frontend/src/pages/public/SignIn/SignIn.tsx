@@ -10,7 +10,7 @@ import { LockOutlined } from "@mui/icons-material";
 import LoadingButton from "@mui/lab/LoadingButton";
 import { useFormik } from "formik";
 import * as Yup from "yup";
-import { SignInReq } from "src/interfaces";
+import { SignInRequest } from "src/interfaces";
 import { removeSpace } from "src/utils/format";
 import { useAuth } from "src/hooks";
 import { MSG, VLDN } from "src/utils/FormUtils";
@@ -35,7 +35,7 @@ export default function SignIn() {
         .min(VLDN.SHORT_STRING.min, MSG.minLength(VLDN.SHORT_STRING.min))
         .max(VLDN.SHORT_STRING.max, MSG.maxLength(VLDN.SHORT_STRING.max)),
     }),
-    onSubmit: async (data: SignInReq) => {
+    onSubmit: async (data: SignInRequest) => {
       try {
         handleSignIn(data);
         formik.setValues(formik.initialValues);

@@ -1,9 +1,5 @@
-import { BaseItem } from ".";
+import { ClientsResponse } from "./pocketbase-types";
 
-export interface Client extends BaseItem<{}> {
-  name: string;
-  phone: string;
-  address: string;
-}
+export type Client = ClientsResponse;
 
 export type CreateClientReq = Pick<Client, "name" | "phone" | "address">;

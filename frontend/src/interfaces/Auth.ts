@@ -1,15 +1,16 @@
+import { BaseSystemFields } from "./pocketbase-types";
 import { Store } from "./Store";
-import { BaseItem } from "./utils";
 
-export interface SignUpRes extends BaseItem<{ store: Store }>, SignInReq {
+export interface SignUpResponse extends BaseSystemFields<{ store: Store }> {
   id: string;
   username: string;
   email: string;
+  password: string;
   role: string;
   store: string;
 }
 
-export interface SignInReq {
+export interface SignInRequest {
   email: string;
   password: string;
 }

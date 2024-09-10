@@ -5,11 +5,7 @@ import { formatMoney, formatPaid, formatDate } from "src/utils/format";
 import { useUISelector } from "src/slices/ui/uiSlice";
 import DeleteDeleteInvoices from "./content/DeleteInvoices";
 import CreateOrUpdateDeleteInvoice from "./content/CreateOrUpdateInvoice";
-import {
-  InvoiceItemView,
-  InvoicePaymentView,
-  InvoiceView,
-} from "src/interfaces";
+import { InvoiceView, InvoiceViewDetails } from "src/interfaces";
 
 const COLUMNS: IColumn<InvoiceView>[] = [
   {
@@ -17,7 +13,7 @@ const COLUMNS: IColumn<InvoiceView>[] = [
     label: "Cliente",
     id: "client",
     align: "left",
-    render: (item) => item.client.name,
+    render: (item) => item.client?.name || "",
   },
   /* {
     minWidth: 150,
@@ -35,7 +31,7 @@ const COLUMNS: IColumn<InvoiceView>[] = [
     minWidth: 100,
     label: "Pagado",
     id: "paid",
-    render: (item) => formatPaid(item.total, item.paid),
+    render: (item) => formatPaid(item.total, Number(item.paid)),
     tooltip: (item) => formatMoney(item.total),
   },
   {
@@ -46,10 +42,7 @@ const COLUMNS: IColumn<InvoiceView>[] = [
   },
 ];
 
-const DETAIL_COLUMNS: IDetailColumn<
-  InvoicePaymentView & InvoiceItemView,
-  InvoiceView
->[] = [
+const DETAIL_COLUMNS: IDetailColumn<InvoiceViewDetails, InvoiceView>[] = [
   {
     id: "invoice_items",
     title: "Detalles de Venta",

@@ -1,12 +1,8 @@
-import { BaseItem, ExpenseConcept } from ".";
+import { ExpenseConceptsResponse, ExpensesResponse } from "./pocketbase-types";
 
-export interface Expense extends BaseItem<{ expense_concept: ExpenseConcept }> {
-  expense_concept: string;
-  detail: string;
-  amount: NumberOrEmpty;
-  unit_price: NumberOrEmpty;
-  total: NumberOrEmpty;
-}
+export type Expense = ExpensesResponse<{
+  expense_concept: ExpenseConceptsResponse;
+}>;
 
 export type CreateExpenseReq = Pick<
   Expense,

@@ -1,7 +1,5 @@
-import { BaseItem } from ".";
+import { StoresResponse } from "./pocketbase-types";
 
-export interface Store extends BaseItem<{}> {
-  name: string;
-}
+export type Store = StoresResponse;
 
 export type CreateStoreReq = Pick<Store, "name">;
