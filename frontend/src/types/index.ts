@@ -7,20 +7,7 @@ import {
   QueryDefinition,
 } from "@reduxjs/toolkit/query";
 import { ListResult } from "pocketbase";
-import {
-  ExpenseConcept,
-  Expense,
-  Client,
-  Product,
-  PaymentMethod,
-  ProductStore,
-} from "src/interfaces";
-import {
-  Invoice,
-  InvoiceView,
-  InvoiceItem,
-  InvoicePayment,
-} from "src/interfaces/Invoice";
+import { CollectionResponses } from "src/interfaces/pocketbase-types";
 
 /**
  * table
@@ -140,46 +127,10 @@ export type IHandleFetchItems = (data: GetList) => Promise<void>;
 /**
  * DataGrid entities
  */
-export type Entity =
-  | "user"
-  | "expenses"
-  | "expenseConcepts"
-  | "products"
-  | "products_stores"
-  | "clients"
-  | "paymentMethods"
-  | "invoices"
-  | "invoices_items"
-  | "invoices_payments"
-  | "v_invoices";
+type ValueOf<T> = T[keyof T];
 
-// all the app entities goes here
-export type Item =
-  | Expense
-  | ExpenseConcept
-  | Product
-  | ProductStore
-  | Client
-  | PaymentMethod
-  | Invoice
-  | InvoiceItem
-  | InvoicePayment
-  | InvoiceView;
+export type Item = ValueOf<CollectionResponses>;
 
-// we have to create this Type due to this error message:
-// "The expected type comes from property 'columns' which is declared here on type 'IntrinsicAttributes & DataGridProps'."
-export type Column =
-  | IColumn<Item>[]
-  | IColumn<Expense>[]
-  | IColumn<ExpenseConcept>[]
-  | IColumn<Product>[]
-  | IColumn<Client>[]
-  | IColumn<PaymentMethod>[]
-  | IColumn<Invoice>[]
-  | IColumn<InvoiceItem>[]
-  | IColumn<InvoicePayment>[]
-  | IColumn<InvoiceView>[]
-  | IColumn<ProductStore>[];
+export type Column = IColumn<any>[];
 
-// any is used because the type of the columns is different for each entity
 export type DetailColumn = IDetailColumn<any, any>[];

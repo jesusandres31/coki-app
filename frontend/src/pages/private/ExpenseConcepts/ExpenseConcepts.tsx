@@ -1,11 +1,12 @@
 import { ExpenseConcept } from "src/interfaces";
-import { Entity, IColumn } from "src/types";
+import { IColumn } from "src/types";
 import DataGrid from "src/components/common/DataGrid/DataGrid";
 import { expenseConceptApi } from "src/app/services/expenseConceptService";
 import { useUISelector } from "src/slices/ui/uiSlice";
 import CreateOrUpdateExpenseConcept from "./content/CreateOrUpdateExpenseConcept";
 import DeleteExpenseConcepts from "./content/DeleteExpenseConcepts";
 import { formatDate, formatMoney } from "src/utils/format";
+import { Collections } from "src/interfaces/pocketbase-types";
 
 const COLUMNS: IColumn<ExpenseConcept>[] = [
   {
@@ -36,7 +37,7 @@ const COLUMNS: IColumn<ExpenseConcept>[] = [
 
 const DEFAULT_ORDER_BY: keyof ExpenseConcept = "created";
 
-const ENTITY: Entity = "expenseConcepts";
+const ENTITY = Collections.ExpenseConcepts;
 
 export default function ExpenseConcepts() {
   const { actionModal, selectedItems } = useUISelector((state) => state.ui);

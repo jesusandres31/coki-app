@@ -4,7 +4,6 @@ import {
   DataGridData,
   DataGridError,
   DetailColumn,
-  Entity,
   FetchItemsFunc,
   Order,
 } from "src/types";
@@ -19,7 +18,8 @@ import { TableContainer, Table } from "@mui/material";
 import CustomTableHead from "./content/CustomTableHead";
 import CustomTablePagination from "./content/CustomTablePagination";
 import CustomTableBody from "./content/CustomTableBody";
-import { useAuth, useRouter, useUI } from "src/hooks";
+import { useAuth, useUI } from "src/hooks";
+import { Collections } from "src/interfaces/pocketbase-types";
 
 const styles = {
   sticky: {
@@ -42,7 +42,7 @@ interface DataGridProps {
   isFetching: boolean;
   columns: Column;
   detailColumns?: DetailColumn;
-  entity: Entity;
+  entity: Collections;
   defaultOrderBy: string;
   fetchItemsFunc: FetchItemsFunc;
   bulkActionForOne?: CustomButtonProps[];
@@ -66,7 +66,6 @@ export default function DataGrid({
   disableDefaultOptBtn,
 }: DataGridProps) {
   const dispatch = useAppDispatch();
-  const { route } = useRouter();
   const { currentStore } = useAuth();
   const { filter, order, orderBy, page, perPage } = useUISelector(
     (state) => state.ui

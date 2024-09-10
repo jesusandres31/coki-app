@@ -21,9 +21,10 @@ import {
 } from "@mui/icons-material";
 import { openModal, setFilter, useUISelector } from "src/slices/ui/uiSlice";
 import { CustomButton, CustomButtonProps, CustomIconButton } from "./utils";
-import { Entity, Order } from "src/types";
+import { Order } from "src/types";
 import { useAppDispatch } from "src/app/store";
 import { useAuth, useUI } from "src/hooks";
+import { Collections } from "src/interfaces/pocketbase-types";
 
 interface CustomTableToolbarProps {
   handleFetchItems: (
@@ -34,7 +35,7 @@ interface CustomTableToolbarProps {
     orderBy: string,
     currentStore?: string
   ) => Promise<void>;
-  entity: Entity;
+  entity: Collections;
   bulkActionForOne?: CustomButtonProps[];
   bulkActionForMany?: CustomButtonProps[];
   disableCreateBtn?: boolean;

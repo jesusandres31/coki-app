@@ -1,4 +1,4 @@
-import { Entity, IColumn, IDetailColumn } from "src/types";
+import { IColumn, IDetailColumn } from "src/types";
 import DataGrid from "src/components/common/DataGrid/DataGrid";
 import { invoiceApi } from "src/app/services/invoiceService";
 import { formatMoney, formatPaid, formatDate } from "src/utils/format";
@@ -6,6 +6,7 @@ import { useUISelector } from "src/slices/ui/uiSlice";
 import DeleteDeleteInvoices from "./content/DeleteInvoices";
 import CreateOrUpdateDeleteInvoice from "./content/CreateOrUpdateInvoice";
 import { InvoiceView, InvoiceViewDetails } from "src/interfaces";
+import { Collections } from "src/interfaces/pocketbase-types";
 
 const COLUMNS: IColumn<InvoiceView>[] = [
   {
@@ -83,7 +84,7 @@ const DETAIL_COLUMNS: IDetailColumn<InvoiceViewDetails, InvoiceView>[] = [
 
 const DEFAULT_ORDER_BY: keyof InvoiceView = "date";
 
-const ENTITY: Entity = "invoices";
+const ENTITY = Collections.Invoices;
 
 export default function Invoices() {
   const { actionModal, selectedItems } = useUISelector((state) => state.ui);

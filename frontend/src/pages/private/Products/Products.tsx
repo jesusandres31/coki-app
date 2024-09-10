@@ -1,11 +1,12 @@
 import { Product } from "src/interfaces";
-import { Entity, IColumn } from "src/types";
+import { IColumn } from "src/types";
 import DataGrid from "src/components/common/DataGrid/DataGrid";
 import { productApi } from "src/app/services/productService";
 import { useUISelector } from "src/slices/ui/uiSlice";
 import CreateOrUpdateProduct from "./content/CreateOrUpdateProduct";
 import DeleteProducts from "./content/DeleteProducts";
-import { formatDate, formatMoney } from "src/utils/format";
+import { formatDate } from "src/utils/format";
+import { Collections } from "src/interfaces/pocketbase-types";
 
 const COLUMNS: IColumn<Product>[] = [
   {
@@ -29,7 +30,7 @@ const COLUMNS: IColumn<Product>[] = [
 
 const DEFAULT_ORDER_BY: keyof Product = "created";
 
-const ENTITY: Entity = "products";
+const ENTITY = Collections.Products;
 
 export default function Products() {
   const { actionModal, selectedItems } = useUISelector((state) => state.ui);

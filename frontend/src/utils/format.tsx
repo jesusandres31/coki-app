@@ -42,7 +42,7 @@ export const formatNulls = (value: any) => {
   return value;
 };
 
-export const formatMoney = (num: NumberOrEmpty) => {
+export const formatMoney = (num: number) => {
   if (isNaN(Number(num))) {
     return "NaN";
   }

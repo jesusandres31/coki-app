@@ -1,5 +1,5 @@
 import { ProductStore } from "src/interfaces";
-import { Entity, IColumn } from "src/types";
+import { IColumn } from "src/types";
 import DataGrid from "src/components/common/DataGrid/DataGrid";
 import { openModal, useUISelector } from "src/slices/ui/uiSlice";
 import UpdateProductStock from "./content/UpdateProductStock";
@@ -9,6 +9,7 @@ import { Typography } from "@mui/material";
 import { ShoppingCartRounded } from "@mui/icons-material";
 import { CustomButtonProps } from "src/components/common/DataGrid/content/utils";
 import { useAppDispatch } from "src/app/store";
+import { Collections } from "src/interfaces/pocketbase-types";
 
 const COLUMNS: IColumn<ProductStore>[] = [
   {
@@ -41,7 +42,7 @@ const COLUMNS: IColumn<ProductStore>[] = [
     minWidth: 100,
     label: "Precio Unit.",
     id: "product",
-    render: (item) => formatMoney(item.expand.product.unit_price),
+    render: (item) => formatMoney(item.expand?.product.unit_price),
   },
   {
     minWidth: 100,
@@ -53,7 +54,7 @@ const COLUMNS: IColumn<ProductStore>[] = [
 
 const DEFAULT_ORDER_BY: keyof ProductStore = "created";
 
-const ENTITY: Entity = "products_stores";
+const ENTITY = Collections.ProductsStores;
 
 export default function Products() {
   const dispatch = useAppDispatch();

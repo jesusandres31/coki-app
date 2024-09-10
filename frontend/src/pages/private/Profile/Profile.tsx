@@ -13,9 +13,9 @@ import { AppRoutes } from "src/config";
 import UpdateUserPsswd from "./content/UpdateUserPsswd";
 import { useAppDispatch } from "src/app/store";
 import { openModal, useUISelector } from "src/slices/ui/uiSlice";
-import { Entity } from "src/types";
+import { Collections } from "src/interfaces/pocketbase-types";
 
-const ENTITY: Entity = "user";
+const ENTITY = Collections.Users;
 
 export default function Profile() {
   const dispatch = useAppDispatch();

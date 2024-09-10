@@ -13,17 +13,17 @@ interface InvoicePaymentViewProp {
   id: string;
   payment_method_id: string;
   payment_method_name: string;
-  total: NumberOrEmpty;
+  total: number;
 }
 
 interface InvoiceItemViewProp {
   id: string;
   product_id: string;
   product_name: string;
-  unit_price: NumberOrEmpty;
-  amount: NumberOrEmpty;
-  discount: NumberOrEmpty;
-  total: NumberOrEmpty;
+  unit_price: number;
+  amount: number;
+  discount: number;
+  total: number;
 }
 
 export type InvoiceView = VInvoicesResponse<

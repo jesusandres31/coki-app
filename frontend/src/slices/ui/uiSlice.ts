@@ -2,9 +2,10 @@ import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 import { useSelector, TypedUseSelectorHook } from "react-redux";
 import { AlertColor } from "@mui/material";
 import { RootState } from "src/app/store";
-import { Action, Entity, Order } from "src/types";
+import { Action, Order } from "src/types";
 import { getListArgsInitialState } from "src/constants";
 import { drawer } from "src/utils/drawer";
+import { Collections } from "src/interfaces/pocketbase-types";
 
 interface ISnackbar {
   message: string;
@@ -13,9 +14,9 @@ interface ISnackbar {
 }
 
 interface IActionModal {
-  create: Entity | null;
-  update: Entity | null;
-  delete: Entity | null;
+  create: Collections | null;
+  update: Collections | null;
+  delete: Collections | null;
 }
 
 interface IUIState {
@@ -126,7 +127,7 @@ const ui = createSlice({
     },
     openModal(
       state: IUIState,
-      { payload }: PayloadAction<{ action: Action; entity: Entity }>
+      { payload }: PayloadAction<{ action: Action; entity: Collections }>
     ) {
       if (payload.action === "create") {
         state.actionModal.create = payload.entity;

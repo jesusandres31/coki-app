@@ -1,11 +1,12 @@
 import { Client } from "src/interfaces";
-import { Entity, IColumn } from "src/types";
+import { IColumn } from "src/types";
 import DataGrid from "src/components/common/DataGrid/DataGrid";
 import { clientApi } from "src/app/services/clientService";
 import { useUISelector } from "src/slices/ui/uiSlice";
 import CreateOrUpdateClient from "./content/CreateOrUpdateClient";
 import DeleteClients from "./content/DeleteClients";
 import { formatDate } from "src/utils/format";
+import { Collections } from "src/interfaces/pocketbase-types";
 
 const COLUMNS: IColumn<Client>[] = [
   {
@@ -34,7 +35,7 @@ const COLUMNS: IColumn<Client>[] = [
 
 const DEFAULT_ORDER_BY: keyof Client = "created";
 
-const ENTITY: Entity = "clients";
+const ENTITY = Collections.Clients;
 
 export default function Clients() {
   const { actionModal, selectedItems } = useUISelector((state) => state.ui);
