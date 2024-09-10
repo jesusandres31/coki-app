@@ -12,7 +12,7 @@ const COLUMNS: IColumn<Expense>[] = [
     minWidth: 150,
     label: "Concepto",
     id: "expense_concept",
-    render: (item) => item.expand.expense_concept.name,
+    render: (item) => item.expand?.expense_concept.name || "",
     align: "left",
   },
   {

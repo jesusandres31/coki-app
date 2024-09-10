@@ -1,20 +1,5 @@
-/**
- * api
- */
-// export interface Error {
-//   message: string;
-//   code: number;
-// }
-
 import { Item } from "src/types";
 
-// export interface StreamRes<T> {
-//   [key: string]: T;
-// }
-
-/**
- * base interfaces
- */
 export interface BaseItem<Expand> {
   id: string;
   created: Date;

@@ -1,7 +1,7 @@
 import { BaseItem } from ".";
 
-export interface Role extends BaseItem<{}>, UpsertRoleReq {}
-
-export interface UpsertRoleReq {
+export interface Role extends BaseItem<{}> {
   name: string;
 }
+
+export type UpsertRoleReq = Pick<Role, "name">;

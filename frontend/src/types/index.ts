@@ -170,6 +170,7 @@ export type Item =
 // "The expected type comes from property 'columns' which is declared here on type 'IntrinsicAttributes & DataGridProps'."
 export type Column =
   | IColumn<Item>[]
+  | IColumn<Expense>[]
   | IColumn<ExpenseConcept>[]
   | IColumn<Product>[]
   | IColumn<Client>[]

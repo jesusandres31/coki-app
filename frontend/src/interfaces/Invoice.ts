@@ -39,16 +39,7 @@ export interface InvoiceItemView {
 }
 
 // invoices
-export interface Invoice
-  extends BaseItem<{ client: Client; store: Store }>,
-    GetInvoiceRes {}
-
-export interface CreateInvoiceReq extends GetInvoiceRes {
-  invoice_payments: CreatePaymentMethodReq[];
-  invoice_items: CreateInvoiceItemReq[];
-}
-
-export interface GetInvoiceRes {
+export interface Invoice extends BaseItem<{ client: Client; store: Store }> {
   client: string;
   store: string;
   date: Date;
@@ -56,12 +47,22 @@ export interface GetInvoiceRes {
   total: NumberOrEmpty;
 }
 
+export type CreateInvoiceReq = Pick<
+  Invoice,
+  "client" | "store" | "date" | "discount" | "total"
+> & {
+  invoice_payments: CreatePaymentMethodReq[];
+  invoice_items: CreateInvoiceItemReq[];
+};
+
+export type GetInvoiceRes = Pick<
+  Invoice,
+  "client" | "store" | "date" | "discount" | "total"
+>;
+
 // invoices_items
 export interface InvoiceItem
-  extends BaseItem<{ invoice: Invoice; product: Product }>,
-    CreateInvoiceItemReq {}
-
-export interface CreateInvoiceItemReq {
+  extends BaseItem<{ invoice: Invoice; product: Product }> {
   invoice: string;
   product: string;
   unit_price: NumberOrEmpty;
@@ -70,13 +71,20 @@ export interface CreateInvoiceItemReq {
   total: NumberOrEmpty;
 }
 
+export type CreateInvoiceItemReq = Pick<
+  InvoiceItem,
+  "invoice" | "product" | "unit_price" | "amount" | "discount" | "total"
+>;
+
 // invoices_payments
 export interface InvoicePayment
-  extends BaseItem<{ invoice: Invoice; payment_method: PaymentMethod }>,
-    CreateInvoicePaymentReq {}
-
-export interface CreateInvoicePaymentReq {
+  extends BaseItem<{ invoice: Invoice; payment_method: PaymentMethod }> {
   invoice: string;
   payment_method: string;
   total: NumberOrEmpty;
 }
+
+export type CreateInvoicePaymentReq = Pick<
+  InvoicePayment,
+  "invoice" | "payment_method" | "total"
+>;

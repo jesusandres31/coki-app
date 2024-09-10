@@ -1,8 +1,8 @@
 import { BaseItem } from ".";
 
-export interface PaymentMethod extends BaseItem<{}>, CreatePaymentMethodReq {}
-
-export interface CreatePaymentMethodReq {
+export interface PaymentMethod extends BaseItem<{}> {
   id: string;
   name: string;
 }
+
+export type CreatePaymentMethodReq = Pick<PaymentMethod, "id" | "name">;

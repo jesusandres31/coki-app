@@ -4,6 +4,12 @@
 
 2 - exec `.\pocketbase-win.exe serve`
 
+## generate poccketbase types
+
+https://www.npmjs.com/package/pocketbase-typegen
+
+npx pocketbase-typegen --db ./pb_data/data.db --out ./pocketbase-types.ts
+
 ## credentials
 
 - admin:
