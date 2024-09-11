@@ -14,7 +14,7 @@ const COLUMNS: IColumn<InvoiceView>[] = [
     label: "Cliente",
     id: "client",
     align: "left",
-    render: (item) => item.client?.name || "",
+    render: (item) => item.client?.name,
   },
   /* {
     minWidth: 150,

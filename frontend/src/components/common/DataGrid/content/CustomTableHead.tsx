@@ -82,12 +82,13 @@ export default function CustomTableHead({
         </TableCell>
 
         {columns.map((column, i) => {
-          const active = orderBy === column.id;
-          const direction = orderBy === column.id ? order : "asc";
+          const id = column.id as keyof Item;
+          const active = orderBy === id;
+          const direction = orderBy === id ? order : "asc";
 
           return (
             <TableCell
-              key={`${column.id}-${i}`}
+              key={`${id}-${i}`}
               variant="head"
               align={column.align ?? "right"}
               style={{ width: column.minWidth }}
@@ -96,7 +97,7 @@ export default function CustomTableHead({
               <TableSortLabel
                 active={active}
                 direction={direction}
-                onClick={() => handleSortTable(column.id)}
+                onClick={() => handleSortTable(id)}
                 disabled={column.disableSort}
               >
                 <Typography variant="body2" fontWeight="bold">

@@ -17,8 +17,8 @@ export interface IColumn<T> {
   label: string;
   minWidth?: number;
   align?: "right" | "left";
-  render?: (item: T) => JSX.Element | string | null;
-  tooltip?: (item: T) => JSX.Element | string | null;
+  render?: (item: T) => JSX.Element | string | null | undefined;
+  tooltip?: (item: T) => JSX.Element | string | null | undefined;
   disableSort?: boolean;
 }
 

@@ -17,7 +17,7 @@ const COLUMNS: IColumn<ProductStore>[] = [
     label: "Nombre",
     id: "product",
     align: "left",
-    render: (item) => item.expand.product.name,
+    render: (item) => item.expand?.product.name,
   },
   {
     minWidth: 100,

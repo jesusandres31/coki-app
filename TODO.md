@@ -7,5 +7,3 @@ create
 
 add UM to products
 add tabla UM
-
-fix all types in FE

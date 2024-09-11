@@ -1,12 +1,26 @@
-import { PaymentMethod, Product, Store, Client } from ".";
+import {
+  Store,
+  Client,
+  CreateInvoicePaymentReq,
+  CreateInvoiceItemReq,
+} from ".";
 import {
   ClientsResponse,
-  InvoicesItemsResponse,
-  InvoicesPaymentsResponse,
   InvoicesResponse,
   StoresResponse,
   VInvoicesResponse,
 } from "./pocketbase-types";
+
+// invoices
+export type Invoice = InvoicesResponse<{ client: Client; store: Store }>;
+
+export type CreateInvoiceReq = Pick<
+  Invoice,
+  "client" | "store" | "date" | "discount" | "total"
+> & {
+  invoice_payments: CreateInvoicePaymentReq[];
+  invoice_items: CreateInvoiceItemReq[];
+};
 
 // view
 interface InvoicePaymentViewProp {
@@ -35,36 +49,3 @@ export type InvoiceView = VInvoicesResponse<
 >;
 
 export type InvoiceViewDetails = InvoicePaymentViewProp & InvoiceItemViewProp;
-
-// invoices
-export type Invoice = InvoicesResponse<{ client: Client; store: Store }>;
-
-export type CreateInvoiceReq = Pick<
-  Invoice,
-  "client" | "store" | "date" | "discount" | "total"
-> & {
-  invoice_payments: CreateInvoicePaymentReq[];
-  invoice_items: CreateInvoiceItemReq[];
-};
-
-// invoices_items
-export type InvoiceItem = InvoicesItemsResponse<{
-  invoice: Invoice;
-  product: Product;
-}>;
-
-export type CreateInvoiceItemReq = Pick<
-  InvoiceItem,
-  "invoice" | "product" | "unit_price" | "amount" | "discount" | "total"
->;
-
-// invoices_payments
-export type InvoicePayment = InvoicesPaymentsResponse<{
-  invoice: Invoice;
-  payment_method: PaymentMethod;
-}>;
-
-export type CreateInvoicePaymentReq = Pick<
-  InvoicePayment,
-  "invoice" | "payment_method" | "total"
->;
