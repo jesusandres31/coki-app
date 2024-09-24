@@ -43,7 +43,7 @@ export const formatNulls = (value: any) => {
 };
 
 export const formatMoney = (num: number | undefined) => {
-  if (isNaN(Number(num)) || !num) {
+  if (isNaN(Number(num)) || (!num && num !== 0)) {
     return "NaN";
   }
   const hasDecimals = Number(num) % 1 !== 0;
