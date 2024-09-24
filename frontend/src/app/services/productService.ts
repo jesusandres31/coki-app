@@ -12,6 +12,7 @@ import { storeApi } from "./storeService";
 import { store } from "../store";
 
 const tag = ApiTag.Products;
+const expand = "measure_unit";
 
 export const productApi = mainApi.injectEndpoints({
   endpoints: (build) => ({
@@ -20,8 +21,9 @@ export const productApi = mainApi.injectEndpoints({
         const res = await pb
           .collection(tag)
           .getList<Product>(_arg.page, _arg.perPage, {
+            expand,
             sort: pbSort(_arg.order, _arg.orderBy),
-            filter: pbFilter(_arg.filter, ["name"]),
+            filter: pbFilter(_arg.filter, ["name", "measure_unit.name"]),
           });
         return { data: res };
       },
@@ -38,7 +40,7 @@ export const productApi = mainApi.injectEndpoints({
       queryFn: async (_arg, _api, _options) => {
         const res = await pb.collection(tag).create<Product>(_arg);
         // create also instances of product in stores
-        const stores = storeApi.endpoints.getstores.select()(
+        const stores = storeApi.endpoints.getStores.select()(
           store.getState()
         ).data;
         if (stores) {

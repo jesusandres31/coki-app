@@ -22,6 +22,12 @@ const COLUMNS: IColumn<Product>[] = [
   },
   {
     minWidth: 100,
+    label: "Unitdad de Medida",
+    id: "measure_unit",
+    render: (item) => item.expand?.measure_unit.name,
+  },
+  {
+    minWidth: 100,
     label: "Fecha Creación",
     id: "created",
     render: (item) => formatDate(item.created),
