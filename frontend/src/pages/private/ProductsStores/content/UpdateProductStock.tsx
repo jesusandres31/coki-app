@@ -18,11 +18,13 @@ import { productStoreApi } from "src/app/services/productStoreService";
 interface UpdateProductStockProps {
   open: boolean;
   label: string;
+  closeEffect?: () => void;
 }
 
 export default function UpdateProductStock({
   open,
   label,
+  closeEffect,
 }: UpdateProductStockProps) {
   const dispatch = useAppDispatch();
   const { currentStore } = useAuth();
@@ -59,6 +61,9 @@ export default function UpdateProductStock({
   const handleClose = () => {
     dispatch(closeModal());
     formik.resetForm();
+    if (closeEffect) {
+      closeEffect();
+    }
   };
 
   const formik = useFormik({
@@ -77,8 +82,6 @@ export default function UpdateProductStock({
         }
         handleClose();
       } catch (err) {
-        console.log("ASDASDasd");
-        console.log(err);
         throw err;
       }
       dispatch(resetSelectedItems());

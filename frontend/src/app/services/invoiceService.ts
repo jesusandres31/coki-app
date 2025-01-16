@@ -1,4 +1,9 @@
-import { CreateInvoiceReq, Invoice, UpdateItemReq } from "src/interfaces";
+import {
+  CreateInvoiceReq,
+  Invoice,
+  InvoiceView,
+  UpdateItemReq,
+} from "src/interfaces";
 import {
   ApiTag,
   ApiView,
@@ -17,11 +22,11 @@ const view = ApiView.Invoices;
 
 export const invoiceApi = mainApi.injectEndpoints({
   endpoints: (build) => ({
-    getInvoices: build.query<ListResult<Invoice>, GetList>({
+    getInvoices: build.query<ListResult<InvoiceView>, GetList>({
       queryFn: async (_arg, _api, _options) => {
         const res = await pb
           .collection(view)
-          .getList<Invoice>(_arg.page, _arg.perPage, {
+          .getList<InvoiceView>(_arg.page, _arg.perPage, {
             sort: pbSort(_arg.order, _arg.orderBy),
             filter: pbFilter(_arg.filter, ["client.name"]) + getCurrent.Store(),
           });
@@ -29,9 +34,9 @@ export const invoiceApi = mainApi.injectEndpoints({
       },
       providesTags: [tag, FLAG.refetch],
     }),
-    getInvoice: build.query<Invoice, string>({
+    getInvoice: build.query<InvoiceView, string>({
       queryFn: async (_arg, _api, _options) => {
-        const res = await pb.collection(tag).getOne<Invoice>(_arg);
+        const res = await pb.collection(view).getOne<InvoiceView>(_arg);
         return { data: res };
       },
       providesTags: [tag],

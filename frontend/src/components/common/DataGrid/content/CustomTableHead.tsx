@@ -30,6 +30,7 @@ interface CustomTableHeadProps {
     currentStore?: string
   ) => Promise<void>;
   isCollapsible: boolean;
+  hasCheckbox: boolean;
   styles: any;
 }
 
@@ -38,6 +39,7 @@ export default function CustomTableHead({
   items,
   handleFetchItems,
   isCollapsible,
+  hasCheckbox,
   styles,
 }: CustomTableHeadProps) {
   const dispatch = useAppDispatch();
@@ -71,15 +73,19 @@ export default function CustomTableHead({
           backgroundColor: theme.palette.background.default,
         }}
       >
-        <TableCell padding="checkbox">
-          <Checkbox
-            color="primary"
-            size="small"
-            checked={(items && items.length > 0 && isAllSelected) ?? false}
-            indeterminate={selectedItems.length > 0 && !isAllSelected}
-            onChange={handleSelectAll}
-          />
-        </TableCell>
+        {hasCheckbox ? (
+          <TableCell padding="checkbox">
+            <Checkbox
+              color="primary"
+              size="small"
+              checked={(items && items.length > 0 && isAllSelected) ?? false}
+              indeterminate={selectedItems.length > 0 && !isAllSelected}
+              onChange={handleSelectAll}
+            />
+          </TableCell>
+        ) : (
+          <TableCell padding="checkbox" sx={{ width: 0 }} />
+        )}
 
         {columns.map((column, i) => {
           const id = column.id as keyof Item;

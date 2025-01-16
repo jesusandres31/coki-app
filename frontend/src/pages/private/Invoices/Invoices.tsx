@@ -95,7 +95,7 @@ export default function Invoices() {
     create: actionModal.create === ENTITY,
     update: actionModal.update === ENTITY,
     delete: actionModal.delete === ENTITY,
-    label: selectedItems.length > 1 ? "Alquileres" : "Alquier",
+    label: selectedItems.length > 1 ? "Ventas" : "Venta",
   };
 
   return (
