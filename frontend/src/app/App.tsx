@@ -89,7 +89,6 @@ function App(): JSX.Element {
   const { isLoggedIn } = useAuth();
   const { isLayoutRoutes } = useRouter();
 
-  // test
   return (
     <React.Fragment>
       <Suspense
