@@ -5,9 +5,9 @@ import {
   Container,
   Typography,
   Avatar,
+  Button,
 } from "@mui/material";
 import { LockOutlined } from "@mui/icons-material";
-import LoadingButton from "@mui/lab/LoadingButton";
 import { useFormik } from "formik";
 import * as Yup from "yup";
 import { SignInRequest } from "src/interfaces";
@@ -122,7 +122,7 @@ export default function SignIn() {
               min: VLDN.SHORT_STRING.min,
             }}
           />
-          <LoadingButton
+          <Button
             type="submit"
             fullWidth
             variant="contained"
@@ -131,7 +131,7 @@ export default function SignIn() {
             loading={isSigningIn}
           >
             Sign In
-          </LoadingButton>
+          </Button>
         </Box>
       </Box>
     </Container>

@@ -6,7 +6,6 @@ import {
   Dialog,
   Button,
 } from "@mui/material";
-import { LoadingButton } from "@mui/lab";
 import { useAppDispatch } from "src/app/store";
 import { closeModal, useUISelector } from "src/slices/ui/uiSlice";
 
@@ -47,7 +46,7 @@ export default function DeleteModal({
         <Button variant="outlined" color="secondary" onClick={handleClose}>
           Cancelar
         </Button>
-        <LoadingButton
+        <Button
           loading={isDeleting}
           onClick={handleDelete}
           autoFocus
@@ -55,7 +54,7 @@ export default function DeleteModal({
           variant="contained"
         >
           Eliminar
-        </LoadingButton>
+        </Button>
       </DialogActions>
     </Dialog>
   );

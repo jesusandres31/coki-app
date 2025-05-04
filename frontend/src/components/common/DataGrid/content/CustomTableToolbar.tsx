@@ -102,7 +102,6 @@ export default function CustomTableToolbar({
         sx={{ height: 55 }}
       >
         <Grid
-          item
           sx={{
             display: "flex",
             alignItems: "center",
@@ -125,7 +124,7 @@ export default function CustomTableToolbar({
               sx={{ gap: 2, width: "100%" }}
               direction="row"
             >
-              <Grid item sx={{ flex: 1, maxWidth: 450 }}>
+              <Grid sx={{ flex: 1, maxWidth: 450 }}>
                 <FormControl
                   variant="outlined"
                   size="small"
@@ -154,7 +153,7 @@ export default function CustomTableToolbar({
                   />
                 </FormControl>
               </Grid>
-              <Grid item>
+              <Grid>
                 {!disableCreateBtn && (
                   <CustomButton
                     text="Create"
@@ -168,7 +167,7 @@ export default function CustomTableToolbar({
             </Grid>
           )}
         </Grid>
-        <Grid item>
+        <Grid>
           <Grid
             container
             justifyContent="space-between"
@@ -176,7 +175,7 @@ export default function CustomTableToolbar({
             spacing={2}
           >
             {isOneSelected || isManySelected ? (
-              <Grid item>
+              <Grid>
                 <Grid container alignItems="center" sx={{ gap: 2 }}>
                   {isOneSelected && (
                     <>

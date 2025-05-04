@@ -8,10 +8,10 @@ interface NoItemsProps {
 const NoItems = ({ message = "No items found." }: NoItemsProps) => {
   return (
     <>
-      <Grid item>
+      <Grid>
         <SearchOffRounded fontSize="large" sx={{ color: "text.secondary" }} />
       </Grid>
-      <Grid item sx={{ textAlign: "center" }}>
+      <Grid sx={{ textAlign: "center" }}>
         <Typography variant="subtitle1" color="text.secondary">
           {message}
         </Typography>

@@ -11,21 +11,21 @@ export default function NotFound(): JSX.Element {
         alignItems="center"
         sx={{ pt: 20 }}
       >
-        <Grid item xs={12} sm={12} sx={{ pt: 5 }}>
+        <Grid sx={{ pt: 5, xs: 12, sm: 12 }}>
           <Grid container direction="row" justifyContent="center">
             <Typography variant="h1" align="center">
               404
             </Typography>
           </Grid>
         </Grid>
-        <Grid item xs={12} sm={12} sx={{ py: 0 }}>
+        <Grid sx={{ py: 0, xs: 12, sm: 12 }}>
           <Grid container direction="row" justifyContent="center">
             <Typography variant="h3" align="center">
               Page Not Found!
             </Typography>
           </Grid>
         </Grid>
-        <Grid item xs={12} sm={12} sx={{ py: 5 }}>
+        <Grid sx={{ py: 5, xs: 12, sm: 12 }}>
           <Grid container direction="row" justifyContent="center">
             <Link color="inherit" href="/">
               Go back

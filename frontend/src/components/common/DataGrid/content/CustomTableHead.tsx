@@ -87,7 +87,7 @@ export default function CustomTableHead({
 
           return (
             <TableCell
-              key={`${column.id}-${i}`}
+              key={`${String(column.id)}-${i}`}
               variant="head"
               align={column.align ?? "right"}
               style={{ width: column.minWidth }}
@@ -96,7 +96,7 @@ export default function CustomTableHead({
               <TableSortLabel
                 active={active}
                 direction={direction}
-                onClick={() => handleSortTable(column.id)}
+                onClick={() => handleSortTable(String(column.id))}
                 disabled={column.disableSort}
               >
                 <Typography variant="body2" fontWeight="bold">

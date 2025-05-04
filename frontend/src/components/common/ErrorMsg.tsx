@@ -8,10 +8,10 @@ const ErrorMsg = ({
 }) => {
   return (
     <>
-      <Grid item>
+      <Grid>
         <WarningRounded fontSize="large" sx={{ color: "text.secondary" }} />
       </Grid>
-      <Grid item sx={{ textAlign: "center" }}>
+      <Grid sx={{ textAlign: "center" }}>
         <Typography variant="subtitle1" color="text.secondary">
           {message}
         </Typography>

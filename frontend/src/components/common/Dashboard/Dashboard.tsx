@@ -163,7 +163,7 @@ export default function Dashboard() {
             justifyContent="flex-start"
             alignItems="center"
           >
-            <Grid item>
+            <Grid>
               <IconButton
                 color="inherit"
                 aria-label="open drawer"
@@ -182,10 +182,10 @@ export default function Dashboard() {
                 <MenuRounded />
               </IconButton>
             </Grid>
-            {/* <Grid item>
+            {/* <Grid  >
               <StoreSelector />
             </Grid> */}
-            <Grid item>
+            <Grid>
               <Typography
                 variant="h6"
                 noWrap
