@@ -14,7 +14,7 @@ const COLUMNS: IColumn<InvoiceView>[] = [
     label: "Cliente",
     id: "client",
     align: "left",
-    render: (item) => item.client?.name || "",
+    render: (item) => item.client?.name,
   },
   /* {
     minWidth: 150,
@@ -95,7 +95,7 @@ export default function Invoices() {
     create: actionModal.create === ENTITY,
     update: actionModal.update === ENTITY,
     delete: actionModal.delete === ENTITY,
-    label: selectedItems.length > 1 ? "Alquileres" : "Alquier",
+    label: selectedItems.length > 1 ? "Ventas" : "Venta",
   };
 
   return (

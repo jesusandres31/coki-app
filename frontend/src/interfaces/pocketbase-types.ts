@@ -12,6 +12,7 @@ export enum Collections {
   Invoices = "invoices",
   InvoicesItems = "invoices_items",
   InvoicesPayments = "invoices_payments",
+  MeasureUnits = "measureUnits",
   PaymentMethods = "paymentMethods",
   Products = "products",
   ProductsStores = "products_stores",
@@ -114,6 +115,14 @@ export type InvoicesPaymentsRecord = {
   updated_by?: RecordIdString;
 };
 
+export type MeasureUnitsRecord = {
+  created_by?: RecordIdString;
+  deleted?: IsoDateString;
+  deleted_by?: RecordIdString;
+  name?: string;
+  updated_by?: RecordIdString;
+};
+
 export type PaymentMethodsRecord = {
   created_by?: RecordIdString;
   deleted?: IsoDateString;
@@ -126,6 +135,7 @@ export type ProductsRecord = {
   created_by?: RecordIdString;
   deleted?: IsoDateString;
   deleted_by?: RecordIdString;
+  measure_unit: RecordIdString;
   name: string;
   unit_price?: number;
   updated_by?: RecordIdString;
@@ -199,6 +209,8 @@ export type InvoicesItemsResponse<Texpand = unknown> =
   Required<InvoicesItemsRecord> & BaseSystemFields<Texpand>;
 export type InvoicesPaymentsResponse<Texpand = unknown> =
   Required<InvoicesPaymentsRecord> & BaseSystemFields<Texpand>;
+export type MeasureUnitsResponse<Texpand = unknown> =
+  Required<MeasureUnitsRecord> & BaseSystemFields<Texpand>;
 export type PaymentMethodsResponse<Texpand = unknown> =
   Required<PaymentMethodsRecord> & BaseSystemFields<Texpand>;
 export type ProductsResponse<Texpand = unknown> = Required<ProductsRecord> &
@@ -236,6 +248,7 @@ export type CollectionRecords = {
   invoices: InvoicesRecord;
   invoices_items: InvoicesItemsRecord;
   invoices_payments: InvoicesPaymentsRecord;
+  measureUnits: MeasureUnitsRecord;
   paymentMethods: PaymentMethodsRecord;
   products: ProductsRecord;
   products_stores: ProductsStoresRecord;
@@ -253,6 +266,7 @@ export type CollectionResponses = {
   invoices: InvoicesResponse;
   invoices_items: InvoicesItemsResponse;
   invoices_payments: InvoicesPaymentsResponse;
+  measureUnits: MeasureUnitsResponse;
   paymentMethods: PaymentMethodsResponse;
   products: ProductsResponse;
   products_stores: ProductsStoresResponse;
@@ -277,6 +291,7 @@ export type TypedPocketBase = PocketBase & {
   collection(
     idOrName: "invoices_payments"
   ): RecordService<InvoicesPaymentsResponse>;
+  collection(idOrName: "measureUnits"): RecordService<MeasureUnitsResponse>;
   collection(idOrName: "paymentMethods"): RecordService<PaymentMethodsResponse>;
   collection(idOrName: "products"): RecordService<ProductsResponse>;
   collection(

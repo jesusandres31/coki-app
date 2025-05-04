@@ -5,6 +5,7 @@ import {
   DataGridError,
   DetailColumn,
   FetchItemsFunc,
+  Item,
   Order,
 } from "src/types";
 import { Loading, ErrorMsg } from "src/components/common";
@@ -45,6 +46,7 @@ interface DataGridProps {
   entity: Collections;
   defaultOrderBy: string;
   fetchItemsFunc: FetchItemsFunc;
+  handleClickRow?: (item: Item) => void;
   bulkActionForOne?: CustomButtonProps[];
   bulkActionForMany?: CustomButtonProps[];
   disableCreateBtn?: boolean;
@@ -60,6 +62,7 @@ export default function DataGrid({
   entity,
   defaultOrderBy,
   fetchItemsFunc,
+  handleClickRow,
   bulkActionForOne,
   bulkActionForMany,
   disableCreateBtn,
@@ -132,12 +135,15 @@ export default function DataGrid({
               items={data?.items}
               handleFetchItems={handleFetchItems}
               isCollapsible={!!detailColumns}
+              hasCheckbox={!handleClickRow}
               styles={styles}
             />
             <CustomTableBody
               items={data.items}
               columns={columns}
               detailColumns={detailColumns}
+              handleClickRow={handleClickRow}
+              hasCheckbox={!handleClickRow}
               styles={styles}
             />
           </Table>

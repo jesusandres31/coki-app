@@ -31,6 +31,8 @@ interface CustomTableBodyProps {
   items: Item[];
   columns: Column;
   detailColumns?: DetailColumn;
+  handleClickRow?: (item: Item) => void;
+  hasCheckbox: boolean;
   styles: any;
 }
 
@@ -38,6 +40,8 @@ export default function CustomTableBody({
   items,
   columns,
   detailColumns,
+  handleClickRow,
+  hasCheckbox,
   styles,
 }: CustomTableBodyProps) {
   const dispatch = useAppDispatch();
@@ -46,9 +50,12 @@ export default function CustomTableBody({
   const theme = useTheme();
   const isCollapsible = Boolean(detailColumns);
 
-  const handleSelectItem = (itemId: string) => {
-    dispatch(setSelectedItems(itemId));
-    // dispatch(resetCollapse());
+  const handleClickRowItem = (item: Item) => {
+    if (handleClickRow) {
+      handleClickRow(item);
+    } else {
+      dispatch(setSelectedItems(item.id));
+    }
   };
 
   const handleCollapse = (id: string) => {
@@ -73,13 +80,17 @@ export default function CustomTableBody({
                 "& > *": { borderBottom: collapsed ? "0px" : "unset" },
               }}
             >
-              <TableCell
-                padding="checkbox"
-                sx={{ cursor: "pointer" }}
-                onClick={() => handleSelectItem(row.id)}
-              >
-                <Checkbox color="primary" size="small" checked={selected} />
-              </TableCell>
+              {hasCheckbox ? (
+                <TableCell
+                  padding="checkbox"
+                  sx={{ cursor: "pointer" }}
+                  onClick={() => handleClickRowItem(row)}
+                >
+                  <Checkbox color="primary" size="small" checked={selected} />
+                </TableCell>
+              ) : (
+                <TableCell padding="checkbox" sx={{ width: 0 }} />
+              )}
 
               {(columns as IColumn<Item>[]).map((column, i) => {
                 const value = column.render
@@ -102,7 +113,7 @@ export default function CustomTableBody({
                     onClick={() =>
                       isCollapsible
                         ? handleCollapse(row.id)
-                        : handleSelectItem(row.id)
+                        : handleClickRowItem(row)
                     }
                   >
                     {/* <Tooltip title={tooltip !== NULL_VAL && tooltip}> */}

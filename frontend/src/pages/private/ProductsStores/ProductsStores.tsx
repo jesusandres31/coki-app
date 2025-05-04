@@ -1,7 +1,12 @@
 import { ProductStore } from "src/interfaces";
-import { IColumn } from "src/types";
+import { IColumn, Item } from "src/types";
 import DataGrid from "src/components/common/DataGrid/DataGrid";
-import { openModal, useUISelector } from "src/slices/ui/uiSlice";
+import {
+  openModal,
+  resetSelectedItems,
+  setSelectedItems,
+  useUISelector,
+} from "src/slices/ui/uiSlice";
 import UpdateProductStock from "./content/UpdateProductStock";
 import { formatDate, formatMoney } from "src/utils/format";
 import { productStoreApi } from "src/app/services/productStoreService";
@@ -17,7 +22,7 @@ const COLUMNS: IColumn<ProductStore>[] = [
     label: "Nombre",
     id: "product",
     align: "left",
-    render: (item) => item.expand.product.name,
+    render: (item) => item.expand?.product.name,
   },
   {
     minWidth: 100,
@@ -77,6 +82,15 @@ export default function Products() {
     },
   ];
 
+  // const handleClickRow = (item: Item) => {
+  //   dispatch(setSelectedItems(item.id));
+  //   dispatch(openModal({ entity: ENTITY, action: "update" }));
+  // };
+
+  // const handleCloseModal = () => {
+  //   dispatch(resetSelectedItems());
+  // };
+
   return (
     <>
       <DataGrid
@@ -88,12 +102,14 @@ export default function Products() {
         fetchItemsFunc={getProducts}
         entity={ENTITY}
         bulkActionForOne={bulkActionForOne}
+        // handleClickRow={handleClickRow}
         disableCreateBtn
         disableDefaultOptBtn
       />
       <UpdateProductStock
         open={MODAL.create || MODAL.update}
         label={MODAL.label}
+        // closeEffect={handleCloseModal}
       />
     </>
   );

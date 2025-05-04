@@ -72,6 +72,7 @@ const isFew = (length: number) => (length > 1 ? "s" : "");
 export const MSG = {
   required: "Required!",
   invalidEmail: "Invalid email",
+  invalidDate: "Invalid date",
   minLength: (len: number) => `Enter ${len} characters at least.`,
   maxLength: (len: number) => `Enter ${len} caracteres maximum.`,
   successDelete: (length: number) =>

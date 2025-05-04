@@ -8,7 +8,7 @@
 
 https://www.npmjs.com/package/pocketbase-typegen
 
-npx pocketbase-typegen --db ./pb_data/data.db --out ./pocketbase-types.ts
+npx pocketbase-typegen --db ./backend/pb_data/data.db --out ./frontend/src/interfaces/pocketbase-types.ts
 
 ## credentials
 

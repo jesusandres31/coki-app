@@ -1,22 +1,19 @@
-import { InputAdornment } from "@mui/material";
 import { useFormik } from "formik";
 import * as Yup from "yup";
-import CreateOrUpdateModal from "src/components/common/Modals/CreateOrUpdateModal";
-import { MSG, VLDN, NumericFormatFloat } from "src/utils/FormUtils";
+import { MSG, VLDN } from "src/utils/FormUtils";
 import { useAppDispatch } from "src/app/store";
 import {
   closeModal,
   resetSelectedItems,
   setSnackbar,
-  uiInitialState,
   useUISelector,
 } from "src/slices/ui/uiSlice";
 import { Input } from "src/types";
 import { useEffect } from "react";
-import { clientApi } from "src/app/services/clientService";
 import { useModal } from "src/hooks";
 import { invoiceApi } from "src/app/services/invoiceService";
 import { CreateInvoiceReq } from "src/interfaces";
+import TransactionModal from "src/components/common/Modals/TransactionModal";
 
 interface CreateOrUpdateInvoiceProps {
   open: boolean;
@@ -33,46 +30,41 @@ export default function CreateOrUpdateInvoice({
     invoiceApi.useCreateInvoiceMutation();
   const [updateInvoice, { isLoading: isUpdating }] =
     invoiceApi.useUpdateInvoiceMutation();
-  const [getInvoice, { data: invoice, isFetching }] =
+  const [getInvoice, { isFetching: isFetchingInvoice }] =
     invoiceApi.useLazyGetInvoiceQuery();
-  const [getClients, { data: clients, isFetching: isFetchingClients }] =
-    clientApi.useLazyGetClientsQuery();
   const { isUpdate } = useModal();
 
   const handleGetExpense = async (id: string) => {
     try {
       const payload = await getInvoice(id).unwrap();
       formik.setValues({
-        /*  client: payload.expand.client.id,
-        field: payload.expand.field.id,
-        ball: payload.ball,
-        started_at: payload.started_at,
-        hours: payload.hours,
+        client: payload.client?.id || "",
+        store: payload.store?.id || "",
+        date: payload.date,
+        discount: payload.discount,
         total: payload.total,
-        rental_payments: payload.rental_payments, */
+        invoice_payments: payload.invoice_payments
+          ? payload.invoice_payments.map((item) => ({
+              total: item.total,
+              invoice: item.id,
+              payment_method: item.payment_method_id,
+            }))
+          : [],
+        invoice_items: payload.invoice_items
+          ? payload.invoice_items.map((item) => ({
+              discount: item.discount,
+              total: item.total,
+              invoice: item.id,
+              product: item.product_id,
+              unit_price: item.unit_price,
+              amount: item.amount,
+            }))
+          : [],
       });
     } catch (err) {
       throw err;
     }
   };
-
-  const handleGetClients = async () => {
-    try {
-      await getClients({
-        page: uiInitialState.page,
-        perPage: uiInitialState.perPage,
-        filter: uiInitialState.filter,
-        order: uiInitialState.order,
-        orderBy: uiInitialState.orderBy,
-      }).unwrap();
-    } catch (err) {
-      throw err;
-    }
-  };
-
-  useEffect(() => {
-    handleGetClients();
-  }, []);
 
   useEffect(() => {
     if (isUpdate) {
@@ -92,11 +84,28 @@ export default function CreateOrUpdateInvoice({
   const formik = useFormik({
     enableReinitialize: true,
     initialValues: {
-      /* client: "", 
-      started_at: new Date(),
-      hours: "",
-      total: "",
-      rental_payments: [], */
+      client: "",
+      store: "",
+      date: "",
+      discount: 0,
+      total: 0,
+      invoice_payments: [
+        {
+          total: 0,
+          invoice: "",
+          payment_method: "",
+        },
+      ],
+      invoice_items: [
+        {
+          discount: 0,
+          total: 0,
+          invoice: "",
+          product: "",
+          unit_price: 0,
+          amount: 0,
+        },
+      ],
     },
     onSubmit: async (data: CreateInvoiceReq) => {
       try {
@@ -115,20 +124,69 @@ export default function CreateOrUpdateInvoice({
       dispatch(resetSelectedItems());
     },
     validationSchema: Yup.object({
-      /* client: Yup.string()
+      client: Yup.string()
         .required(MSG.required)
         .min(VLDN.SHORT_STRING.min, MSG.minLength(VLDN.SHORT_STRING.min))
         .max(VLDN.SHORT_STRING.max, MSG.maxLength(VLDN.SHORT_STRING.max)),
-      started_at: Yup.date().required(MSG.required),
-      hours: Yup.number()
+      store: Yup.string()
         .required(MSG.required)
+        .min(VLDN.SHORT_STRING.min, MSG.minLength(VLDN.SHORT_STRING.min))
+        .max(VLDN.SHORT_STRING.max, MSG.maxLength(VLDN.SHORT_STRING.max)),
+      date: Yup.date().required(MSG.required).typeError(MSG.invalidDate),
+      discount: Yup.number()
         .min(VLDN.NN_REAL_NUMBER.min, MSG.minLength(VLDN.NN_REAL_NUMBER.min))
-        .max(VLDN.NN_REAL_NUMBER.max, MSG.maxLength(VLDN.NN_REAL_NUMBER.max)),
+        .max(VLDN.NN_REAL_NUMBER.max, MSG.maxLength(VLDN.NN_REAL_NUMBER.max))
+        .required(MSG.required),
       total: Yup.number()
-        .required(MSG.required)
         .min(VLDN.NN_REAL_NUMBER.min, MSG.minLength(VLDN.NN_REAL_NUMBER.min))
-        .max(VLDN.NN_REAL_NUMBER.max, MSG.maxLength(VLDN.NN_REAL_NUMBER.max)),
-      rental_payments: Yup.array().required(MSG.required), */
+        .required(MSG.required),
+      invoice_payments: Yup.array()
+        .of(
+          Yup.object({
+            total: Yup.number()
+              .min(
+                VLDN.NN_REAL_NUMBER.min,
+                MSG.minLength(VLDN.NN_REAL_NUMBER.min)
+              )
+              .required(MSG.required),
+            invoice: Yup.string().required(MSG.required),
+            payment_method: Yup.string().required(MSG.required),
+          })
+        )
+        .required(MSG.required),
+      invoice_items: Yup.array()
+        .of(
+          Yup.object({
+            discount: Yup.number()
+              .min(
+                VLDN.NN_REAL_NUMBER.min,
+                MSG.minLength(VLDN.NN_REAL_NUMBER.min)
+              )
+              .max(
+                VLDN.NN_REAL_NUMBER.max,
+                MSG.maxLength(VLDN.NN_REAL_NUMBER.max)
+              )
+              .required(MSG.required),
+            total: Yup.number()
+              .min(
+                VLDN.NN_REAL_NUMBER.min,
+                MSG.minLength(VLDN.NN_REAL_NUMBER.min)
+              )
+              .required(MSG.required),
+            invoice: Yup.string().required(MSG.required),
+            product: Yup.string().required(MSG.required),
+            unit_price: Yup.number()
+              .min(
+                VLDN.NN_REAL_NUMBER.min,
+                MSG.minLength(VLDN.NN_REAL_NUMBER.min)
+              )
+              .required(MSG.required),
+            amount: Yup.number()
+              .min(1, MSG.minLength(1))
+              .required(MSG.required),
+          })
+        )
+        .required(MSG.required),
     }),
     validateOnChange: false,
     validateOnBlur: false,
@@ -200,12 +258,12 @@ export default function CreateOrUpdateInvoice({
   ];
 
   return (
-    <CreateOrUpdateModal
+    <TransactionModal
       open={open}
       label={label}
       hanleConfirm={hanleConfirm}
       handleClose={handleClose}
-      loading={isFetching || isCreating || isUpdating}
+      loading={isFetchingInvoice || isCreating || isUpdating}
       isUpdate={isUpdate}
       inputs={inputs}
       formik={formik}

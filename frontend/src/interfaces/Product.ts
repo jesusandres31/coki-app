@@ -1,18 +1,10 @@
-import { Store } from ".";
-import { ProductsResponse, ProductsStoresResponse } from "./pocketbase-types";
+import { MeasureUnitsResponse, ProductsResponse } from "./pocketbase-types";
 
-// products
-export type Product = ProductsResponse;
-
-export type CreateProductReq = Pick<Product, "name" | "unit_price">;
-
-// products_stores
-export type ProductStore = ProductsStoresResponse<{
-  product: Product;
-  store: Store;
+export type Product = ProductsResponse<{
+  measure_unit: MeasureUnitsResponse;
 }>;
 
-export type CreateProductStoreReq = Pick<
-  ProductStore,
-  "product" | "store" | "stock"
+export type CreateProductReq = Pick<
+  Product,
+  "name" | "unit_price" | "measure_unit"
 >;
