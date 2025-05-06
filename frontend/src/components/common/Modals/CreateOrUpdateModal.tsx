@@ -69,12 +69,10 @@ export default function CreateOrUpdateModal({
           {inputs.map((input) => (
             <Grid
               key={input.id}
+              size={{ xs: 2, sm: 4, md: 6 }}
               sx={{
                 display: "flex",
                 justifyContent: "center",
-                xs: 2,
-                sm: 4,
-                md: 6,
               }}
             >
               {!input.hide ? (

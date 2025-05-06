@@ -8,7 +8,6 @@ import {
   TextField,
   TextFieldVariants,
 } from "@mui/material";
-import { LoadingButton } from "@mui/lab";
 import { Input } from "src/types";
 import { handleSetFormikValue } from "src/utils/FormUtils";
 import { STYLE } from "src/constants";
@@ -69,11 +68,8 @@ export default function TransactionModal({
         <Grid container spacing={2} columns={columns} direction={direction}>
           {inputs.map((input) => (
             <Grid
-              item
-              xs={2}
-              sm={4}
-              md={6}
               key={input.id}
+              size={{ xs: 2, sm: 4, md: 6 }}
               sx={{
                 display: "flex",
                 justifyContent: "center",
@@ -126,7 +122,7 @@ export default function TransactionModal({
             Cancelar
           </Button>
         )}
-        <LoadingButton
+        <Button
           loading={loading}
           onClick={hanleConfirm}
           type="submit"
@@ -134,7 +130,7 @@ export default function TransactionModal({
           variant="contained"
         >
           {confBtnLabel ? confBtnLabel : isUpdate ? "Actualizar" : "Crear"}
-        </LoadingButton>
+        </Button>
       </DialogActions>
     </Dialog>
   );

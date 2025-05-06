@@ -11,14 +11,14 @@ export default function NotFound(): JSX.Element {
         alignItems="center"
         sx={{ pt: 20 }}
       >
-        <Grid sx={{ py: 0, pt: 5, xs: 12, sm: 12 }}>
+        <Grid sx={{ py: 0, pt: 5 }} size={{ xs: 12, sm: 12 }}>
           <Grid container direction="row" justifyContent="center">
             <Typography variant="h3" align="center">
               Unauthorized!
             </Typography>
           </Grid>
         </Grid>
-        <Grid sx={{ py: 5, xs: 12, sm: 12 }}>
+        <Grid sx={{ py: 5 }} size={{ xs: 12, sm: 12 }}>
           <Grid container direction="row" justifyContent="center">
             <Link color="inherit" href="/">
               Log in to continue using this app.

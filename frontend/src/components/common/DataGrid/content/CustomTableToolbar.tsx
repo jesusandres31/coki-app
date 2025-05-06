@@ -55,7 +55,7 @@ export default function CustomTableToolbar({
   const { currentStore } = useAuth();
   const { selectedItems, filter, order, orderBy, page, perPage } =
     useUISelector((state) => state.ui);
-  const isManySelected = selectedItems.length > 0;
+  const isManySelected = selectedItems.length > 0; // TODO: > 1
   const isOneSelected = selectedItems.length === 1;
   const { isMobile } = useUI();
 
@@ -88,7 +88,7 @@ export default function CustomTableToolbar({
         pl: { sm: 2 },
         pr: { xs: 1, sm: 1 },
         flex: "0 0 auto",
-        py: 3,
+        py: { xs: 1, sm: 2 },
         backgroundColor: isManySelected
           ? lighten(theme.palette.primary.light, 0.8)
           : theme.palette.background.paper,
@@ -98,8 +98,7 @@ export default function CustomTableToolbar({
         container
         justifyContent="space-between"
         alignItems="center"
-        spacing={2}
-        sx={{ height: 55 }}
+        sx={{ height: 55, width: "100%" }}
       >
         <Grid
           sx={{

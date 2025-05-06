@@ -156,7 +156,10 @@ export default function Dashboard() {
           //  backgroundColor: lighten(theme.palette.text.primary, 0.15),
         }}
       >
-        <Toolbar variant="dense">
+        <Toolbar
+          variant="dense"
+          sx={{ display: "flex", justifyContent: "space-between" }}
+        >
           <Grid
             container
             direction="row"
