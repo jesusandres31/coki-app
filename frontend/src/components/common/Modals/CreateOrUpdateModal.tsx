@@ -65,7 +65,14 @@ export default function CreateOrUpdateModal({
           pt: 4,
         }}
       >
-        <Grid container spacing={2} columns={columns} direction={direction}>
+        <Grid
+          container
+          spacing={2}
+          columns={columns}
+          direction={direction}
+          justifyContent="center"
+          alignItems="center"
+        >
           {inputs.map((input) => (
             <Grid
               key={input.id}
