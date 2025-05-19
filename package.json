@@ -1,0 +1,141 @@
+{
+  "name": "@hstpathways/compass-ds",
+  "version": "1.3.22",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/HSTPathways/compass-storybook.git"
+  },
+  "publishConfig": {
+    "registry": "https://npm.pkg.github.com"
+  },
+  "main": "index.ts",
+  "files": [
+    "dist/",
+    "index.ts",
+    "icons/",
+    "theme/",
+    "ts/",
+    "public/style.css",
+    "public/fonts/",
+    "public/images/"
+  ],
+  "private": false,
+  "scripts": {
+    "start": " npm run storybook",
+    "build": "npm run build-package",
+    "test": "echo \"There are no test implemented yet.\"",
+    "eject": "react-scripts eject",
+    "lint": "eslint src --ext .js,.jsx,.ts,.tsx",
+    "format": "prettier --write \"src/**/*.{js,jsx,ts,tsx}\"",
+    "storybook": "start-storybook -p 6006 -s public --no-open",
+    "build-storybook": "build-storybook -s public",
+    "rm-dist": "rimraf dist",
+    "build:ts": "npm run rm-dist && tsc --project tsconfig.build.json",
+    "build:css": "postcss src/**/*.module.css --base src --dir dist",
+    "generate-index": "node scripts/generateLibIndex.cjs && node scripts/generateTypesIndex.cjs && node scripts/generateIconsIndex.cjs",
+    "remove-css-json": "node ./scripts/removeCssJsonFiles.cjs",
+    "build-package": "npm run build:ts && npm run build:css && npm run remove-css-json && npm run generate-index",
+    "publish-package": "node ./scripts/publishPackage.cjs",
+    "prepare": "husky install && bash -c 'chmod +x .husky/*'",
+    "dev-install": "node ./scripts/devInstall.cjs",
+    "css-to-tokens": "node ./scripts/syncTokensFromCss.cjs",
+    "svg-to-icons": "node ./scripts/syncIconsFromSVGs.cjs",
+    "add-component": "node ./scripts/addNewComponent/index.cjs",
+    "promote-component": "node ./scripts/promoteComponent.cjs"
+  },
+  "eslintConfig": {
+    "extends": [
+      "react-app",
+      "react-app/jest"
+    ],
+    "overrides": [
+      {
+        "files": [
+          "**/*.stories.*"
+        ],
+        "rules": {
+          "import/no-anonymous-default-export": "off"
+        }
+      }
+    ]
+  },
+  "browserslist": {
+    "production": [
+      ">0.2%",
+      "not dead",
+      "not op_mini all"
+    ],
+    "development": [
+      "last 1 chrome version",
+      "last 1 firefox version",
+      "last 1 safari version"
+    ]
+  },
+  "dependencies": {
+    "@radix-ui/react-checkbox": "^1.0.3",
+    "@radix-ui/react-dropdown-menu": "^2.0.4",
+    "@radix-ui/react-tooltip": "^1.0.5",
+    "@types/react-input-mask": "^3.0.6",
+    "csstype": "^3.1.3",
+    "next-transpile-modules": "^10.0.0",
+    "react-drag-drop-files": "^2.3.10",
+    "react-hot-toast": "2.4.1",
+    "react-input-mask": "^2.0.4",
+    "react-select": "^5.7.3"
+  },
+  "peerDependencies": {
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "react-scripts": "5.0.1",
+    "typescript": "^4.9.5",
+    "web-vitals": "^2.1.4"
+  },
+  "devDependencies": {
+    "@babel/cli": "^7.21.0",
+    "@babel/core": "^7.21.3",
+    "@babel/preset-env": "^7.20.2",
+    "@babel/preset-react": "^7.18.6",
+    "@babel/preset-typescript": "^7.21.0",
+    "@storybook/addon-actions": "^6.5.16",
+    "@storybook/addon-essentials": "^6.5.16",
+    "@storybook/addon-interactions": "^6.5.16",
+    "@storybook/addon-links": "^6.5.16",
+    "@storybook/builder-webpack5": "^6.5.16",
+    "@storybook/manager-webpack5": "^6.5.16",
+    "@storybook/node-logger": "^6.5.16",
+    "@storybook/preset-create-react-app": "^4.1.2",
+    "@storybook/react": "^6.5.16",
+    "@storybook/testing-library": "^0.0.13",
+    "@testing-library/dom": "^9.0.1",
+    "@testing-library/jest-dom": "^5.16.5",
+    "@testing-library/react": "^13.4.0",
+    "@testing-library/user-event": "^13.5.0",
+    "@types/jest": "^27.5.2",
+    "@types/node": "^16.18.16",
+    "@types/react": "^18.2.79",
+    "@types/react-dom": "^18.2.25",
+    "babel-plugin-named-exports-order": "^0.0.2",
+    "css-loader": "^6.7.3",
+    "eslint": "^8.41.0",
+    "eslint-config-prettier": "^8.8.0",
+    "eslint-plugin-prettier": "^4.2.1",
+    "husky": "^8.0.0",
+    "mini-css-extract-plugin": "^2.7.5",
+    "ncp": "^2.0.0",
+    "npm-run-all": "^4.1.5",
+    "postcss": "^8.4.22",
+    "postcss-cli": "^10.1.0",
+    "postcss-import": "^15.1.0",
+    "postcss-modules": "^6.0.0",
+    "postcss-modules-values": "^4.0.0",
+    "postcss-preset-env": "^8.3.2",
+    "prettier": "^2.8.8",
+    "prop-types": "^15.8.1",
+    "rimraf": "^5.0.0",
+    "style-loader": "^3.3.2",
+    "ts-loader": "^9.4.2",
+    "typescript-plugin-css-modules": "^5.0.1",
+    "webpack": "^5.76.1",
+    "webpack-cli": "^5.0.1"
+  }
+}
