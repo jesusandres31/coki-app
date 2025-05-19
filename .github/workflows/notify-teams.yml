@@ -9,16 +9,21 @@ jobs:
   notify:
     runs-on: ubuntu-latest
     steps:
-      - name: Get version
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Get version from package.json
         id: get_version
-        run: echo "VERSION=$(git describe --tags --abbrev=0)" >> $GITHUB_ENV
+        run: |
+          VERSION=$(jq -r .version package.json)
+          echo "VERSION=$VERSION" >> $GITHUB_ENV
 
       - name: Send notification to MS Teams
         env:
           VERSION: ${{ env.VERSION }}
         run: |
           TITLE="📦🎉 New version of Compass-DS has been released! 🚀📦"
-          TEXT="✨ **Version**: \`v$VERSION\`\n\n🔍 [View commit](${{ github.event.head_commit.url }}) 🔗\n\n📥 *Install it:*\n\@hstpathways/compass-ds@$VERSION\"
+          TEXT="✨ **Version**: \`v${VERSION}\`\n\n🔍 [View commit](${{ github.event.head_commit.url }}) 🔗\n\n📥 *Install it:*\n@hstpathways/compass-ds@${VERSION}"
 
-          echo $TITLE
-          echo $TEXT
+          echo "$TITLE"
+          echo -e "$TEXT"
