@@ -46,6 +46,42 @@ export default function CustomList({
     }
   };
 
+  // --- FIX: Manage openCollapse state for all items at the top level ---
+  const [openCollapses, setOpenCollapses] = useState<{
+    [key: string]: boolean;
+  }>({});
+
+  useEffect(() => {
+    // Initialize openCollapses for items with nestedItems if their nested item matches pathname
+    const newOpenCollapses: { [key: string]: boolean } = {};
+    items.forEach((item, index) => {
+      if (item.nestedItems) {
+        const hasNestedSelected = item.nestedItems.some(
+          (nestedItem) => pathname === nestedItem.to
+        );
+        newOpenCollapses[item.to || `index-${index}`] = hasNestedSelected;
+      }
+    });
+    setOpenCollapses((prev) => ({ ...prev, ...newOpenCollapses }));
+    if (!openDrawer) {
+      // Close all collapses if drawer is closed
+      setOpenCollapses({});
+    }
+  }, [pathname, items, openDrawer]);
+
+  const handleCollapse = (
+    e: React.MouseEvent<HTMLDivElement, MouseEvent>,
+    itemKey: string
+  ) => {
+    setOpenCollapses((prev) => ({ ...prev, [itemKey]: !prev[itemKey] }));
+    if (!openDrawer) toggleOpenDrawer();
+    e.stopPropagation();
+  };
+
+  const isNestedSelected = (item: IMenuItem) => {
+    return item.nestedItems?.some((nestedItem) => nestedItem.to === pathname);
+  };
+
   return (
     <List
       component="div"
@@ -66,33 +102,8 @@ export default function CustomList({
       }
     >
       {items.map((item, index) => {
-        const [openCollapse, setOpenCollapse] = useState(route === item.to);
-
-        useEffect(() => {
-          if (item.nestedItems && !openCollapse) {
-            const currentNestedItem = item.nestedItems.find(
-              (nestedItem) => route === nestedItem.to
-            );
-            if (currentNestedItem) setOpenCollapse(true);
-          }
-          if (!openDrawer) setOpenCollapse(false);
-        }, [openDrawer]);
-
-        const handleCollapse = (
-          e: React.MouseEvent<HTMLDivElement, MouseEvent>
-        ) => {
-          setOpenCollapse(!openCollapse);
-          if (!openDrawer) dispatch(toggleOpenDrawer());
-          e.stopPropagation();
-        };
-
-        const isNestedSelected = (item: IMenuItem) => {
-          if (!openCollapse) {
-            return item.nestedItems?.some(
-              (nestedItem) => nestedItem.to === route
-            );
-          }
-        };
+        const itemKey = item.to || `index-${index}`;
+        const openCollapse = openCollapses[itemKey] || false;
 
         return (
           <React.Fragment key={`${index}-${item.to}`}>
