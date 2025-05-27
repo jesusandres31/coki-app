@@ -52,12 +52,12 @@ export default function CustomList({
   }>({});
 
   useEffect(() => {
-    // Initialize openCollapses for items with nestedItems if their nested item matches pathname
+    // Initialize openCollapses for items with nestedItems if their nested item matches route
     const newOpenCollapses: { [key: string]: boolean } = {};
     items.forEach((item, index) => {
       if (item.nestedItems) {
         const hasNestedSelected = item.nestedItems.some(
-          (nestedItem) => pathname === nestedItem.to
+          (nestedItem) => route === nestedItem.to
         );
         newOpenCollapses[item.to || `index-${index}`] = hasNestedSelected;
       }
@@ -67,7 +67,7 @@ export default function CustomList({
       // Close all collapses if drawer is closed
       setOpenCollapses({});
     }
-  }, [pathname, items, openDrawer]);
+  }, [route, items, openDrawer]);
 
   const handleCollapse = (
     e: React.MouseEvent<HTMLDivElement, MouseEvent>,
@@ -79,7 +79,7 @@ export default function CustomList({
   };
 
   const isNestedSelected = (item: IMenuItem) => {
-    return item.nestedItems?.some((nestedItem) => nestedItem.to === pathname);
+    return item.nestedItems?.some((nestedItem) => nestedItem.to === route);
   };
 
   return (
@@ -130,7 +130,7 @@ export default function CustomList({
               <ListItemButton
                 selected={isSelected(item) || isNestedSelected(item)}
                 onClick={(e) => {
-                  item.to ? handleGoTo(item.to) : handleCollapse(e);
+                  item.to ? handleGoTo(item.to) : handleCollapse(e, itemKey);
                 }}
                 sx={{
                   "&:hover": {
@@ -183,7 +183,7 @@ export default function CustomList({
                       padding: 5,
                       display: openDrawer ? "flex" : "none",
                     }}
-                    onClick={(e) => handleCollapse(e)}
+                    onClick={(e) => handleCollapse(e, itemKey)}
                   >
                     {openCollapse ? <ExpandLess /> : <ExpandMore />}
                   </div>
