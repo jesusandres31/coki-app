@@ -52,6 +52,11 @@ export default function CustomList({
   }>({});
 
   useEffect(() => {
+    if (!openDrawer) {
+      // Close all collapses if drawer is closed
+      setOpenCollapses({});
+      return;
+    }
     // Initialize openCollapses for items with nestedItems if their nested item matches route
     const newOpenCollapses: { [key: string]: boolean } = {};
     items.forEach((item, index) => {
@@ -63,10 +68,6 @@ export default function CustomList({
       }
     });
     setOpenCollapses((prev) => ({ ...prev, ...newOpenCollapses }));
-    if (!openDrawer) {
-      // Close all collapses if drawer is closed
-      setOpenCollapses({});
-    }
   }, [route, items, openDrawer]);
 
   const handleCollapse = (
@@ -86,8 +87,7 @@ export default function CustomList({
     <List
       component="div"
       subheader={
-        subheader &&
-        openDrawer && (
+        subheader && openDrawer ? (
           <ListSubheader>
             <Box py={1.5}>
               <Typography
@@ -98,7 +98,7 @@ export default function CustomList({
               </Typography>
             </Box>
           </ListSubheader>
-        )
+        ) : null
       }
     >
       {items.map((item, index) => {
@@ -130,7 +130,11 @@ export default function CustomList({
               <ListItemButton
                 selected={isSelected(item) || isNestedSelected(item)}
                 onClick={(e) => {
-                  item.to ? handleGoTo(item.to) : handleCollapse(e, itemKey);
+                  if (item.to) {
+                    handleGoTo(item.to);
+                  } else {
+                    handleCollapse(e, itemKey);
+                  }
                 }}
                 sx={{
                   "&:hover": {
