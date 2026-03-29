@@ -1,3 +1,7 @@
+To init the dependencies, run go mod init myapp && go mod tidy.
+To start the application, run go run . serve.
+To build a statically linked executable, run go build and then you can start the created executable with ./myapp serve.
+
 ## start pocketbase
 
 1 - open powershell
