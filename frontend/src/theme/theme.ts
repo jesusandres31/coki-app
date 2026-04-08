@@ -2,33 +2,17 @@ import { createTheme } from "@mui/material";
 
 const theme = createTheme({
   palette: {
-    // vite
-    // primary: {
-    //   main: "#747BFF",
-    // },
-    // secondary: {
-    //   main: "#FFCE25",
-    // },
     primary: {
       main: "#FFAA05",
-      // 303030 black
-      // FF9900 amazon orange
-      // e26544 beerboard
-      // f37a48 mandarin orange
-      // 0072bb french deep blue
     },
     secondary: {
       main: "#001534",
-      // 481449 slack
-      // 303030 black
-      // 252F3E amazon blue
-      // f6a92c beerboard
     },
     info: {
       main: "#50aaff",
     },
     warning: {
-      main: "#ffa726",
+      main: "#ffa10a",
     },
     error: {
       main: "#fc3535",
@@ -45,7 +29,7 @@ const theme = createTheme({
     },
   },
   shape: {
-    borderRadius: 3,
+    borderRadius: 5,
   },
   typography: {
     fontFamily: ["Inter", "sans-serif"].join(","),

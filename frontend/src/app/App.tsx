@@ -2,44 +2,20 @@ import React, { lazy, Suspense } from "react";
 import { Routes, Route, Navigate } from "react-router-dom";
 import { NotFound, SignIn, Unauthorized } from "src/pages";
 import {
-  Dashboard,
+  Drawer,
   GlobalSnackbar,
   Loading,
   ProtectedRoute,
 } from "src/components/common";
-import { AppRoutes, conf } from "src/config";
+import { AppRoutes, configKey } from "src/config";
 import { useAuth, useRouter } from "src/hooks";
 import { Box } from "@mui/material";
 
-const Expenses = lazy(() =>
-  import("src/pages").then((module) => ({ default: module.Expenses }))
-);
-const ExpenseConcepts = lazy(() =>
-  import("src/pages").then((module) => ({ default: module.ExpenseConcepts }))
-);
-const Clients = lazy(() =>
-  import("src/pages").then((module) => ({ default: module.Clients }))
+const Profile = lazy(() =>
+  import("src/pages").then((module) => ({ default: module.Profile })),
 );
 const Invoices = lazy(() =>
-  import("src/pages").then((module) => ({ default: module.Invoices }))
-);
-const Products = lazy(() =>
-  import("src/pages").then((module) => ({ default: module.Products }))
-);
-const ProductsStores = lazy(() =>
-  import("src/pages").then((module) => ({ default: module.ProductsStores }))
-);
-const StatsClients = lazy(() =>
-  import("src/pages").then((module) => ({ default: module.StatsClients }))
-);
-const StatsIncomes = lazy(() =>
-  import("src/pages").then((module) => ({ default: module.StatsIncomes }))
-);
-const StatsProducts = lazy(() =>
-  import("src/pages").then((module) => ({ default: module.StatsProducts }))
-);
-const Profile = lazy(() =>
-  import("src/pages").then((module) => ({ default: module.Profile }))
+  import("src/pages").then((module) => ({ default: module.Invoices })),
 );
 
 const privateRoutes = [
@@ -48,40 +24,8 @@ const privateRoutes = [
     render: <Profile />,
   },
   {
-    route: AppRoutes.Expenses,
-    render: <Expenses />,
-  },
-  {
-    route: AppRoutes.ExpenseConcepts,
-    render: <ExpenseConcepts />,
-  },
-  {
-    route: AppRoutes.Clients,
-    render: <Clients />,
-  },
-  {
     route: AppRoutes.Invoices,
     render: <Invoices />,
-  },
-  {
-    route: AppRoutes.Products,
-    render: <Products />,
-  },
-  {
-    route: AppRoutes.ProductsStores,
-    render: <ProductsStores />,
-  },
-  {
-    route: AppRoutes.StatsClients,
-    render: <StatsClients />,
-  },
-  {
-    route: AppRoutes.StatsIncomes,
-    render: <StatsIncomes />,
-  },
-  {
-    route: AppRoutes.StatsProducts,
-    render: <StatsProducts />,
   },
 ];
 
@@ -107,14 +51,14 @@ function App(): JSX.Element {
           <Route
             path={AppRoutes.Login}
             element={
-              isLoggedIn ? <Navigate to={conf.LANDING_PAGE} /> : <SignIn />
+              isLoggedIn ? <Navigate to={configKey.LANDING_PAGE} /> : <SignIn />
             }
           />
 
           {/* protected routes */}
           <Route
             path={AppRoutes.Index}
-            element={isLayoutRoutes && <Dashboard />}
+            element={isLayoutRoutes && <Drawer noTable />}
           >
             {privateRoutes.map((privateRoute) => (
               <Route

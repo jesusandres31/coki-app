@@ -7,64 +7,40 @@ import {
   useTheme,
   TableHead,
 } from "@mui/material";
-import { Column, Item, Order } from "src/types";
-import { useAuth, useUI } from "src/hooks";
-import {
-  resetSelectedItems,
-  setOrderBy,
-  setSelectedItems,
-  toggleSortDirection,
-  useUISelector,
-} from "src/slices/ui/uiSlice";
-import { useAppDispatch } from "src/app/store";
+import { Column, DataItem, Order } from "src/types";
+import { useUI } from "src/hooks";
 
 interface CustomTableHeadProps {
   columns: Column;
-  items: Item[];
-  handleFetchItems: (
-    page: number,
-    perPage: number,
-    filter: string,
-    order: Order,
-    orderBy: string,
-    currentStore?: string
-  ) => Promise<void>;
+  items: DataItem[];
+  selectedItems: string[];
+  order: Order;
+  orderBy: string;
   isCollapsible: boolean;
-  hasCheckbox: boolean;
-  styles: any;
+  hasCheckbox?: boolean;
+  styles?: any;
 }
 
 export default function CustomTableHead({
   columns,
   items,
-  handleFetchItems,
+  selectedItems,
+  order,
+  orderBy,
   isCollapsible,
-  hasCheckbox,
+  hasCheckbox = false,
   styles,
 }: CustomTableHeadProps) {
-  const dispatch = useAppDispatch();
-  const { currentStore } = useAuth();
-  const { selectedItems, filter, order, orderBy, page, perPage } =
-    useUISelector((state) => state.ui);
   const theme = useTheme();
   const { isMobile } = useUI();
   const isAllSelected = items.length === selectedItems.length;
 
   const handleSelectAll = () => {
-    if (isAllSelected) return dispatch(resetSelectedItems());
-    if (items) return dispatch(setSelectedItems(items.map((item) => item.id)));
+    /* if (isAllSelected) return dispatch(resetSelectedItems());
+    if (items) return dispatch(setSelectedItems(items.map((item) => item.id))); */
   };
 
-  const handleSortTable = (columnId: string) => {
-    const newOrder =
-      orderBy === columnId ? (order === "asc" ? "desc" : "asc") : "desc";
-    if (orderBy === columnId) {
-      dispatch(toggleSortDirection());
-    } else {
-      dispatch(setOrderBy(columnId));
-    }
-    handleFetchItems(page, perPage, filter, newOrder, columnId, currentStore);
-  };
+  const handleSortTable = (columnId: string) => {};
 
   return (
     <TableHead>
@@ -88,7 +64,7 @@ export default function CustomTableHead({
         )}
 
         {columns.map((column, i) => {
-          const id = column.id as keyof Item;
+          const id = column.id as keyof DataItem;
           const active = orderBy === id;
           const direction = orderBy === id ? order : "asc";
 

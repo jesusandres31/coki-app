@@ -7,20 +7,20 @@ import {
 import { TypedUseSelectorHook, useDispatch, useSelector } from "react-redux";
 import { mainApi } from "./services/api";
 import { uiReducer } from "src/slices";
-import { setSnackbar } from "src/slices/ui/uiSlice";
+import { setSnackbar } from "src/slices/uiSlice";
 import { PromiseStatus } from "src/types";
 
 export const rtkQueryCustomMiddleware: Middleware =
   ({ dispatch }: MiddlewareAPI) =>
   (next) =>
-  (action) => {
+  (action: any) => {
     const DEF_MSG = "Error in request.";
     if (action.error) {
       dispatch(
         setSnackbar({
           message: action.error.message ?? DEF_MSG,
           type: "error",
-        })
+        }),
       );
     } else {
       const actions = Array.isArray(action.payload)
@@ -32,7 +32,7 @@ export const rtkQueryCustomMiddleware: Middleware =
             setSnackbar({
               message: action.reason.message ?? DEF_MSG,
               type: "error",
-            })
+            }),
           );
         }
       });
@@ -44,7 +44,7 @@ export const rtkQueryCustomMiddleware: Middleware =
  * store
  */
 export const createStore = (
-  options?: ConfigureStoreOptions["preloadedState"] | undefined
+  options?: ConfigureStoreOptions["preloadedState"] | undefined,
 ) =>
   configureStore({
     reducer: {

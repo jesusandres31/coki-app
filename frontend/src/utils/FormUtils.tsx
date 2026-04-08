@@ -56,7 +56,7 @@ export const handleSetFormikValue = (
 /**
  * validations
  */
-export const VLDN = {
+export const FORM_VLDN = {
   SHORT_STRING: { min: 3, max: 100 },
   LONG_STRING: { min: 3, max: 150 },
   NN_REAL_NUMBER: { min: 0, max: 1000000 },
@@ -69,7 +69,7 @@ export const VLDN = {
  */
 const isFew = (length: number) => (length > 1 ? "s" : "");
 
-export const MSG = {
+export const FORM_MSG = {
   required: "Required!",
   invalidEmail: "Invalid email",
   invalidDate: "Invalid date",

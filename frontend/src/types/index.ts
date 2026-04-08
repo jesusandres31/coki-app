@@ -7,7 +7,7 @@ import {
   QueryDefinition,
 } from "@reduxjs/toolkit/query";
 import { ListResult } from "pocketbase";
-import { CollectionResponses } from "src/interfaces/pocketbase-types";
+import { CollectionResponses } from "src/types/pocketbase-types";
 
 /**
  * table
@@ -20,6 +20,8 @@ export interface IColumn<T> {
   render?: (item: T) => JSX.Element | string | null | undefined;
   tooltip?: (item: T) => JSX.Element | string | null | undefined;
   disableSort?: boolean;
+  disableEdit?: boolean;
+  type?: "number" | "text" | "date";
 }
 
 export interface IDetailColumn<T, U> {
@@ -31,9 +33,8 @@ export interface IDetailColumn<T, U> {
 export type Order = "asc" | "desc";
 
 /**
- * Modal and DataGrid configuration
+ * DataGrid configuration
  */
-export type Action = "create" | "update" | "delete";
 
 export interface IMenuItem {
   text?: string;
@@ -54,7 +55,6 @@ export type GetList = {
   filter?: string;
   order?: Order;
   orderBy?: string;
-  currentStore?: string;
 };
 
 /**
@@ -82,16 +82,16 @@ export interface Input {
     inputComponent: React.ComponentType<any>;
     startAdornment?: JSX.Element;
   };
-  options?: Item[];
+  options?: DataItem[];
   fetchItemsFunc?: FetchItemsFunc;
   loading?: boolean;
-  getOptionLabel?: (option: Item) => string;
-  startValue?: Item | Item[];
+  getOptionLabel?: (option: DataItem) => string;
+  startValue?: DataItem | DataItem[];
   capitalize?: boolean;
   noSpace?: boolean;
   multiple?: boolean;
   disabled?: boolean;
-  triggerSideEffect?: (data: Item) => void;
+  triggerSideEffect?: (data: DataItem) => void;
 }
 
 /**
@@ -118,7 +118,7 @@ type RTKQueryFetchFn<T> = (
 
 export type FetchItemsFunc = RTKQueryFetchFn<GetList>;
 
-export type DataGridData = ListResult<Item> | undefined;
+export type DataGridData = ListResult<DataItem> | undefined;
 
 export type DataGridError = FetchBaseQueryError | SerializedError | undefined;
 
@@ -129,7 +129,7 @@ export type IHandleFetchItems = (data: GetList) => Promise<void>;
  */
 type ValueOf<T> = T[keyof T];
 
-export type Item = ValueOf<CollectionResponses>;
+export type DataItem = ValueOf<CollectionResponses>;
 
 export type Column = IColumn<any>[];
 

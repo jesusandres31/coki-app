@@ -7,7 +7,7 @@ import {
   Button,
 } from "@mui/material";
 import { useAppDispatch } from "src/app/store";
-import { closeModal, useUISelector } from "src/slices/ui/uiSlice";
+import { useUISelector } from "src/slices/uiSlice";
 
 interface DeleteModalProps {
   open: boolean;
@@ -26,7 +26,8 @@ export default function DeleteModal({
   const { selectedItems } = useUISelector((state) => state.ui);
   const isMoreThanOne = selectedItems.length > 1;
 
-  const handleClose = () => dispatch(closeModal());
+  // const handleClose = () => dispatch(closeModal());
+  const handleClose = () => {};
 
   const handleDelete = async () => {
     await hanleConfirm();

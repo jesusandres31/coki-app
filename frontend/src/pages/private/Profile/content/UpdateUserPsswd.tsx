@@ -2,24 +2,27 @@ import { useFormik } from "formik";
 import { UpsertUserReq } from "src/interfaces";
 import * as Yup from "yup";
 import CreateOrUpdateModal from "src/components/common/Modals/CreateOrUpdateModal";
-import { MSG, VLDN } from "src/utils/FormUtils";
+import { FORM_MSG, FORM_VLDN } from "src/utils/FormUtils";
 import { useAppDispatch } from "src/app/store";
-import { closeModal, setSnackbar } from "src/slices/ui/uiSlice";
+import { setSnackbar } from "src/slices/uiSlice";
 import { userApi } from "src/app/services/userService";
 import { Input } from "src/types";
-import { useAuth, useModal } from "src/hooks";
+import { useAuth } from "src/hooks";
 import { useEffect } from "react";
 
 interface UpdateUserPsswdProps {
   open: boolean;
+  handleClose: () => void;
 }
 
-export default function UpdateUserPsswd({ open }: UpdateUserPsswdProps) {
+export default function UpdateUserPsswd({
+  open,
+  handleClose,
+}: UpdateUserPsswdProps) {
   const dispatch = useAppDispatch();
   const { authUser, handleSignOut } = useAuth();
   const [updateUser, { isLoading: isUpdating }] =
     userApi.useUpdateUserMutation();
-  const { isUpdate } = useModal();
 
   useEffect(() => {
     if (authUser) {
@@ -35,8 +38,8 @@ export default function UpdateUserPsswd({ open }: UpdateUserPsswdProps) {
     formik.handleSubmit();
   };
 
-  const handleClose = () => {
-    dispatch(closeModal());
+  const _handleClose = () => {
+    handleClose();
     formik.resetForm();
   };
 
@@ -47,11 +50,20 @@ export default function UpdateUserPsswd({ open }: UpdateUserPsswdProps) {
       password: "",
       passwordConfirm: "",
     },
-    onSubmit: async (data: UpsertUserReq) => {
+    onSubmit: async (values) => {
       try {
         if (authUser) {
+          // Create a proper UpsertUserReq by including the required fields
+          const data: UpsertUserReq = {
+            role: authUser.role,
+            username: authUser.username,
+            email: authUser.email,
+            oldPassword: values.oldPassword,
+            password: values.password,
+            passwordConfirm: values.passwordConfirm,
+          };
           await updateUser({ id: authUser.id, data }).unwrap();
-          dispatch(setSnackbar({ message: MSG.changePsswd }));
+          dispatch(setSnackbar({ message: FORM_MSG.changePsswd }));
           handleSignOut();
           handleClose();
         }
@@ -61,17 +73,17 @@ export default function UpdateUserPsswd({ open }: UpdateUserPsswdProps) {
     },
     validationSchema: Yup.object({
       oldPassword: Yup.string()
-        .required(MSG.required)
-        .min(VLDN.PSSWD.min, MSG.minLength(VLDN.PSSWD.min))
-        .max(VLDN.PSSWD.max, MSG.maxLength(VLDN.PSSWD.max)),
+        .required(FORM_MSG.required)
+        .min(FORM_VLDN.PSSWD.min, FORM_MSG.minLength(FORM_VLDN.PSSWD.min))
+        .max(FORM_VLDN.PSSWD.max, FORM_MSG.maxLength(FORM_VLDN.PSSWD.max)),
       password: Yup.string()
-        .required(MSG.required)
-        .min(VLDN.PSSWD.min, MSG.minLength(VLDN.PSSWD.min))
-        .max(VLDN.PSSWD.max, MSG.maxLength(VLDN.PSSWD.max)),
+        .required(FORM_MSG.required)
+        .min(FORM_VLDN.PSSWD.min, FORM_MSG.minLength(FORM_VLDN.PSSWD.min))
+        .max(FORM_VLDN.PSSWD.max, FORM_MSG.maxLength(FORM_VLDN.PSSWD.max)),
       passwordConfirm: Yup.string()
-        .required(MSG.required)
-        .min(VLDN.PSSWD.min, MSG.minLength(VLDN.PSSWD.min))
-        .max(VLDN.PSSWD.max, MSG.maxLength(VLDN.PSSWD.max)),
+        .required(FORM_MSG.required)
+        .min(FORM_VLDN.PSSWD.min, FORM_MSG.minLength(FORM_VLDN.PSSWD.min))
+        .max(FORM_VLDN.PSSWD.max, FORM_MSG.maxLength(FORM_VLDN.PSSWD.max)),
     }),
     validateOnChange: false,
     validateOnBlur: false,
@@ -84,8 +96,8 @@ export default function UpdateUserPsswd({ open }: UpdateUserPsswdProps) {
       id: "oldPassword",
       value: formik.values.oldPassword,
       error: formik.errors.oldPassword,
-      max: VLDN.LONG_STRING.max,
-      min: VLDN.LONG_STRING.min,
+      max: FORM_VLDN.LONG_STRING.max,
+      min: FORM_VLDN.LONG_STRING.min,
       noSpace: true,
       capitalize: false,
     },
@@ -95,8 +107,8 @@ export default function UpdateUserPsswd({ open }: UpdateUserPsswdProps) {
       id: "password",
       value: formik.values.password,
       error: formik.errors.password,
-      max: VLDN.LONG_STRING.max,
-      min: VLDN.LONG_STRING.min,
+      max: FORM_VLDN.LONG_STRING.max,
+      min: FORM_VLDN.LONG_STRING.min,
       noSpace: true,
       capitalize: false,
     },
@@ -108,10 +120,10 @@ export default function UpdateUserPsswd({ open }: UpdateUserPsswdProps) {
       error:
         formik.errors.passwordConfirm ||
         (formik.values.password !== formik.values.passwordConfirm
-          ? MSG.passwordConfirm
+          ? FORM_MSG.passwordConfirm
           : undefined),
-      max: VLDN.LONG_STRING.max,
-      min: VLDN.LONG_STRING.min,
+      max: FORM_VLDN.LONG_STRING.max,
+      min: FORM_VLDN.LONG_STRING.min,
       noSpace: true,
       capitalize: false,
     },
@@ -121,9 +133,9 @@ export default function UpdateUserPsswd({ open }: UpdateUserPsswdProps) {
     <CreateOrUpdateModal
       open={open}
       hanleConfirm={hanleConfirm}
-      handleClose={handleClose}
+      handleClose={_handleClose}
       loading={isUpdating}
-      isUpdate={isUpdate}
+      isUpdate={true}
       inputs={inputs}
       formik={formik}
       title="Restablecer Contraseña"

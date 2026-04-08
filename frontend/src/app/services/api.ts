@@ -1,7 +1,5 @@
 import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
-import { key } from "src/config";
 import { Order } from "src/types";
-import { ls } from "src/utils/localStorage";
 
 const baseQuery = fetchBaseQuery({});
 
@@ -10,21 +8,11 @@ const baseQuery = fetchBaseQuery({});
  */
 export const ApiTag = {
   Users: "users",
-  Stores: "stores",
-  Expenses: "expenses",
-  ExpenseConcepts: "expenseConcepts",
-  Products: "products",
-  ProductsStores: "products_stores",
-  Clients: "clients",
-  PaymentMethods: "paymentMethods",
   Invoices: "invoices",
-  InvoiceItem: "invoices_items",
-  InvoicePayment: "invoice_payment",
+  InvoicesView: "v_invoices",
 };
 
-export const ApiView = {
-  Invoices: "v_invoices",
-};
+export const ApiView = {};
 
 export const mainApi = createApi({
   baseQuery,
@@ -36,8 +24,10 @@ export const mainApi = createApi({
 /**
  * Utils
  */
-export const pbSort = (order: Order | undefined, orderBy: string | undefined) =>
-  order && orderBy ? `${order === "asc" ? "+" : "-"}${orderBy}` : "";
+export const pbSort = (
+  order: Order | undefined,
+  orderBy: string | undefined,
+) => (order && orderBy ? `${order === "asc" ? "+" : "-"}${orderBy}` : "");
 
 export const pbFilter = (filter: string | undefined, props: string[]) => {
   if (!filter) return `deleted = ""`;
@@ -52,9 +42,4 @@ export const FLAG = {
   delete: { delete: true },
   // tag used when updating the default caneen
   refetch: ApiTag.Users,
-};
-
-// to be used in querys to filter by the current store
-export const getCurrent = {
-  Store: () => ` && store.id = '${ls.get(key.STORE)}'`,
 };

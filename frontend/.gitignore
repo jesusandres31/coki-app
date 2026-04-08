@@ -9,7 +9,7 @@ lerna-debug.log*
 
 # TODO: uncomment 'dist' when we can build in the vm
 node_modules
-# dist
+dist
 dist-ssr
 *.local
 
@@ -23,3 +23,5 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+.env

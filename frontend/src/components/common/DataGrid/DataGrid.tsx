@@ -1,26 +1,14 @@
-import { useEffect } from "react";
-import {
-  Column,
-  DataGridData,
-  DataGridError,
-  DetailColumn,
-  FetchItemsFunc,
-  Item,
-  Order,
-} from "src/types";
+import { useState } from "react";
+import { Column, DataGridData, DataGridError, Order } from "src/types";
 import { Loading, ErrorMsg } from "src/components/common";
-import PageContainer from "./utils/PageContainer";
+import PageContainer from "../PageContainer/PageContainer";
 import NoItems from "../NoItems";
-import { setPage, setSnackbar, useUISelector } from "src/slices/ui/uiSlice";
 import { useAppDispatch } from "src/app/store";
-import CustomTableToolbar from "./content/CustomTableToolbar";
-import { CustomButtonProps, CustomGrid } from "./content/utils";
+import { CustomGrid } from "./content/utils";
 import { TableContainer, Table } from "@mui/material";
 import CustomTableHead from "./content/CustomTableHead";
 import CustomTablePagination from "./content/CustomTablePagination";
 import CustomTableBody from "./content/CustomTableBody";
-import { useAuth, useUI } from "src/hooks";
-import { Collections } from "src/interfaces/pocketbase-types";
 
 const styles = {
   sticky: {
@@ -42,15 +30,6 @@ interface DataGridProps {
   error: DataGridError;
   isFetching: boolean;
   columns: Column;
-  detailColumns?: DetailColumn;
-  entity: Collections;
-  defaultOrderBy: string;
-  fetchItemsFunc: FetchItemsFunc;
-  handleClickRow?: (item: Item) => void;
-  bulkActionForOne?: CustomButtonProps[];
-  bulkActionForMany?: CustomButtonProps[];
-  disableCreateBtn?: boolean;
-  disableDefaultOptBtn?: boolean;
 }
 
 export default function DataGrid({
@@ -58,54 +37,27 @@ export default function DataGrid({
   error,
   isFetching,
   columns,
-  detailColumns,
-  entity,
-  defaultOrderBy,
-  fetchItemsFunc,
-  handleClickRow,
-  bulkActionForOne,
-  bulkActionForMany,
-  disableCreateBtn,
-  disableDefaultOptBtn,
 }: DataGridProps) {
   const dispatch = useAppDispatch();
-  const { currentStore } = useAuth();
-  const { filter, order, orderBy, page, perPage } = useUISelector(
-    (state) => state.ui
-  );
-  const { resetTableState } = useUI();
+  const [page, setPage] = useState(1);
+  const [filter, setFilter] = useState("");
+  const [collapseItems, setCollapseItem] = useState<string[]>([]);
+  const [selectedItems, setSelectedItems] = useState<string[]>([]);
+  const [order, setOrder] = useState<Order>("desc");
+  const [orderBy, setOrderBy] = useState<string>("created");
 
-  useEffect(() => {
-    resetTableState(defaultOrderBy);
-  }, []);
+  const handleSetFilter = (value: string) => {
+    // TODO: debounce function here
+    setFilter(value);
+    setPage(1);
+  };
 
-  useEffect(() => {
-    // fetch in first render.
-    if (orderBy && orderBy === defaultOrderBy) {
-      handleFetchItems(page, perPage, filter, order, orderBy, currentStore);
-    }
-  }, [orderBy, page]);
+  const handleSetPage = (newPage: number) => {
+    setPage(newPage);
+  };
 
-  const handleFetchItems = async (
-    page: number,
-    perPage: number,
-    filter: string,
-    order: Order,
-    orderBy: string,
-    currentStore?: string
-  ) => {
-    try {
-      await fetchItemsFunc({
-        page,
-        perPage,
-        filter,
-        order,
-        orderBy,
-        currentStore,
-      });
-    } catch (err: any) {
-      dispatch(setSnackbar({ message: err.data.error, type: "error" }));
-    }
+  const handleResetCollapseItems = () => {
+    setCollapseItem([]);
   };
 
   return (
@@ -113,14 +65,14 @@ export default function DataGrid({
       {/* <Box pl={2} mb={1}>
         <Typography variant="h6">{translateTitle(route)}</Typography>
       </Box> */}
-      <CustomTableToolbar
+      {/* <CustomTableToolbar
         handleFetchItems={handleFetchItems}
         entity={entity}
         bulkActionForOne={bulkActionForOne}
         bulkActionForMany={bulkActionForMany}
         disableCreateBtn={disableCreateBtn}
         disableDefaultOptBtn={disableDefaultOptBtn}
-      />
+      /> */}
       {data && data.items && data.items.length > 0 ? (
         <TableContainer sx={{ flex: "1 1 auto" }}>
           <Table
@@ -133,17 +85,16 @@ export default function DataGrid({
             <CustomTableHead
               columns={columns}
               items={data?.items}
-              handleFetchItems={handleFetchItems}
-              isCollapsible={!!detailColumns}
-              hasCheckbox={!handleClickRow}
+              selectedItems={selectedItems}
+              order={order}
+              orderBy={orderBy}
+              isCollapsible={true}
               styles={styles}
             />
             <CustomTableBody
               items={data.items}
               columns={columns}
-              detailColumns={detailColumns}
-              handleClickRow={handleClickRow}
-              hasCheckbox={!handleClickRow}
+              selectedItems={selectedItems}
               styles={styles}
             />
           </Table>
@@ -165,7 +116,11 @@ export default function DataGrid({
           <></>
         </CustomGrid>
       )}
-      <CustomTablePagination data={data} setPage={setPage} />
+      <CustomTablePagination
+        data={data}
+        handleSetPage={handleSetPage}
+        handleResetCollapseItems={handleResetCollapseItems}
+      />
     </PageContainer>
   );
 }

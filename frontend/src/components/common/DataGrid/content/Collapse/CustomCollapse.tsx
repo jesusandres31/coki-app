@@ -1,4 +1,4 @@
-import { DetailColumn, IColumn, IDetailColumn, Item } from "src/types";
+import { DetailColumn, IColumn, IDetailColumn, DataItem } from "src/types";
 import { useUI } from "src/hooks";
 import {
   TableCell,
@@ -21,7 +21,7 @@ interface CustomCollapseProps {
   detailColumns?: DetailColumn;
   styles: any;
   collapsed: boolean;
-  row: Item;
+  row: DataItem;
 }
 
 export default function CustomCollapse({
@@ -51,7 +51,7 @@ export default function CustomCollapse({
       >
         <Collapse in={collapsed} timeout="auto" unmountOnExit>
           {collapsed &&
-            (detailColumns as IDetailColumn<Item, Item>[]).map(
+            (detailColumns as IDetailColumn<DataItem, DataItem>[]).map(
               (detailCol, i) => {
                 const detailRows = row[detailCol.id];
 
@@ -114,30 +114,30 @@ export default function CustomCollapse({
                             {Array.isArray(detailRows) &&
                               detailRows.map((item, i) => (
                                 <TableRow key={`${item.id}-${i}`}>
-                                  {(detailCol.columns as IColumn<Item>[]).map(
-                                    (column) => {
-                                      const value = column.render
-                                        ? column.render(item)
-                                        : formatNulls(item[column.id]);
+                                  {(
+                                    detailCol.columns as IColumn<DataItem>[]
+                                  ).map((column) => {
+                                    const value = column.render
+                                      ? column.render(item)
+                                      : formatNulls(item[column.id]);
 
-                                      return (
-                                        <TableCell
-                                          component="th"
-                                          scope="item"
-                                          key={`${column.id}-${i}`}
-                                          align={column.align ?? "right"}
-                                          sx={{
-                                            borderColor: darken(
-                                              theme.palette.background.default,
-                                              0.05
-                                            ),
-                                          }}
-                                        >
-                                          {renderValue(value)}
-                                        </TableCell>
-                                      );
-                                    }
-                                  )}
+                                    return (
+                                      <TableCell
+                                        component="th"
+                                        scope="item"
+                                        key={`${column.id}-${i}`}
+                                        align={column.align ?? "right"}
+                                        sx={{
+                                          borderColor: darken(
+                                            theme.palette.background.default,
+                                            0.05
+                                          ),
+                                        }}
+                                      >
+                                        {renderValue(value)}
+                                      </TableCell>
+                                    );
+                                  })}
                                 </TableRow>
                               ))}
                           </TableBody>

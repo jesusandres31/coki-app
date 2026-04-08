@@ -1,13 +1,13 @@
-import { key } from "src/config";
+import { storageKey } from "src/config";
 
 export const drawer = {
   set: (open: boolean) => {
-    localStorage.setItem(key.DRAWER, String(!open));
+    localStorage.setItem(storageKey.DRAWER, String(!open));
   },
   get: () => {
-    return localStorage.getItem(key.DRAWER) === "true";
+    return localStorage.getItem(storageKey.DRAWER) === "true";
   },
   remove: () => {
-    localStorage.removeItem(key.DRAWER);
+    localStorage.removeItem(storageKey.DRAWER);
   },
 };

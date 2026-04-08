@@ -23,3 +23,6 @@ export const getListArgsInitialState = {
   order: "desc" as Order,
   orderBy: "",
 };
+
+// forms
+export const KNOWN_INDEXES = ["ICC"];

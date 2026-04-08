@@ -10,22 +10,15 @@ import {
 import { useAuth, useRouter } from "src/hooks";
 import { ChevronLeftRounded } from "@mui/icons-material";
 import { AppRoutes } from "src/config";
+import { useState } from "react";
 import UpdateUserPsswd from "./content/UpdateUserPsswd";
-import { useAppDispatch } from "src/app/store";
-import { openModal, useUISelector } from "src/slices/ui/uiSlice";
-import { Collections } from "src/interfaces/pocketbase-types";
 
-const ENTITY = Collections.Users;
-
-export default function Profile() {
-  const dispatch = useAppDispatch();
+export default function UpdateProfile() {
   const { authUser } = useAuth();
   const { handleGoTo } = useRouter();
-  const { actionModal } = useUISelector((state) => state.ui);
+  const [open, setOpen] = useState(false);
 
-  const MODAL = {
-    update: actionModal.update === ENTITY,
-  };
+  const handleClose = () => setOpen(false);
 
   return (
     <Container component="main" maxWidth="md" sx={{ p: 4 }}>
@@ -62,9 +55,7 @@ export default function Profile() {
                 color="secondary"
                 variant="contained"
                 size="large"
-                onClick={() =>
-                  dispatch(openModal({ entity: ENTITY, action: "update" }))
-                }
+                onClick={() => setOpen(true)}
               >
                 Cambiar Contraseña
               </Button>
@@ -72,7 +63,7 @@ export default function Profile() {
           </CardContent>
         </Card>
       </Box>
-      <UpdateUserPsswd open={MODAL.update} />
+      <UpdateUserPsswd open={open} handleClose={handleClose} />
     </Container>
   );
 }

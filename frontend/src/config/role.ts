@@ -9,7 +9,7 @@ interface RouteRoles {
   [key: string]: SystemRole[];
 }
 
-// this data matchs the database roles.
+// this data match the database roles.
 export enum SystemRole {
   ADMIN = "admin",
   REGULAR = "regular",
@@ -18,14 +18,7 @@ export enum SystemRole {
 // route roles
 export const routeRoles: RouteRoles = {
   [AppRoutes.Profile]: [SystemRole.ADMIN],
-  [AppRoutes.Expenses]: [SystemRole.ADMIN],
-  [AppRoutes.ExpenseConcepts]: [SystemRole.ADMIN],
-  [AppRoutes.Clients]: [SystemRole.ADMIN],
-  [AppRoutes.Invoices]: [SystemRole.ADMIN],
-  [AppRoutes.Products]: [SystemRole.ADMIN],
-  [AppRoutes.StatsIncomes]: [SystemRole.ADMIN],
-  [AppRoutes.StatsClients]: [SystemRole.ADMIN],
-  [AppRoutes.StatsProducts]: [SystemRole.ADMIN],
+  [AppRoutes.Invoices]: [SystemRole.ADMIN, SystemRole.REGULAR],
 };
 
 // utils

@@ -1,13 +1,5 @@
 import React from "react";
-import { Column, DetailColumn, IColumn, Item } from "src/types";
-import {
-  isCollapsed,
-  isSelected,
-  resetCollapse,
-  setCollapseItem,
-  setSelectedItems,
-  useUISelector,
-} from "src/slices/ui/uiSlice";
+import { Column, DetailColumn, IColumn, DataItem } from "src/types";
 import { useAppDispatch } from "src/app/store";
 import { useUI } from "src/hooks";
 import {
@@ -28,49 +20,57 @@ import {
 import CustomCollapse from "./Collapse/CustomCollapse";
 
 interface CustomTableBodyProps {
-  items: Item[];
+  items: DataItem[];
   columns: Column;
+  selectedItems: string[];
   detailColumns?: DetailColumn;
-  handleClickRow?: (item: Item) => void;
-  hasCheckbox: boolean;
-  styles: any;
+  hasCheckbox?: boolean;
+  styles?: any;
 }
 
 export default function CustomTableBody({
   items,
   columns,
+  selectedItems,
   detailColumns,
-  handleClickRow,
-  hasCheckbox,
+  hasCheckbox = false,
   styles,
 }: CustomTableBodyProps) {
   const dispatch = useAppDispatch();
-  const { selectedItems, collapseItem } = useUISelector((state) => state.ui);
   const { isMobile } = useUI();
   const theme = useTheme();
   const isCollapsible = Boolean(detailColumns);
 
-  const handleClickRowItem = (item: Item) => {
-    if (handleClickRow) {
+  const handleClickRowItem = (item: DataItem) => {
+    /* if (handleClickRow) {
       handleClickRow(item);
     } else {
       dispatch(setSelectedItems(item.id));
-    }
+    } */
   };
 
   const handleCollapse = (id: string) => {
-    if (id === collapseItem) {
+    /*  if (id === collapseItem) {
       dispatch(resetCollapse());
     } else {
       dispatch(setCollapseItem(id));
-    }
+    } */
+  };
+
+  const isCollapsed = (collapseItem: string, itemId: string) => {
+    return collapseItem === itemId;
+  };
+
+  const isSelected = (selectedItems: string[], itemId: string) => {
+    return selectedItems.some((selectedItem) => selectedItem === itemId);
   };
 
   return (
     <TableBody>
       {items.map((row, index) => {
         const selected = isSelected(selectedItems, row.id);
-        const collapsed = isCollapsed(collapseItem, row.id);
+        // const collapsed = isCollapsed(collapseItem, row.id);
+        const collapsed = false;
 
         return (
           <React.Fragment key={`${index}-${row.id}`}>
@@ -92,7 +92,7 @@ export default function CustomTableBody({
                 <TableCell padding="checkbox" sx={{ width: 0 }} />
               )}
 
-              {(columns as IColumn<Item>[]).map((column, i) => {
+              {(columns as IColumn<DataItem>[]).map((column, i) => {
                 const value = column.render
                   ? column.render(row)
                   : formatNulls(row[column.id]);

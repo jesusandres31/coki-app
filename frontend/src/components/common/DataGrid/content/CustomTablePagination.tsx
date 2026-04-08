@@ -1,31 +1,28 @@
 import React from "react";
 import { Divider, Grid, TablePagination, Typography } from "@mui/material";
-import { Item } from "src/types";
-import { useAppDispatch } from "src/app/store";
+import { DataItem } from "src/types";
 import { ListResult } from "pocketbase";
-import { ActionCreatorWithPayload } from "@reduxjs/toolkit";
-import { resetCollapse } from "src/slices/ui/uiSlice";
 
 interface CustomTablePaginationProps {
-  data: ListResult<Item> | undefined;
-  setPage: ActionCreatorWithPayload<number, string>;
+  data: ListResult<DataItem> | undefined;
+  handleSetPage: (newPage: number) => void;
+  handleResetCollapseItems: () => void;
   isCollapsed?: boolean;
 }
 
 export default function CustomTablePagination({
   data,
-  setPage,
+  handleSetPage,
+  handleResetCollapseItems,
   isCollapsed = false,
 }: CustomTablePaginationProps) {
-  const dispatch = useAppDispatch();
-
   const handleChangePage = (
     e: React.MouseEvent<HTMLButtonElement, MouseEvent> | null,
     newPage: number
   ) => {
     // because pagination starts at 0 in MUI TablePagination.
-    dispatch(setPage(newPage + 1));
-    dispatch(resetCollapse());
+    handleSetPage(newPage + 1);
+    if (isCollapsed) handleResetCollapseItems();
   };
 
   return (

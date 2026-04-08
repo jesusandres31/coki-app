@@ -1,22 +1,25 @@
 import packageJson from "../../package.json";
 
 // envs
-const SERVER_URL = import.meta.env.DEV
-  ? import.meta.env.VITE_SERVER_URL_DEV
-  : import.meta.env.VITE_SERVER_URL_PROD;
+const SERVER_URL = import.meta.env.VITE_SERVER_URL;
 
-export const URL = {
-  SERVER: `${SERVER_URL}`,
-  API: `${SERVER_URL}/api`,
+export const config = {
+  PB: {
+    SERVER: `${SERVER_URL}`,
+    API: `${SERVER_URL}/api`,
+  },
+  API: {
+    URL: import.meta.env.VITE_API_URL,
+    SECURITY_TOKEN: import.meta.env.VITE_API_SECURITY_TOKEN,
+  },
 };
 
 export const version = packageJson.version;
 
 // application keys
-export const key = {
+export const storageKey = {
   DRAWER: "drawer",
-  STORE: "store",
-};
+ };
 
 // application routing
 export enum AppRoutes {
@@ -26,21 +29,13 @@ export enum AppRoutes {
   Unauthorized = "/unauthorized",
   // private routes
   Profile = "/profile",
-  Expenses = "/expenses",
-  ExpenseConcepts = "/expense-concepts",
-  Clients = "/clients",
   Invoices = "/invoices",
-  Products = "/products",
-  ProductsStores = "/products-stores",
-  StatsIncomes = "/stats/incomes",
-  StatsClients = "/stats/clients",
-  StatsProducts = "/stats/products",
-}
+ }
 
 export const noLayoutRoutes = [AppRoutes.Profile];
 
 // general config
-export const conf = {
+export const configKey = {
   LANDING_PAGE: AppRoutes.Invoices,
   AUTHORIZATION: "Authorization",
   TOKEN_PREFIX: "Bearer",

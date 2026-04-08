@@ -6,7 +6,7 @@ import {
   resetPage,
   resetSelectedItems,
   setOrderBy,
-} from "src/slices/ui/uiSlice";
+} from "src/slices/uiSlice";
 
 const DEFAULT_ORDER_BY = "created";
 

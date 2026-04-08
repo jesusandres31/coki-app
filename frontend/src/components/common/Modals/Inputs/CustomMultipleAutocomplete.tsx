@@ -8,17 +8,17 @@ import {
 } from "@mui/material";
 import { FormikProps } from "formik";
 import { STYLE } from "src/constants";
-import { uiInitialState } from "src/slices/ui/uiSlice";
-import { FetchItemsFunc, Input, Item } from "src/types";
+import { uiInitialState } from "src/slices/uiSlice";
+import { FetchItemsFunc, Input, DataItem } from "src/types";
 import { useCallback, useEffect, useState } from "react";
 
 interface CustomMultipleAutocompleteProps {
   input: Input;
-  formik: FormikProps<Item>;
-  options: Item[];
+  formik: FormikProps<DataItem>;
+  options: DataItem[];
   fetchItemsFunc?: FetchItemsFunc;
   loading?: boolean;
-  getOptionLabel?: (option: Item) => string;
+  getOptionLabel?: (option: DataItem) => string;
   variant?: TextFieldVariants;
 }
 
@@ -33,7 +33,7 @@ export default function CustomMultipleAutocomplete({
 }: CustomMultipleAutocompleteProps) {
   const [open, setOpen] = useState(false);
   const [filter, setFilter] = useState("");
-  const [selectedItems, setSelectedItems] = useState<Item[]>([]);
+  const [selectedItems, setSelectedItems] = useState<DataItem[]>([]);
 
   const handleGetItems = async (filter: string) => {
     if (fetchItemsFunc === undefined) return;
@@ -51,7 +51,7 @@ export default function CustomMultipleAutocomplete({
   };
 
   useEffect(() => {
-    if (input.startValue) setSelectedItems(input.startValue as Item[]);
+    if (input.startValue) setSelectedItems(input.startValue as DataItem[]);
   }, [input.startValue]);
 
   useEffect(() => {
@@ -90,7 +90,7 @@ export default function CustomMultipleAutocomplete({
 
   const handleChange = (
     e: React.ChangeEvent<{}>,
-    data: Item[],
+    data: DataItem[],
     reason: string,
     details?: any | undefined
   ) => {

@@ -1,1 +1,9 @@
+- admin: 
+admin@admin.com
+admpsswd.rsync
+
+
+- test user: 
+test@test.com
+usrpsswd.rsync
  

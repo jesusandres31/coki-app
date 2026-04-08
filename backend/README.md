@@ -12,23 +12,7 @@ To build a statically linked executable, run go build and then you can start the
 
 https://www.npmjs.com/package/pocketbase-typegen
 
-npx pocketbase-typegen --db ./backend/pb_data/data.db --out ./frontend/src/interfaces/pocketbase-types.ts
-
-## credentials
-
-- admin:
-
-```
-admin@admin.com
-admpsswd.rsync
-```
-
-- test user:
-
-```
-test@test.com
-usrpsswd.rsync
-```
+npx pocketbase-typegen --db ./backend/pb_data/data.db --out ./frontend/src/types/pocketbase-types.ts
 
 ## migration
 

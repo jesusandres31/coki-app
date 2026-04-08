@@ -1,5 +1,5 @@
 import { NULL_VAL } from "src/constants";
-import { VLDN } from "./FormUtils";
+import { FORM_VLDN } from "./FormUtils";
 import { Chip } from "@mui/material";
 
 // dates
@@ -75,8 +75,8 @@ export const formatPaid = (total: number, paid: number) => {
 export const isValidNumber = (value: number | undefined): boolean => {
   return (
     value !== undefined &&
-    value < VLDN.NN_REAL_NUMBER.max &&
-    value > VLDN.NN_REAL_NUMBER.min
+    value < FORM_VLDN.NN_REAL_NUMBER.max &&
+    value > FORM_VLDN.NN_REAL_NUMBER.min
   );
 };
 

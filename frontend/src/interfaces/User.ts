@@ -1,5 +1,5 @@
 import { Role } from ".";
-import { UsersResponse } from "./pocketbase-types";
+import { UsersResponse } from "../types/pocketbase-types";
 
 export interface ExtraProps {
   username?: string;
@@ -13,11 +13,5 @@ export type User = UsersResponse<{ role: Role }> & ExtraProps;
 
 export type UpsertUserReq = Pick<
   User,
-  | "role"
-  | "username"
-  | "email"
-  | "store"
-  | "oldPassword"
-  | "password"
-  | "passwordConfirm"
+  "role" | "username" | "email" | "oldPassword" | "password" | "passwordConfirm"
 >;

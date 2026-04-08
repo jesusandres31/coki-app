@@ -1,13 +1,11 @@
-import { BaseSystemFields } from "./pocketbase-types";
-import { Store } from "./Store";
+import { BaseSystemFields } from "../types/pocketbase-types";
 
-export interface SignUpResponse extends BaseSystemFields<{ store: Store }> {
+export interface SignUpResponse extends BaseSystemFields {
   id: string;
   username: string;
   email: string;
   password: string;
   role: string;
-  store: string;
 }
 
 export interface SignInRequest {

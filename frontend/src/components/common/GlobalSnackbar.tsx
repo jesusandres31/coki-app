@@ -1,6 +1,6 @@
 import React from "react";
 import { Alert, Snackbar } from "@mui/material";
-import { resetSnackbar, useUISelector } from "src/slices/ui/uiSlice";
+import { resetSnackbar, useUISelector } from "src/slices/uiSlice";
 import { useAppDispatch } from "src/app/store";
 
 export default function GlobalSnackbar() {
@@ -20,8 +20,8 @@ export default function GlobalSnackbar() {
       autoHideDuration={3000}
       onClose={handleClose}
       anchorOrigin={{
-        vertical: "bottom",
-        horizontal: "center",
+        vertical: snackbar.anchorOrigin?.vertical,
+        horizontal: snackbar.anchorOrigin?.horizontal,
       }}
     >
       <Alert

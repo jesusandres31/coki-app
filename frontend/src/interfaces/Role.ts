@@ -1,3 +1,3 @@
-import { RolesResponse } from "./pocketbase-types";
+import { RolesResponse } from "../types/pocketbase-types";
 
 export type Role = RolesResponse;

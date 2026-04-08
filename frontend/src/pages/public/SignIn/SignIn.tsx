@@ -7,13 +7,13 @@ import {
   Avatar,
   Button,
 } from "@mui/material";
-import { LockOutlined } from "@mui/icons-material";
+import { LockRounded } from "@mui/icons-material";
 import { useFormik } from "formik";
 import * as Yup from "yup";
 import { SignInRequest } from "src/interfaces";
 import { removeSpace } from "src/utils/format";
 import { useAuth } from "src/hooks";
-import { MSG, VLDN } from "src/utils/FormUtils";
+import { FORM_MSG, FORM_VLDN } from "src/utils/FormUtils";
 // import logo from "src/assets/logo.png";
 
 export default function SignIn() {
@@ -27,13 +27,25 @@ export default function SignIn() {
     validationSchema: Yup.object({
       email: Yup.string()
         // .email(MSG.invalidEmail)
-        .required(MSG.required)
-        .min(VLDN.SHORT_STRING.min, MSG.minLength(VLDN.SHORT_STRING.min))
-        .max(VLDN.SHORT_STRING.max, MSG.maxLength(VLDN.SHORT_STRING.max)),
+        .required(FORM_MSG.required)
+        .min(
+          FORM_VLDN.SHORT_STRING.min,
+          FORM_MSG.minLength(FORM_VLDN.SHORT_STRING.min)
+        )
+        .max(
+          FORM_VLDN.SHORT_STRING.max,
+          FORM_MSG.maxLength(FORM_VLDN.SHORT_STRING.max)
+        ),
       password: Yup.string()
-        .required(MSG.required)
-        .min(VLDN.SHORT_STRING.min, MSG.minLength(VLDN.SHORT_STRING.min))
-        .max(VLDN.SHORT_STRING.max, MSG.maxLength(VLDN.SHORT_STRING.max)),
+        .required(FORM_MSG.required)
+        .min(
+          FORM_VLDN.SHORT_STRING.min,
+          FORM_MSG.minLength(FORM_VLDN.SHORT_STRING.min)
+        )
+        .max(
+          FORM_VLDN.SHORT_STRING.max,
+          FORM_MSG.maxLength(FORM_VLDN.SHORT_STRING.max)
+        ),
     }),
     onSubmit: async (data: SignInRequest) => {
       try {
@@ -65,7 +77,7 @@ export default function SignIn() {
         }}
       >
         <Avatar sx={{ m: 1, bgcolor: "success.main" }}>
-          <LockOutlined />
+          <LockRounded />
         </Avatar>
 
         {/* <img alt="logo" height="150px" src={logo} /> */}
@@ -96,8 +108,8 @@ export default function SignIn() {
             helperText={formik.errors.email ? formik.errors.email : " "}
             variant="outlined"
             inputProps={{
-              max: VLDN.SHORT_STRING.max,
-              min: VLDN.SHORT_STRING.min,
+              max: FORM_VLDN.SHORT_STRING.max,
+              min: FORM_VLDN.SHORT_STRING.min,
             }}
           />
           <TextField
@@ -118,8 +130,8 @@ export default function SignIn() {
             helperText={formik.errors.password ? formik.errors.password : " "}
             variant="outlined"
             inputProps={{
-              max: VLDN.SHORT_STRING.max,
-              min: VLDN.SHORT_STRING.min,
+              max: FORM_VLDN.SHORT_STRING.max,
+              min: FORM_VLDN.SHORT_STRING.min,
             }}
           />
           <Button
