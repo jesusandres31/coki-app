@@ -18,7 +18,7 @@ import { AppRoutes } from "src/config";
 import UpdateUserPsswd from "./content/UpdateUserPsswd";
 
 export default function UpdateProfile() {
-  const { authUser } = useAuth();
+  const { authUser, roleName } = useAuth();
   const { handleGoTo } = useRouter();
   const [open, setOpen] = useState(false);
 
@@ -81,9 +81,9 @@ export default function UpdateProfile() {
               <Typography variant="body1" color="text.primary">
                 {authUser?.email || "-"}
               </Typography>
-              {(authUser?.expand?.role?.name || authUser?.role) && (
+              {(roleName || authUser?.role) && (
                 <Chip
-                  label={`Rol: ${authUser?.expand?.role?.name ?? authUser?.role}`}
+                  label={`Rol: ${roleName || "No disponible"}`}
                   size="small"
                   variant="outlined"
                   sx={{ alignSelf: "flex-start", mt: 1 }}

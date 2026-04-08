@@ -35,13 +35,13 @@ export default function LoginButton() {
 
   const ITEMS: IMenuItem[] = [
     {
-      text: "Profile",
+      text: "Perfil",
       icon: <PersonRounded />,
       to: AppRoutes.Profile,
       onClick: () => handleGoTo(AppRoutes.Profile),
     },
     {
-      text: "Logout",
+      text: "Cerrar sesión",
       icon: <PowerSettingsNewRounded />,
       to: AppRoutes.Login,
       onClick: handleLogout,
@@ -60,22 +60,27 @@ export default function LoginButton() {
         <AccountCircleRounded />
       </IconButton>
       <Menu
-        /* anchorOrigin={{
-          vertical: "top",
-          horizontal: "right",
-        }}
-        keepMounted
-        transformOrigin={{
-          vertical: "top",
-          horizontal: "right",
-        }} */
         id="basic-menu"
         anchorEl={anchorEl}
         open={open}
         onClose={handleClose}
+        anchorOrigin={{
+          vertical: "bottom",
+          horizontal: "right",
+        }}
+        transformOrigin={{
+          vertical: "top",
+          horizontal: "right",
+        }}
       >
         {ITEMS.map((item) => (
-          <MenuItem key={item.to} onClick={item.onClick}>
+          <MenuItem
+            key={item.to}
+            onClick={() => {
+              item.onClick?.();
+              handleClose();
+            }}
+          >
             <ListItemIcon sx={{ minWidth: "40px", color: "secondary.light" }}>
               {item.icon}
             </ListItemIcon>

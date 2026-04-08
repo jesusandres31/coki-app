@@ -8,7 +8,7 @@ import {
   InvoicesResponse,
   VInvoicesResponse,
 } from "src/types/pocketbase-types";
-import { ApiTag, mainApi, pbSort } from "./api";
+import { ApiTag, mainApi, pbFilter, pbSort } from "./api";
 
 const invoiceTag = ApiTag.Invoices;
 const invoicesViewTag = ApiTag.InvoicesView;
@@ -18,11 +18,12 @@ export const invoiceApi = mainApi.injectEndpoints({
   endpoints: (build) => ({
     getInvoicesView: build.query<ListResult<VInvoicesResponse>, GetList>({
       queryFn: async (_arg) => {
+        const searchFilter = pbFilter(_arg.filter, ["date", "client"]);
         const res = await typedPb.collection("v_invoices").getList(
           _arg.page,
           _arg.perPage,
           {
-            filter: _arg.filter,
+            filter: searchFilter,
             sort: pbSort(_arg.order, _arg.orderBy),
           },
         );

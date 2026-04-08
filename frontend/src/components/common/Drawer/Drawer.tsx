@@ -156,9 +156,9 @@ export default function Drawer({ noTable }: DrawerProps) {
         position="fixed"
         open={notMobAndOpen}
         sx={{
-          boxShadow: 0,
-          backgroundColor: "secondary.main",
-          //  backgroundColor: lighten(theme.palette.text.primary, 0.15),
+          backgroundColor: "secondary.dark",
+          borderBottom: "1px solid",
+          borderColor: "divider",
         }}
       >
         <Toolbar
@@ -181,7 +181,7 @@ export default function Drawer({ noTable }: DrawerProps) {
                   ...(notMobAndOpen
                     ? { display: "none" }
                     : {
-                        mr: 5.5,
+                        mr: 2.5,
                         pl: 1.5,
                       }),
                   color: "white",
@@ -192,12 +192,13 @@ export default function Drawer({ noTable }: DrawerProps) {
             </Grid>
             <Grid>
               <Typography
-                variant="h6"
+                variant="subtitle1"
                 noWrap
                 component="div"
                 sx={{
                   color: "white",
-                  ...(notMobAndOpen && { paddingLeft: 1 }),
+                  letterSpacing: "0.01em",
+                  ...(notMobAndOpen && { paddingLeft: 1.5 }),
                 }}
               >
                 {translateTitle(route)}
@@ -246,10 +247,10 @@ export default function Drawer({ noTable }: DrawerProps) {
         component="main"
         sx={{
           flexGrow: 1,
-          p: noTable ? 0 : 3,
+          p: noTable ? 0 : { xs: 1.5, sm: 2 },
           overflow: "hidden",
           backgroundColor: "background.default",
-          paddingBottom: isMobile ? 4 : 6,
+          paddingBottom: isMobile ? 2 : 3,
         }}
       >
         <Toolbar variant="dense" />
@@ -258,7 +259,7 @@ export default function Drawer({ noTable }: DrawerProps) {
             sx={{
               maxHeight: `calc(100vh - ${APPBAR_HEIGHT}px)`,
               overflowY: "auto",
-              p: 2,
+              p: { xs: 1.5, sm: 2 },
               height: "100%",
             }}
           >
@@ -269,7 +270,9 @@ export default function Drawer({ noTable }: DrawerProps) {
             sx={{
               height: isMobile ? "95%" : `calc(100% - 30px)`,
               backgroundColor: "background.paper",
-              borderRadius: 5,
+              borderRadius: 3,
+              border: "1px solid",
+              borderColor: "divider",
             }}
           >
             <Outlet />

@@ -31,8 +31,15 @@ export const pbSort = (
 
 export const pbFilter = (filter: string | undefined, props: string[]) => {
   if (!filter) return `deleted = ""`;
+  const safeFilter = filter
+    .replace(/\\/g, "\\\\")
+    .replace(/"/g, '\\"')
+    .trim();
+
+  if (!safeFilter) return `deleted = ""`;
+
   return `(${props
-    .map((prop) => `${prop} ~ "${filter}"`)
+    .map((prop) => `${prop} ~ "${safeFilter}"`)
     .join(" || ")}) && deleted = ""`;
 };
 

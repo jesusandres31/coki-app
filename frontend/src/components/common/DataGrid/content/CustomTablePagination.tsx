@@ -52,6 +52,12 @@ export default function CustomTablePagination({
           );
         }}
         // onRowsPerPageChange={() => {}}
+        sx={{
+          backgroundColor: "background.paper",
+          "& .MuiTablePagination-toolbar": {
+            px: { xs: 1, sm: 2 },
+          },
+        }}
       />
     </Grid>
   );

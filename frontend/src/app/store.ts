@@ -15,7 +15,20 @@ export const rtkQueryCustomMiddleware: Middleware =
   (next) =>
   (action: any) => {
     const DEF_MSG = "Error in request.";
+    const isIgnorableError = (message?: string) => {
+      const msg = (message ?? "").toLowerCase();
+      return (
+        msg.includes("autocancelled") ||
+        msg.includes("auto-cancelled") ||
+        msg.includes("request was aborted") ||
+        msg.includes("aborted")
+      );
+    };
+
     if (action.error) {
+      if (isIgnorableError(action.error.message)) {
+        return next(action);
+      }
       dispatch(
         setSnackbar({
           message: action.error.message ?? DEF_MSG,
@@ -28,6 +41,9 @@ export const rtkQueryCustomMiddleware: Middleware =
         : [action.payload];
       (actions as any[]).forEach((action) => {
         if (action?.status === PromiseStatus.REJECTED) {
+          if (isIgnorableError(action.reason?.message)) {
+            return;
+          }
           dispatch(
             setSnackbar({
               message: action.reason.message ?? DEF_MSG,

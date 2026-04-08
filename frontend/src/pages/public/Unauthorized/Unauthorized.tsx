@@ -1,31 +1,32 @@
-import { Typography, Grid, Link, Container, CssBaseline } from "@mui/material";
+import {
+  Typography,
+  Link,
+  Container,
+  CssBaseline,
+  Card,
+  CardContent,
+  Stack,
+} from "@mui/material";
 
 export default function NotFound(): JSX.Element {
   return (
-    <Container component="main" maxWidth="xs">
+    <Container component="main" maxWidth="sm" sx={{ py: { xs: 6, md: 10 } }}>
       <CssBaseline />
-      <Grid
-        container
-        direction="row"
-        justifyContent="flex-center"
-        alignItems="center"
-        sx={{ pt: 20 }}
-      >
-        <Grid sx={{ py: 0, pt: 5 }} size={{ xs: 12, sm: 12 }}>
-          <Grid container direction="row" justifyContent="center">
-            <Typography variant="h3" align="center">
-              Unauthorized!
+      <Card variant="outlined" sx={{ maxWidth: 520, mx: "auto" }}>
+        <CardContent sx={{ py: 5 }}>
+          <Stack spacing={2.5} alignItems="center">
+            <Typography variant="h4" align="center">
+              Acceso no autorizado
             </Typography>
-          </Grid>
-        </Grid>
-        <Grid sx={{ py: 5 }} size={{ xs: 12, sm: 12 }}>
-          <Grid container direction="row" justifyContent="center">
-            <Link color="inherit" href="/">
-              Log in to continue using this app.
+            <Typography variant="body1" color="text.secondary" align="center">
+              No tenés permisos para ingresar a esta sección.
+            </Typography>
+            <Link color="secondary" href="/">
+              Volver al inicio
             </Link>
-          </Grid>
-        </Grid>
-      </Grid>
+          </Stack>
+        </CardContent>
+      </Card>
     </Container>
   );
 }

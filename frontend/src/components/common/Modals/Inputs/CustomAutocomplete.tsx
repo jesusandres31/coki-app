@@ -99,7 +99,7 @@ export default function CustomAutocomplete({
 
   return (
     <Autocomplete
-      sx={{ width: STYLE.width.textfield }}
+      sx={{ width: { xs: "100%", sm: STYLE.width.textfield } }}
       open={open}
       onOpen={() => {
         setOpen(true);
@@ -136,7 +136,7 @@ export default function CustomAutocomplete({
           autoComplete="off"
           error={!!input.error}
           helperText={input.error ? input.error : " "}
-          sx={{ width: STYLE.width.textfield }}
+          sx={{ width: { xs: "100%", sm: STYLE.width.textfield } }}
           size="small"
           variant={variant}
           InputProps={{

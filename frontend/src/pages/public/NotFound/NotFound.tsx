@@ -1,38 +1,35 @@
-import { Typography, Grid, Link, Container, CssBaseline } from "@mui/material";
+import {
+  Typography,
+  Link,
+  Container,
+  CssBaseline,
+  Card,
+  CardContent,
+  Stack,
+} from "@mui/material";
 
 export default function NotFound(): JSX.Element {
   return (
-    <Container component="main" maxWidth="xs">
+    <Container component="main" maxWidth="sm" sx={{ py: { xs: 6, md: 10 } }}>
       <CssBaseline />
-      <Grid
-        container
-        direction="row"
-        justifyContent="flex-center"
-        alignItems="center"
-        sx={{ pt: 20 }}
-      >
-        <Grid sx={{ pt: 5 }} size={{ xs: 12, sm: 12 }}>
-          <Grid container direction="row" justifyContent="center">
-            <Typography variant="h1" align="center">
+      <Card variant="outlined" sx={{ maxWidth: 520, mx: "auto" }}>
+        <CardContent sx={{ py: 5 }}>
+          <Stack spacing={1.5} alignItems="center">
+            <Typography variant="h2" align="center" color="secondary.main">
               404
             </Typography>
-          </Grid>
-        </Grid>
-        <Grid sx={{ py: 0 }} size={{ xs: 12, sm: 12 }}>
-          <Grid container direction="row" justifyContent="center">
-            <Typography variant="h3" align="center">
-              Page Not Found!
+            <Typography variant="h5" align="center">
+              Página no encontrada
             </Typography>
-          </Grid>
-        </Grid>
-        <Grid sx={{ py: 5 }} size={{ xs: 12, sm: 12 }}>
-          <Grid container direction="row" justifyContent="center">
-            <Link color="inherit" href="/">
-              Go back
+            <Typography variant="body1" color="text.secondary" align="center">
+              El recurso que buscás no existe o fue movido.
+            </Typography>
+            <Link color="secondary" href="/">
+              Volver
             </Link>
-          </Grid>
-        </Grid>
-      </Grid>
+          </Stack>
+        </CardContent>
+      </Card>
     </Container>
   );
 }

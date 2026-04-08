@@ -4,8 +4,8 @@ import {
   Toolbar,
   Typography,
   IconButton,
+  alpha,
   useTheme,
-  lighten,
   FormControl,
   InputLabel,
   OutlinedInput,
@@ -47,8 +47,10 @@ export default function CustomTableToolbar({
         flex: "0 0 auto",
         py: { xs: 1, sm: 2 },
         backgroundColor: hasSelection
-          ? lighten(theme.palette.primary.light, 0.8)
-          : theme.palette.background.paper,
+          ? alpha(theme.palette.primary.main, 0.12)
+          : "background.paper",
+        borderBottom: "1px solid",
+        borderColor: "divider",
       }}
     >
       <Grid container justifyContent="space-between" alignItems="center">
@@ -87,7 +89,7 @@ export default function CustomTableToolbar({
                 startAdornment={
                   <InputAdornment
                     position="start"
-                    sx={{ color: theme.palette.text.disabled }}
+                    sx={{ color: "text.disabled" }}
                   >
                     <SearchRounded />
                   </InputAdornment>

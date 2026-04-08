@@ -115,7 +115,7 @@ export default function CustomMultipleAutocomplete({
     <>
       <Autocomplete
         multiple
-        sx={{ width: STYLE.width.textfield }}
+        sx={{ width: { xs: "100%", sm: STYLE.width.textfield } }}
         limitTags={3}
         size="small"
         open={open}
@@ -154,7 +154,7 @@ export default function CustomMultipleAutocomplete({
             autoComplete="off"
             error={!!input.error}
             helperText={input.error ? input.error : " "}
-            sx={{ width: STYLE.width.textfield }}
+            sx={{ width: { xs: "100%", sm: STYLE.width.textfield } }}
             size="small"
             variant={variant}
             InputProps={{

@@ -10,7 +10,7 @@ import {
   useTheme,
   ListSubheader,
   Collapse,
-  lighten,
+  alpha,
 } from "@mui/material";
 import { ExpandLess, ExpandMore } from "@mui/icons-material";
 import { useRouter } from "src/hooks";
@@ -34,7 +34,7 @@ export default function CustomList({
   const { openDrawer } = useUISelector((state) => state.ui);
   const dispatch = useAppDispatch();
   const theme = useTheme();
-  const backgroundColor = lighten(theme.palette.primary.light, 0.7);
+  const backgroundColor = alpha(theme.palette.primary.main, 0.12);
   // const borderRadius = 8;
 
   const isSelected = (item: IMenuItem) => {
@@ -124,26 +124,24 @@ export default function CustomList({
 
         return (
           <React.Fragment key={`${index}-${item.to}`}>
-            <ListItem
-              disablePadding
-              sx={{
-                marginBottom: 0.1,
+          <ListItem
+            disablePadding
+            sx={{
+                marginBottom: 0.35,
                 pl: isNested ? 1.5 : 0,
-                height: "45px",
+                minHeight: 44,
                 "&.Mui-selected": {
                   backgroundColor,
-                  // borderRadius,
                 },
                 "&:hover": {
                   backgroundColor: item.to ? backgroundColor : "transparent",
-                  // borderRadius,
                 },
                 "&.Mui-selected:hover": {
                   backgroundColor,
-                  // borderRadius,
                 },
                 backgroundColor: selected ? backgroundColor : "transparent",
-                transition: "background-color 0.3s",
+                borderRadius: 2,
+                transition: "background-color 0.2s ease",
                 display: "block",
               }}
             >
@@ -160,19 +158,18 @@ export default function CustomList({
                   "&:hover": {
                     backgroundColor: "transparent",
                   },
-                  minHeight: 48,
+                  minHeight: 44,
                   justifyContent: openDrawer ? "initial" : "center",
-                  /* px: 2.5, */
+                  borderRadius: 2,
                 }}
               >
                 {item.icon && (
                   <Box display="flex">
                     <ListItemIcon
                       sx={{
-                        /* minWidth: "40px", */
-                        color: "secondary.light",
+                        color: selected ? "secondary.main" : "text.secondary",
                         minWidth: 0,
-                        mr: openDrawer ? 3 : "auto",
+                        mr: openDrawer ? 2 : "auto",
                         justifyContent: "center",
                       }}
                     >
@@ -184,14 +181,12 @@ export default function CustomList({
                   primary={
                     <Typography
                       sx={{
-                        fontSize: isNested ? 12 : 13,
+                        fontSize: isNested ? 12 : 13.5,
                         opacity: openDrawer ? 1 : 0,
                       }}
-                      fontWeight="bold"
+                      fontWeight={selected ? 700 : 600}
                       color={
-                        isSelected(item)
-                          ? theme.palette.primary.main
-                          : "text.secondary"
+                        isSelected(item) ? "secondary.main" : "text.secondary"
                       }
                     >
                       {item.text || translateTitle(removeForeslash(item.to))}
@@ -201,7 +196,6 @@ export default function CustomList({
                 {item.nestedItems && (
                   <div
                     style={{
-                      /* display: "flex", */
                       alignItems: "center",
                       color: theme.palette.text.disabled,
                       padding: 5,

@@ -3,8 +3,12 @@ import { Order } from "src/types";
 // style
 export const STYLE = {
   width: {
-    textfield: 250,
+    textfield: 280,
   },
+};
+
+export const SEARCH = {
+  debounceMs: 1500,
 };
 
 // pagination

@@ -55,23 +55,23 @@ export default function CustomCollapse({
               const detailRows = row[detailCol.id];
 
               return (
-                <Box key={`${detailCol.id}-${i}`} py={1}>
+                <Box key={`${detailCol.id}-${i}`} py={1} sx={{ pb: 5 }}>
                   <Box
                     sx={{
                       display: "flex",
                       justifyContent: "flex-start",
                     }}
                   >
-                    <Typography
+                    {/* <Typography
                       variant="subtitle2"
                       color="text.secondary"
                       sx={{
-                        fontStyle: "italic",
+                        // fontStyle: "italic",
                         pl: 6,
                       }}
                     >
                       {`${detailCol.title}:`}
-                    </Typography>
+                    </Typography> */}
                   </Box>
                   {Array.isArray(detailRows) &&
                   (detailRows[0] === null ||
@@ -98,12 +98,17 @@ export default function CustomCollapse({
                               ))}
                             <TableCell
                               padding="checkbox"
-                              sx={isMobile ? styles.stickyMobile : styles.sticky}
+                              sx={
+                                isMobile ? styles.stickyMobile : styles.sticky
+                              }
                             />
                           </TableRow>
                         </TableHead>
 
-                        <TableBody key={`${i}-${row.id}`} sx={{ width: "100%" }}>
+                        <TableBody
+                          key={`${i}-${row.id}`}
+                          sx={{ width: "100%" }}
+                        >
                           {Array.isArray(detailRows) &&
                             detailRows.map((item, i) => (
                               <TableRow key={`${item.id}-${i}`}>

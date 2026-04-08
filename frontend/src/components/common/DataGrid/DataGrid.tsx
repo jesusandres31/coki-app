@@ -17,6 +17,7 @@ import CustomTablePagination from "./content/CustomTablePagination";
 import CustomTableBody from "./content/CustomTableBody";
 import CustomTableToolbar from "./content/CustomTableToolbar";
 import { formatNulls } from "src/utils/format";
+import { SEARCH } from "src/constants";
 
 const styles = {
   sticky: {
@@ -29,7 +30,7 @@ const styles = {
     right: 0,
     padding: 0,
     margin: 0,
-    backgroundColor: "white",
+    backgroundColor: "background.paper",
   },
 };
 
@@ -60,6 +61,9 @@ export default function DataGrid({
 }: DataGridProps) {
   const [page, setPage] = useState(initialQuery?.page ?? 1);
   const [filter, setFilter] = useState(initialQuery?.filter ?? "");
+  const [debouncedFilter, setDebouncedFilter] = useState(
+    initialQuery?.filter ?? "",
+  );
   const [collapseItem, setCollapseItem] = useState<string>("");
   const [selectedItems, setSelectedItems] = useState<string[]>([]);
   const [order, setOrder] = useState<Order>(initialQuery?.order ?? "desc");
@@ -75,6 +79,14 @@ export default function DataGrid({
     setFilter(value);
     setPage(1);
   };
+
+  useEffect(() => {
+    const timeout = setTimeout(() => {
+      setDebouncedFilter(filter);
+    }, SEARCH.debounceMs);
+
+    return () => clearTimeout(timeout);
+  }, [filter]);
 
   const handleSetPage = (newPage: number) => {
     setPage(newPage);
@@ -116,14 +128,22 @@ export default function DataGrid({
     onQueryChange({
       page,
       perPage: data?.perPage ?? initialQuery?.perPage ?? 20,
-      filter,
+      filter: debouncedFilter,
       order,
       orderBy,
     });
-  }, [data?.perPage, filter, initialQuery?.perPage, onQueryChange, order, orderBy, page]);
+  }, [
+    data?.perPage,
+    debouncedFilter,
+    initialQuery?.perPage,
+    onQueryChange,
+    order,
+    orderBy,
+    page,
+  ]);
 
   const filteredAndSortedItems = useMemo(() => {
-    const lowerFilter = filter.toLowerCase().trim();
+    const lowerFilter = debouncedFilter.toLowerCase().trim();
 
     const filtered = lowerFilter
       ? items.filter((item) =>
@@ -150,7 +170,14 @@ export default function DataGrid({
     });
 
     return sorted;
-  }, [columns, filter, items, order, orderBy]);
+  }, [columns, debouncedFilter, items, order, orderBy]);
+
+  const hasIgnorableError =
+    !!error &&
+    (() => {
+      const errorText = JSON.stringify(error).toLowerCase();
+      return errorText.includes("autocancel") || errorText.includes("aborted");
+    })();
 
   const dataForRender = isServerMode
     ? data
@@ -174,7 +201,13 @@ export default function DataGrid({
       )}
 
       {dataForRender && dataForRender.items && dataForRender.items.length > 0 ? (
-        <TableContainer sx={{ flex: "1 1 auto" }}>
+        <TableContainer
+          sx={{
+            flex: "1 1 auto",
+            borderTop: "1px solid",
+            borderColor: "divider",
+          }}
+        >
           <Table
             stickyHeader
             sx={{
@@ -211,7 +244,7 @@ export default function DataGrid({
         <CustomGrid>
           <NoItems />
         </CustomGrid>
-      ) : error ? (
+      ) : error && !hasIgnorableError ? (
         <CustomGrid>
           <ErrorMsg />
         </CustomGrid>

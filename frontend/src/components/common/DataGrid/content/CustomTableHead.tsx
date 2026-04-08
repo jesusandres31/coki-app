@@ -4,7 +4,6 @@ import {
   Typography,
   Checkbox,
   TableSortLabel,
-  useTheme,
   TableHead,
 } from "@mui/material";
 import { Column, DataItem, Order } from "src/types";
@@ -35,17 +34,12 @@ export default function CustomTableHead({
   handleSortTable,
   styles,
 }: CustomTableHeadProps) {
-  const theme = useTheme();
   const { isMobile } = useUI();
   const isAllSelected = items.length === selectedItems.length;
 
   return (
     <TableHead>
-      <TableRow
-        sx={{
-          backgroundColor: theme.palette.background.default,
-        }}
-      >
+      <TableRow>
         {hasCheckbox ? (
           <TableCell padding="checkbox">
             <Checkbox
@@ -78,8 +72,13 @@ export default function CustomTableHead({
                 direction={direction}
                 onClick={() => handleSortTable(String(column.id))}
                 disabled={column.disableSort}
+                sx={{
+                  "& .MuiTableSortLabel-icon": {
+                    color: "text.secondary !important",
+                  },
+                }}
               >
-                <Typography variant="body2" fontWeight="bold">
+                <Typography variant="body2" fontWeight={700}>
                   {column.label}
                 </Typography>
               </TableSortLabel>

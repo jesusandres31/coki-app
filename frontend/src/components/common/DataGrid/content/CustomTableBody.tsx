@@ -6,8 +6,6 @@ import {
   Typography,
   Checkbox,
   IconButton,
-  lighten,
-  useTheme,
   TableRow,
   TableBody,
 } from "@mui/material";
@@ -42,7 +40,6 @@ export default function CustomTableBody({
   styles,
 }: CustomTableBodyProps) {
   const { isMobile } = useUI();
-  const theme = useTheme();
   const isCollapsible = Boolean(detailColumns);
 
   const isSelected = (selectedItems: string[], itemId: string) => {
@@ -86,7 +83,7 @@ export default function CustomTableBody({
 
                 return (
                   <TableCell
-                    height={50}
+                    height={52}
                     component="th"
                     scope="row"
                     size="small"
@@ -99,13 +96,14 @@ export default function CustomTableBody({
                   >
                     {/* <Tooltip title={tooltip !== NULL_VAL && tooltip}> */}
                     <Typography
-                      variant="subtitle2"
+                      variant="body2"
                       noWrap
-                      color={lighten(theme.palette.text.primary, 0.2)}
+                      color="text.primary"
                       sx={{
                         overflow: "hidden",
                         textOverflow: "ellipsis",
                         whiteSpace: "nowrap",
+                        fontWeight: 500,
                       }}
                     >
                       {isEmail ? value : renderValue(value)}

@@ -55,6 +55,7 @@ export default function CreateOrUpdateModal({
       onClose={handleClose}
       scroll="paper"
       maxWidth={maxWidth}
+      fullWidth
     >
       <DialogTitle>
         {title ? title : `${isUpdate ? "Actualizar" : "Crear nuevo"} ${label}`}
@@ -62,7 +63,7 @@ export default function CreateOrUpdateModal({
       <DialogContent
         dividers
         sx={{
-          pt: 4,
+          pt: 2,
         }}
       >
         <Grid
@@ -115,7 +116,7 @@ export default function CreateOrUpdateModal({
                       min: input.min,
                     }}
                     InputProps={input.InputProps}
-                    sx={{ width: STYLE.width.textfield }}
+                    sx={{ width: { xs: "100%", sm: STYLE.width.textfield } }}
                     disabled={input.disabled}
                   />
                 )

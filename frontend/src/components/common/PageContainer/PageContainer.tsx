@@ -7,8 +7,7 @@ interface PageContainerProps {
 export default function PageContainer({ children }: PageContainerProps) {
   return (
     <Box
-      sx={{ height: "100%" }}
-      style={{
+      sx={{
         height: "100%",
         width: "100%",
         display: "flex",
@@ -19,12 +18,13 @@ export default function PageContainer({ children }: PageContainerProps) {
       <Paper
         variant="outlined"
         elevation={0}
-        style={{
+        sx={{
           height: "100%",
           width: "100%",
           display: "flex",
           flexDirection: "column",
           overflow: "auto",
+          borderRadius: 3,
         }}
       >
         {children}
