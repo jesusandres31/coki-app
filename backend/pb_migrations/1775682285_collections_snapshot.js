@@ -684,14 +684,14 @@ migrate((db) => {
     {
       "id": "ur14h8gcnpxdzyv",
       "created": "2024-04-12 19:51:59.944Z",
-      "updated": "2026-04-08 18:23:59.521Z",
+      "updated": "2026-04-08 20:53:56.725Z",
       "name": "v_invoices",
       "type": "view",
       "system": false,
       "schema": [
         {
           "system": false,
-          "id": "qtmqcogg",
+          "id": "jmula1q0",
           "name": "date",
           "type": "date",
           "required": true,
@@ -704,7 +704,7 @@ migrate((db) => {
         },
         {
           "system": false,
-          "id": "dbxzx1zs",
+          "id": "akihkqdn",
           "name": "discount",
           "type": "number",
           "required": false,
@@ -718,7 +718,7 @@ migrate((db) => {
         },
         {
           "system": false,
-          "id": "ywovzymq",
+          "id": "afw9ynrz",
           "name": "total",
           "type": "number",
           "required": false,
@@ -732,7 +732,7 @@ migrate((db) => {
         },
         {
           "system": false,
-          "id": "t26oarfk",
+          "id": "0ydzvkb4",
           "name": "client",
           "type": "json",
           "required": false,
@@ -744,7 +744,7 @@ migrate((db) => {
         },
         {
           "system": false,
-          "id": "deecca93",
+          "id": "ed18iaac",
           "name": "invoice_products",
           "type": "json",
           "required": false,
@@ -756,7 +756,7 @@ migrate((db) => {
         },
         {
           "system": false,
-          "id": "pvfj9yd8",
+          "id": "nx9okx49",
           "name": "deleted",
           "type": "date",
           "required": false,
@@ -775,7 +775,7 @@ migrate((db) => {
       "updateRule": null,
       "deleteRule": null,
       "options": {
-        "query": "SELECT \n    i.id,\n    i.date,\n    i.discount,\n    i.total,\n    JSON_OBJECT(\n      'id', c.id,\n      'name', c.name\n    ) AS client,\n    JSON_GROUP_ARRAY(\n      CASE WHEN ii.id IS NOT NULL THEN\n          JSON_OBJECT(\n            'id', ii.id,\n            'product_id', ii.product,\n            'product_name', p.name,\n            'unit_price', ii.unit_price,\n            'amount', ii.amount,\n            'discount', ii.discount,\n            'total', ii.total\n          )\n      ELSE\n          NULL\n      END\n    ) AS invoice_products,\n    i.created,\n    i.updated,\n    i.deleted\nFROM \n    invoices i\nLEFT JOIN \n    clients c ON i.client = c.id\nLEFT JOIN \n    invoices_products ii ON i.id = ii.invoice  \nLEFT JOIN \n    products p ON ii.product = p.id  \nGROUP BY \n    i.id,\n    i.date,\n    i.total,\n    c.name,\n    i.created,\n    i.updated,\n    i.deleted;"
+        "query": "SELECT\n  i.id,\n  i.date,\n  i.discount,\n  i.total,\n  JSON_OBJECT(\n    'id', c.id,\n    'name', c.name\n  ) AS client,\n  COALESCE(\n    JSON_GROUP_ARRAY(\n      JSON_OBJECT(\n        'id', ii.id,\n        'product_id', ii.product,\n        'product_name', p.name,\n        'unit_price', ii.unit_price,\n        'amount', ii.amount,\n        'discount', ii.discount,\n        'total', ii.total\n      )\n    ) FILTER (WHERE ii.id IS NOT NULL),\n    JSON('[]')\n  ) AS invoice_products,\n  i.created,\n  i.updated,\n  i.deleted\nFROM invoices i\nLEFT JOIN clients c\n  ON c.id = i.client\nLEFT JOIN invoices_products ii\n  ON ii.invoice = i.id\nLEFT JOIN products p\n  ON p.id = ii.product\nWHERE COALESCE(i.deleted, '') = ''\nGROUP BY\n  i.id,\n  i.date,\n  i.discount,\n  i.total,\n  c.id,\n  c.name,\n  i.created,\n  i.updated,\n  i.deleted;\n"
       }
     },
     {
