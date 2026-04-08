@@ -1,6 +1,5 @@
 import React from "react";
 import { Column, DetailColumn, IColumn, DataItem } from "src/types";
-import { useAppDispatch } from "src/app/store";
 import { useUI } from "src/hooks";
 import {
   TableCell,
@@ -24,7 +23,10 @@ interface CustomTableBodyProps {
   columns: Column;
   selectedItems: string[];
   detailColumns?: DetailColumn;
+  collapseItem: string;
   hasCheckbox?: boolean;
+  handleToggleSelect: (id: string) => void;
+  handleToggleCollapse: (id: string) => void;
   styles?: any;
 }
 
@@ -33,33 +35,15 @@ export default function CustomTableBody({
   columns,
   selectedItems,
   detailColumns,
+  collapseItem,
   hasCheckbox = false,
+  handleToggleSelect,
+  handleToggleCollapse,
   styles,
 }: CustomTableBodyProps) {
-  const dispatch = useAppDispatch();
   const { isMobile } = useUI();
   const theme = useTheme();
   const isCollapsible = Boolean(detailColumns);
-
-  const handleClickRowItem = (item: DataItem) => {
-    /* if (handleClickRow) {
-      handleClickRow(item);
-    } else {
-      dispatch(setSelectedItems(item.id));
-    } */
-  };
-
-  const handleCollapse = (id: string) => {
-    /*  if (id === collapseItem) {
-      dispatch(resetCollapse());
-    } else {
-      dispatch(setCollapseItem(id));
-    } */
-  };
-
-  const isCollapsed = (collapseItem: string, itemId: string) => {
-    return collapseItem === itemId;
-  };
 
   const isSelected = (selectedItems: string[], itemId: string) => {
     return selectedItems.some((selectedItem) => selectedItem === itemId);
@@ -69,8 +53,7 @@ export default function CustomTableBody({
     <TableBody>
       {items.map((row, index) => {
         const selected = isSelected(selectedItems, row.id);
-        // const collapsed = isCollapsed(collapseItem, row.id);
-        const collapsed = false;
+        const collapsed = collapseItem === row.id;
 
         return (
           <React.Fragment key={`${index}-${row.id}`}>
@@ -84,7 +67,7 @@ export default function CustomTableBody({
                 <TableCell
                   padding="checkbox"
                   sx={{ cursor: "pointer" }}
-                  onClick={() => handleClickRowItem(row)}
+                  onClick={() => handleToggleSelect(row.id)}
                 >
                   <Checkbox color="primary" size="small" checked={selected} />
                 </TableCell>
@@ -111,9 +94,7 @@ export default function CustomTableBody({
                     align={column.align ?? "right"}
                     sx={{ cursor: "pointer" }}
                     onClick={() =>
-                      isCollapsible
-                        ? handleCollapse(row.id)
-                        : handleClickRowItem(row)
+                      isCollapsible ? handleToggleCollapse(row.id) : undefined
                     }
                   >
                     {/* <Tooltip title={tooltip !== NULL_VAL && tooltip}> */}
@@ -138,7 +119,7 @@ export default function CustomTableBody({
                 <TableCell
                   align="right"
                   sx={isMobile ? styles.stickyMobile : styles.sticky}
-                  onClick={() => handleCollapse(row.id)}
+                  onClick={() => handleToggleCollapse(row.id)}
                 >
                   <IconButton>
                     {collapsed ? (

@@ -50,73 +50,65 @@ export default function CustomCollapse({
         }
       >
         <Collapse in={collapsed} timeout="auto" unmountOnExit>
-          {collapsed &&
-            (detailColumns as IDetailColumn<DataItem, DataItem>[]).map(
-              (detailCol, i) => {
-                const detailRows = row[detailCol.id];
+          {(detailColumns as IDetailColumn<DataItem, DataItem>[]).map(
+            (detailCol, i) => {
+              const detailRows = row[detailCol.id];
 
-                return (
-                  <Box key={`${detailCol.id}-${i}`} py={1}>
-                    <Box
+              return (
+                <Box key={`${detailCol.id}-${i}`} py={1}>
+                  <Box
+                    sx={{
+                      display: "flex",
+                      justifyContent: "flex-start",
+                    }}
+                  >
+                    <Typography
+                      variant="subtitle2"
+                      color="text.secondary"
                       sx={{
-                        display: "flex",
-                        justifyContent: "flex-start",
+                        fontStyle: "italic",
+                        pl: 6,
                       }}
                     >
-                      <Typography
-                        variant="subtitle2"
-                        color="text.secondary"
-                        sx={{
-                          // textDecoration: "underline",
-                          fontStyle: "italic",
-                          pl: 6,
-                        }}
-                      >
-                        {`${detailCol.title}:`}
-                      </Typography>
-                    </Box>
-                    {Array.isArray(detailRows) &&
-                    (detailRows[0] === null ||
-                      (detailRows && detailRows.length === 0)) ? (
-                      <CustomGrid>
-                        <NoItems />
-                      </CustomGrid>
-                    ) : Array.isArray(detailRows) &&
-                      detailRows &&
-                      detailRows.length > 0 ? (
-                      <Box sx={{ width: "100%" }}>
-                        <Table size="small">
-                          <TableHead>
-                            <TableRow>
-                              {detailCol.columns &&
-                                detailCol.columns.map((column, i) => (
-                                  <TableCell
-                                    size="small"
-                                    key={`${column.id}-${i}`}
-                                    align={column.align ?? "right"}
-                                  >
-                                    {column.label}
-                                  </TableCell>
-                                ))}
-                              <TableCell
-                                padding="checkbox"
-                                sx={
-                                  isMobile ? styles.stickyMobile : styles.sticky
-                                }
-                              />
-                            </TableRow>
-                          </TableHead>
+                      {`${detailCol.title}:`}
+                    </Typography>
+                  </Box>
+                  {Array.isArray(detailRows) &&
+                  (detailRows[0] === null ||
+                    (detailRows && detailRows.length === 0)) ? (
+                    <CustomGrid>
+                      <NoItems />
+                    </CustomGrid>
+                  ) : Array.isArray(detailRows) &&
+                    detailRows &&
+                    detailRows.length > 0 ? (
+                    <Box sx={{ width: "100%" }}>
+                      <Table size="small">
+                        <TableHead>
+                          <TableRow>
+                            {detailCol.columns &&
+                              detailCol.columns.map((column, i) => (
+                                <TableCell
+                                  size="small"
+                                  key={`${column.id}-${i}`}
+                                  align={column.align ?? "right"}
+                                >
+                                  {column.label}
+                                </TableCell>
+                              ))}
+                            <TableCell
+                              padding="checkbox"
+                              sx={isMobile ? styles.stickyMobile : styles.sticky}
+                            />
+                          </TableRow>
+                        </TableHead>
 
-                          <TableBody
-                            key={`${i}-${row.id}`}
-                            sx={{ width: "100%" }}
-                          >
-                            {Array.isArray(detailRows) &&
-                              detailRows.map((item, i) => (
-                                <TableRow key={`${item.id}-${i}`}>
-                                  {(
-                                    detailCol.columns as IColumn<DataItem>[]
-                                  ).map((column) => {
+                        <TableBody key={`${i}-${row.id}`} sx={{ width: "100%" }}>
+                          {Array.isArray(detailRows) &&
+                            detailRows.map((item, i) => (
+                              <TableRow key={`${item.id}-${i}`}>
+                                {(detailCol.columns as IColumn<DataItem>[]).map(
+                                  (column) => {
                                     const value = column.render
                                       ? column.render(item)
                                       : formatNulls(item[column.id]);
@@ -130,24 +122,25 @@ export default function CustomCollapse({
                                         sx={{
                                           borderColor: darken(
                                             theme.palette.background.default,
-                                            0.05
+                                            0.05,
                                           ),
                                         }}
                                       >
                                         {renderValue(value)}
                                       </TableCell>
                                     );
-                                  })}
-                                </TableRow>
-                              ))}
-                          </TableBody>
-                        </Table>
-                      </Box>
-                    ) : null}
-                  </Box>
-                );
-              }
-            )}
+                                  },
+                                )}
+                              </TableRow>
+                            ))}
+                        </TableBody>
+                      </Table>
+                    </Box>
+                  ) : null}
+                </Box>
+              );
+            },
+          )}
         </Collapse>
       </TableCell>
     </TableRow>

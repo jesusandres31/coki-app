@@ -18,6 +18,8 @@ interface CustomTableHeadProps {
   orderBy: string;
   isCollapsible: boolean;
   hasCheckbox?: boolean;
+  handleSelectAll: () => void;
+  handleSortTable: (columnId: string) => void;
   styles?: any;
 }
 
@@ -29,18 +31,13 @@ export default function CustomTableHead({
   orderBy,
   isCollapsible,
   hasCheckbox = false,
+  handleSelectAll,
+  handleSortTable,
   styles,
 }: CustomTableHeadProps) {
   const theme = useTheme();
   const { isMobile } = useUI();
   const isAllSelected = items.length === selectedItems.length;
-
-  const handleSelectAll = () => {
-    /* if (isAllSelected) return dispatch(resetSelectedItems());
-    if (items) return dispatch(setSelectedItems(items.map((item) => item.id))); */
-  };
-
-  const handleSortTable = (columnId: string) => {};
 
   return (
     <TableHead>

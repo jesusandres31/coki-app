@@ -1,14 +1,22 @@
-import { useState } from "react";
-import { Column, DataGridData, DataGridError, Order } from "src/types";
+import { useEffect, useMemo, useState } from "react";
+import {
+  Column,
+  DataGridData,
+  DataGridError,
+  DetailColumn,
+  GetList,
+  Order,
+} from "src/types";
 import { Loading, ErrorMsg } from "src/components/common";
 import PageContainer from "../PageContainer/PageContainer";
 import NoItems from "../NoItems";
-import { useAppDispatch } from "src/app/store";
 import { CustomGrid } from "./content/utils";
 import { TableContainer, Table } from "@mui/material";
 import CustomTableHead from "./content/CustomTableHead";
 import CustomTablePagination from "./content/CustomTablePagination";
 import CustomTableBody from "./content/CustomTableBody";
+import CustomTableToolbar from "./content/CustomTableToolbar";
+import { formatNulls } from "src/utils/format";
 
 const styles = {
   sticky: {
@@ -30,6 +38,12 @@ interface DataGridProps {
   error: DataGridError;
   isFetching: boolean;
   columns: Column;
+  detailColumns?: DetailColumn;
+  hasCheckbox?: boolean;
+  hasSearch?: boolean;
+  searchPlaceholder?: string;
+  initialQuery?: Partial<GetList>;
+  onQueryChange?: (query: GetList) => void;
 }
 
 export default function DataGrid({
@@ -37,17 +51,27 @@ export default function DataGrid({
   error,
   isFetching,
   columns,
+  detailColumns,
+  hasCheckbox = true,
+  hasSearch = true,
+  searchPlaceholder,
+  initialQuery,
+  onQueryChange,
 }: DataGridProps) {
-  const dispatch = useAppDispatch();
-  const [page, setPage] = useState(1);
-  const [filter, setFilter] = useState("");
-  const [collapseItems, setCollapseItem] = useState<string[]>([]);
+  const [page, setPage] = useState(initialQuery?.page ?? 1);
+  const [filter, setFilter] = useState(initialQuery?.filter ?? "");
+  const [collapseItem, setCollapseItem] = useState<string>("");
   const [selectedItems, setSelectedItems] = useState<string[]>([]);
-  const [order, setOrder] = useState<Order>("desc");
-  const [orderBy, setOrderBy] = useState<string>("created");
+  const [order, setOrder] = useState<Order>(initialQuery?.order ?? "desc");
+  const [orderBy, setOrderBy] = useState<string>(
+    initialQuery?.orderBy ?? String(columns[0]?.id ?? "id"),
+  );
+
+  const items = data?.items ?? [];
+  const isCollapsible = Boolean(detailColumns);
+  const isServerMode = Boolean(onQueryChange);
 
   const handleSetFilter = (value: string) => {
-    // TODO: debounce function here
     setFilter(value);
     setPage(1);
   };
@@ -57,23 +81,99 @@ export default function DataGrid({
   };
 
   const handleResetCollapseItems = () => {
-    setCollapseItem([]);
+    setCollapseItem("");
   };
+
+  const handleToggleSelect = (id: string) => {
+    setSelectedItems((prev) =>
+      prev.includes(id) ? prev.filter((itemId) => itemId !== id) : [...prev, id],
+    );
+  };
+
+  const handleSelectAll = () => {
+    if (selectedItems.length === items.length) {
+      setSelectedItems([]);
+      return;
+    }
+    setSelectedItems(items.map((item) => item.id));
+  };
+
+  const handleToggleCollapse = (id: string) => {
+    setCollapseItem((prev) => (prev === id ? "" : id));
+  };
+
+  const handleSort = (columnId: string) => {
+    if (orderBy === columnId) {
+      setOrder((prev) => (prev === "asc" ? "desc" : "asc"));
+      return;
+    }
+    setOrderBy(columnId);
+    setOrder("asc");
+  };
+
+  useEffect(() => {
+    if (!onQueryChange) return;
+    onQueryChange({
+      page,
+      perPage: data?.perPage ?? initialQuery?.perPage ?? 20,
+      filter,
+      order,
+      orderBy,
+    });
+  }, [data?.perPage, filter, initialQuery?.perPage, onQueryChange, order, orderBy, page]);
+
+  const filteredAndSortedItems = useMemo(() => {
+    const lowerFilter = filter.toLowerCase().trim();
+
+    const filtered = lowerFilter
+      ? items.filter((item) =>
+          columns.some((column) => {
+            const id = column.id as keyof typeof item;
+            const rawValue = column.render
+              ? column.render(item)
+              : formatNulls(item[id]);
+            return String(rawValue ?? "")
+              .toLowerCase()
+              .includes(lowerFilter);
+          }),
+        )
+      : items;
+
+    const sorted = [...filtered].sort((a, b) => {
+      const valA = a[orderBy as keyof typeof a];
+      const valB = b[orderBy as keyof typeof b];
+      if (valA === valB) return 0;
+      if (valA === null || valA === undefined) return order === "asc" ? -1 : 1;
+      if (valB === null || valB === undefined) return order === "asc" ? 1 : -1;
+      if (valA > valB) return order === "asc" ? 1 : -1;
+      return order === "asc" ? -1 : 1;
+    });
+
+    return sorted;
+  }, [columns, filter, items, order, orderBy]);
+
+  const dataForRender = isServerMode
+    ? data
+    : data && filteredAndSortedItems
+      ? {
+          ...data,
+          items: filteredAndSortedItems,
+          totalItems: filteredAndSortedItems.length,
+        }
+      : data;
 
   return (
     <PageContainer>
-      {/* <Box pl={2} mb={1}>
-        <Typography variant="h6">{translateTitle(route)}</Typography>
-      </Box> */}
-      {/* <CustomTableToolbar
-        handleFetchItems={handleFetchItems}
-        entity={entity}
-        bulkActionForOne={bulkActionForOne}
-        bulkActionForMany={bulkActionForMany}
-        disableCreateBtn={disableCreateBtn}
-        disableDefaultOptBtn={disableDefaultOptBtn}
-      /> */}
-      {data && data.items && data.items.length > 0 ? (
+      {hasSearch && (
+        <CustomTableToolbar
+          filter={filter}
+          selectedCount={selectedItems.length}
+          onSearch={handleSetFilter}
+          searchPlaceholder={searchPlaceholder}
+        />
+      )}
+
+      {dataForRender && dataForRender.items && dataForRender.items.length > 0 ? (
         <TableContainer sx={{ flex: "1 1 auto" }}>
           <Table
             stickyHeader
@@ -84,22 +184,30 @@ export default function DataGrid({
           >
             <CustomTableHead
               columns={columns}
-              items={data?.items}
+              items={dataForRender.items}
               selectedItems={selectedItems}
               order={order}
               orderBy={orderBy}
-              isCollapsible={true}
+              isCollapsible={isCollapsible}
+              hasCheckbox={hasCheckbox}
+              handleSelectAll={handleSelectAll}
+              handleSortTable={handleSort}
               styles={styles}
             />
             <CustomTableBody
-              items={data.items}
+              items={dataForRender.items}
               columns={columns}
               selectedItems={selectedItems}
+              detailColumns={detailColumns}
+              collapseItem={collapseItem}
+              hasCheckbox={hasCheckbox}
+              handleToggleSelect={handleToggleSelect}
+              handleToggleCollapse={handleToggleCollapse}
               styles={styles}
             />
           </Table>
         </TableContainer>
-      ) : data && data.items && data.items.length === 0 ? (
+      ) : dataForRender && dataForRender.items && dataForRender.items.length === 0 ? (
         <CustomGrid>
           <NoItems />
         </CustomGrid>
@@ -117,7 +225,7 @@ export default function DataGrid({
         </CustomGrid>
       )}
       <CustomTablePagination
-        data={data}
+        data={dataForRender}
         handleSetPage={handleSetPage}
         handleResetCollapseItems={handleResetCollapseItems}
       />
