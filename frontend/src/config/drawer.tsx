@@ -1,4 +1,4 @@
-import { RequestQuoteRounded, ManageSearchRounded } from "@mui/icons-material";
+import { DescriptionRounded } from "@mui/icons-material";
 import { AppRoutes } from "src/config";
 import { DrawerSection } from "src/types";
 
@@ -11,7 +11,7 @@ export const DRAWER_SECTIONS: DrawerSection[] = [
     menuItems: [
       {
         text: "Facturación",
-        icon: <RequestQuoteRounded />,
+        icon: <DescriptionRounded />,
         to: AppRoutes.Invoices,
       },
     ],

@@ -91,6 +91,8 @@ export interface Input {
   noSpace?: boolean;
   multiple?: boolean;
   disabled?: boolean;
+  type?: string;
+  autoComplete?: string;
   triggerSideEffect?: (data: DataItem) => void;
 }
 
@@ -134,3 +136,4 @@ export type DataItem = ValueOf<CollectionResponses>;
 export type Column = IColumn<any>[];
 
 export type DetailColumn = IDetailColumn<any, any>[];
+

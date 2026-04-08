@@ -24,15 +24,55 @@ export default function UpdateUserPsswd({
   const [updateUser, { isLoading: isUpdating }] =
     userApi.useUpdateUserMutation();
 
+  const formik = useFormik({
+    enableReinitialize: true,
+    initialValues: {
+      oldPassword: "",
+      password: "",
+      passwordConfirm: "",
+    },
+    onSubmit: async (values) => {
+      if (!authUser) return;
+
+      const data: UpsertUserReq = {
+        role: authUser.role,
+        username: authUser.username,
+        email: authUser.email,
+        oldPassword: values.oldPassword,
+        password: values.password,
+        passwordConfirm: values.passwordConfirm,
+      };
+
+      await updateUser({ id: authUser.id, data }).unwrap();
+      dispatch(setSnackbar({ message: FORM_MSG.changePsswd }));
+      handleClose();
+      handleSignOut();
+    },
+    validationSchema: Yup.object({
+      oldPassword: Yup.string()
+        .required(FORM_MSG.required)
+        .min(FORM_VLDN.PSSWD.min, FORM_MSG.minLength(FORM_VLDN.PSSWD.min))
+        .max(FORM_VLDN.PSSWD.max, FORM_MSG.maxLength(FORM_VLDN.PSSWD.max)),
+      password: Yup.string()
+        .required(FORM_MSG.required)
+        .min(FORM_VLDN.PSSWD.min, FORM_MSG.minLength(FORM_VLDN.PSSWD.min))
+        .max(FORM_VLDN.PSSWD.max, FORM_MSG.maxLength(FORM_VLDN.PSSWD.max))
+        .notOneOf([Yup.ref("oldPassword")], "La nueva contraseña debe ser distinta a la actual."),
+      passwordConfirm: Yup.string()
+        .required(FORM_MSG.required)
+        .oneOf([Yup.ref("password")], FORM_MSG.passwordConfirm)
+        .min(FORM_VLDN.PSSWD.min, FORM_MSG.minLength(FORM_VLDN.PSSWD.min))
+        .max(FORM_VLDN.PSSWD.max, FORM_MSG.maxLength(FORM_VLDN.PSSWD.max)),
+    }),
+    validateOnChange: false,
+    validateOnBlur: false,
+  });
+
   useEffect(() => {
-    if (authUser) {
-      formik.setValues({
-        oldPassword: "",
-        password: "",
-        passwordConfirm: "",
-      });
+    if (!open) {
+      formik.resetForm();
     }
-  }, []);
+  }, [open]);
 
   const hanleConfirm = async () => {
     formik.handleSubmit();
@@ -43,89 +83,45 @@ export default function UpdateUserPsswd({
     formik.resetForm();
   };
 
-  const formik = useFormik({
-    enableReinitialize: true,
-    initialValues: {
-      oldPassword: "",
-      password: "",
-      passwordConfirm: "",
-    },
-    onSubmit: async (values) => {
-      try {
-        if (authUser) {
-          // Create a proper UpsertUserReq by including the required fields
-          const data: UpsertUserReq = {
-            role: authUser.role,
-            username: authUser.username,
-            email: authUser.email,
-            oldPassword: values.oldPassword,
-            password: values.password,
-            passwordConfirm: values.passwordConfirm,
-          };
-          await updateUser({ id: authUser.id, data }).unwrap();
-          dispatch(setSnackbar({ message: FORM_MSG.changePsswd }));
-          handleSignOut();
-          handleClose();
-        }
-      } catch (err) {
-        throw err;
-      }
-    },
-    validationSchema: Yup.object({
-      oldPassword: Yup.string()
-        .required(FORM_MSG.required)
-        .min(FORM_VLDN.PSSWD.min, FORM_MSG.minLength(FORM_VLDN.PSSWD.min))
-        .max(FORM_VLDN.PSSWD.max, FORM_MSG.maxLength(FORM_VLDN.PSSWD.max)),
-      password: Yup.string()
-        .required(FORM_MSG.required)
-        .min(FORM_VLDN.PSSWD.min, FORM_MSG.minLength(FORM_VLDN.PSSWD.min))
-        .max(FORM_VLDN.PSSWD.max, FORM_MSG.maxLength(FORM_VLDN.PSSWD.max)),
-      passwordConfirm: Yup.string()
-        .required(FORM_MSG.required)
-        .min(FORM_VLDN.PSSWD.min, FORM_MSG.minLength(FORM_VLDN.PSSWD.min))
-        .max(FORM_VLDN.PSSWD.max, FORM_MSG.maxLength(FORM_VLDN.PSSWD.max)),
-    }),
-    validateOnChange: false,
-    validateOnBlur: false,
-  });
-
   const inputs: Input[] = [
     {
       required: true,
-      label: "Contraseña Actual",
+      label: "Contraseña actual",
       id: "oldPassword",
       value: formik.values.oldPassword,
       error: formik.errors.oldPassword,
-      max: FORM_VLDN.LONG_STRING.max,
-      min: FORM_VLDN.LONG_STRING.min,
+      max: FORM_VLDN.PSSWD.max,
+      min: FORM_VLDN.PSSWD.min,
       noSpace: true,
       capitalize: false,
+      type: "password",
+      autoComplete: "current-password",
     },
     {
       required: true,
-      label: "Nueva Contraseña",
+      label: "Nueva contraseña",
       id: "password",
       value: formik.values.password,
       error: formik.errors.password,
-      max: FORM_VLDN.LONG_STRING.max,
-      min: FORM_VLDN.LONG_STRING.min,
+      max: FORM_VLDN.PSSWD.max,
+      min: FORM_VLDN.PSSWD.min,
       noSpace: true,
       capitalize: false,
+      type: "password",
+      autoComplete: "new-password",
     },
     {
       required: true,
-      label: "Confirmar Nueva Contraseña",
+      label: "Confirmar nueva contraseña",
       id: "passwordConfirm",
       value: formik.values.passwordConfirm,
-      error:
-        formik.errors.passwordConfirm ||
-        (formik.values.password !== formik.values.passwordConfirm
-          ? FORM_MSG.passwordConfirm
-          : undefined),
-      max: FORM_VLDN.LONG_STRING.max,
-      min: FORM_VLDN.LONG_STRING.min,
+      error: formik.errors.passwordConfirm,
+      max: FORM_VLDN.PSSWD.max,
+      min: FORM_VLDN.PSSWD.min,
       noSpace: true,
       capitalize: false,
+      type: "password",
+      autoComplete: "new-password",
     },
   ];
 
@@ -138,9 +134,8 @@ export default function UpdateUserPsswd({
       isUpdate={true}
       inputs={inputs}
       formik={formik}
-      title="Restablecer Contraseña"
+      title="Cambiar contraseña"
       confBtnLabel="Confirmar"
-      noCancelBtn
       variant="standard"
     />
   );

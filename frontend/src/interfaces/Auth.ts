@@ -1,4 +1,5 @@
 import { BaseSystemFields } from "../types/pocketbase-types";
+import { Role } from "./Role";
 
 export interface SignUpResponse extends BaseSystemFields {
   id: string;
@@ -6,6 +7,9 @@ export interface SignUpResponse extends BaseSystemFields {
   email: string;
   password: string;
   role: string;
+  expand?: {
+    role?: Role;
+  };
 }
 
 export interface SignInRequest {

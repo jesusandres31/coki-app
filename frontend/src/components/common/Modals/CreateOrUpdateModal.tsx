@@ -102,9 +102,10 @@ export default function CreateOrUpdateModal({
                     name={input.id}
                     value={input.value}
                     multiline={input.multiline}
+                    type={input.type ?? "text"}
                     placeholder={""}
                     onChange={(e) => handleSetFormikValue(e, formik, input)}
-                    autoComplete="off"
+                    autoComplete={input.autoComplete ?? "off"}
                     error={!!input.error}
                     helperText={input.error ? input.error : " "}
                     variant={variant}
@@ -142,3 +143,4 @@ export default function CreateOrUpdateModal({
     </Dialog>
   );
 }
+
