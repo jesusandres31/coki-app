@@ -82,6 +82,35 @@ interface DebouncedAutocompleteProps {
   disabled?: boolean;
 }
 
+interface ProductTableRowData {
+  id: string;
+  productId: string;
+  productName: string;
+  amount: number;
+  unitPrice: number;
+  discount: number;
+  total: number;
+}
+
+interface ProductsTableProps {
+  rows: ProductTableRowData[];
+  editable: boolean;
+  productOptions: NamedOption[];
+  onRowChange?: (
+    id: string,
+    field: keyof Omit<InvoiceProductInput, "id">,
+    value: string | number,
+  ) => void;
+  onRemoveRow?: (id: string) => void;
+  canRemoveRow?: (id: string) => boolean;
+}
+
+interface InvoiceTotalsSummaryProps {
+  subtotal: number;
+  discountPercent: number;
+  total: number;
+}
+
 const getLocalDate = () => {
   const now = new Date();
   const offset = now.getTimezoneOffset() * 60000;
@@ -185,6 +214,164 @@ function DebouncedAutocomplete({
   );
 }
 
+function ProductsTable({
+  rows,
+  editable,
+  productOptions,
+  onRowChange,
+  onRemoveRow,
+  canRemoveRow,
+}: ProductsTableProps) {
+  return (
+    <TableContainer
+      sx={{
+        flex: "1 1 auto",
+        minHeight: 0,
+        overflowY: "auto",
+        border: "1px solid",
+        borderColor: "divider",
+        borderRadius: 1.5,
+      }}
+    >
+      <Table size="small" stickyHeader>
+        <TableHead>
+          <TableRow>
+            <TableCell sx={{ width: "36%" }}>Producto</TableCell>
+            <TableCell sx={{ width: "12%" }}>Cantidad</TableCell>
+            <TableCell sx={{ width: "16%" }}>Precio unit.</TableCell>
+            <TableCell sx={{ width: "16%" }}>Descuento (%)</TableCell>
+            <TableCell sx={{ width: "16%" }} align="right">
+              Total
+            </TableCell>
+            {editable && <TableCell sx={{ width: 56 }} />}
+          </TableRow>
+        </TableHead>
+        <TableBody>
+          {rows.map((row) => (
+            <TableRow key={row.id}>
+              <TableCell sx={{ py: 0.75, verticalAlign: "middle" }}>
+                {editable ? (
+                  <DebouncedAutocomplete
+                    options={productOptions}
+                    valueId={row.productId}
+                    placeholder="Seleccionar producto"
+                    variant="standard"
+                    onChange={(value) => onRowChange?.(row.id, "product", value)}
+                  />
+                ) : (
+                  <TextField
+                    fullWidth
+                    size="small"
+                    variant="standard"
+                    value={row.productName}
+                    disabled
+                  />
+                )}
+              </TableCell>
+
+              <TableCell sx={{ py: 0.75, verticalAlign: "middle" }}>
+                <TextField
+                  fullWidth
+                  size="small"
+                  variant="standard"
+                  type="number"
+                  value={row.amount}
+                  onChange={(e) =>
+                    onRowChange?.(
+                      row.id,
+                      "amount",
+                      Math.max(1, Number(e.target.value || 1)),
+                    )
+                  }
+                  inputProps={{ min: 1, step: 1 }}
+                  disabled={!editable}
+                />
+              </TableCell>
+
+              <TableCell sx={{ py: 0.75, verticalAlign: "middle" }}>
+                <TextField
+                  fullWidth
+                  size="small"
+                  variant="standard"
+                  type="number"
+                  value={row.unitPrice}
+                  onChange={(e) =>
+                    onRowChange?.(
+                      row.id,
+                      "unitPrice",
+                      Math.max(0, Number(e.target.value || 0)),
+                    )
+                  }
+                  inputProps={{ min: 0, step: "0.01" }}
+                  disabled={!editable}
+                />
+              </TableCell>
+
+              <TableCell sx={{ py: 0.75, verticalAlign: "middle" }}>
+                <TextField
+                  fullWidth
+                  size="small"
+                  variant="standard"
+                  type="number"
+                  value={row.discount}
+                  onChange={(e) =>
+                    onRowChange?.(
+                      row.id,
+                      "discount",
+                      Math.min(100, Math.max(0, Number(e.target.value || 0))),
+                    )
+                  }
+                  inputProps={{ min: 0, max: 100, step: "0.01" }}
+                  disabled={!editable}
+                />
+              </TableCell>
+
+              <TableCell align="right" sx={{ py: 0.75, verticalAlign: "middle" }}>
+                <Typography variant="body2" fontWeight={600}>
+                  {formatMoney(row.total)}
+                </Typography>
+              </TableCell>
+
+              {editable && (
+                <TableCell align="center" sx={{ py: 0.75, verticalAlign: "middle" }}>
+                  <IconButton
+                    size="small"
+                    color="error"
+                    onClick={() => onRemoveRow?.(row.id)}
+                    disabled={!canRemoveRow?.(row.id)}
+                  >
+                    <DeleteRounded />
+                  </IconButton>
+                </TableCell>
+              )}
+            </TableRow>
+          ))}
+        </TableBody>
+      </Table>
+    </TableContainer>
+  );
+}
+
+function InvoiceTotalsSummary({
+  subtotal,
+  discountPercent,
+  total,
+}: InvoiceTotalsSummaryProps) {
+  return (
+    <Stack spacing={0.5} sx={{ alignItems: "flex-start" }}>
+      <Typography variant="body2" color="text.secondary">
+        Subtotal: {formatMoney(subtotal)}
+      </Typography>
+      <Typography variant="body2" color="text.secondary">
+        Descuento factura: {formatPercent(discountPercent)}
+      </Typography>
+      <Typography variant="h6" fontWeight={700}>
+        Total: {formatMoney(total)}
+      </Typography>
+    </Stack>
+  );
+}
+
 export default function InvoiceFormPage() {
   const { invoiceId } = useParams();
   const dispatch = useAppDispatch();
@@ -276,7 +463,7 @@ export default function InvoiceFormPage() {
       }
 
       try {
-        await createInvoice({
+        const created = await createInvoice({
           client: values.client,
           date: values.date,
           discount: values.discount,
@@ -294,7 +481,7 @@ export default function InvoiceFormPage() {
             type: "success",
           }),
         );
-        handleGoTo(AppRoutes.Invoices);
+        handleGoTo(`${AppRoutes.Invoices}/${created.invoice.id}`);
       } catch {
         // Error feedback is already handled by RTK middleware.
       }
@@ -385,6 +572,41 @@ export default function InvoiceFormPage() {
   const detailTotal = useMemo(
     () => Math.max(0, detailSubtotal * (1 - editFormik.values.discount / 100)),
     [detailSubtotal, editFormik.values.discount],
+  );
+
+  const createTableRows = useMemo<ProductTableRowData[]>(
+    () =>
+      newFormik.values.rows.map((row) => {
+        const productName =
+          productOptions.find((option) => option.id === row.product)?.name || "";
+        return {
+          id: row.id,
+          productId: row.product,
+          productName,
+          amount: row.amount,
+          unitPrice: row.unitPrice,
+          discount: row.discount,
+          total: getCreateItemTotal(row),
+        };
+      }),
+    [newFormik.values.rows, productOptions],
+  );
+
+  const detailTableRows = useMemo<ProductTableRowData[]>(
+    () =>
+      invoiceProducts.map((item, i) => ({
+        id: item.id || `row-${i}`,
+        productId: "",
+        productName:
+          item.product_name ||
+          (typeof item.product === "string" ? item.product : item.product?.name) ||
+          "-",
+        amount: Number(item.amount ?? 0),
+        unitPrice: Number(item.unit_price ?? 0),
+        discount: Number(item.discount ?? 0),
+        total: getDetailItemTotal(item),
+      })),
+    [invoiceProducts],
   );
 
   const hasInvalidRows = newFormik.values.rows.some(
@@ -610,152 +832,33 @@ export default function InvoiceFormPage() {
                     </Button>
                   </Stack>
 
-                  <TableContainer
-                    sx={{
-                      flex: "1 1 auto",
-                      minHeight: 0,
-                      overflowY: "auto",
-                      border: "1px solid",
-                      borderColor: "divider",
-                      borderRadius: 1.5,
-                    }}
-                  >
-                    <Table size="small" stickyHeader>
-                      <TableHead>
-                        <TableRow>
-                          <TableCell sx={{ width: "36%" }}>Producto</TableCell>
-                          <TableCell sx={{ width: "12%" }}>Cantidad</TableCell>
-                          <TableCell sx={{ width: "16%" }}>
-                            Precio unit.
-                          </TableCell>
-                          <TableCell sx={{ width: "16%" }}>
-                            Descuento (%)
-                          </TableCell>
-                          <TableCell sx={{ width: "16%" }} align="right">
-                            Total
-                          </TableCell>
-                          <TableCell sx={{ width: 56 }} />
-                        </TableRow>
-                      </TableHead>
-                      <TableBody>
-                        {newFormik.values.rows.map((row) => (
-                          <TableRow key={row.id}>
-                            <TableCell
-                              sx={{ py: 0.75, verticalAlign: "middle" }}
-                            >
-                              <DebouncedAutocomplete
-                                options={productOptions}
-                                valueId={row.product}
-                                placeholder="Seleccionar producto"
-                                variant="standard"
-                                onChange={(value) =>
-                                  handleRowChange(row.id, "product", value)
-                                }
-                              />
-                            </TableCell>
-                            <TableCell
-                              sx={{ py: 0.75, verticalAlign: "middle" }}
-                            >
-                              <TextField
-                                fullWidth
-                                size="small"
-                                variant="standard"
-                                type="number"
-                                value={row.amount}
-                                onChange={(e) =>
-                                  handleRowChange(
-                                    row.id,
-                                    "amount",
-                                    Math.max(1, Number(e.target.value || 1)),
-                                  )
-                                }
-                                inputProps={{ min: 1, step: 1 }}
-                              />
-                            </TableCell>
-                            <TableCell
-                              sx={{ py: 0.75, verticalAlign: "middle" }}
-                            >
-                              <TextField
-                                fullWidth
-                                size="small"
-                                variant="standard"
-                                type="number"
-                                value={row.unitPrice}
-                                onChange={(e) =>
-                                  handleRowChange(
-                                    row.id,
-                                    "unitPrice",
-                                    Math.max(0, Number(e.target.value || 0)),
-                                  )
-                                }
-                                inputProps={{ min: 0, step: "0.01" }}
-                              />
-                            </TableCell>
-                            <TableCell
-                              sx={{ py: 0.75, verticalAlign: "middle" }}
-                            >
-                              <TextField
-                                fullWidth
-                                size="small"
-                                variant="standard"
-                                type="number"
-                                value={row.discount}
-                                onChange={(e) =>
-                                  handleRowChange(
-                                    row.id,
-                                    "discount",
-                                    Math.min(
-                                      100,
-                                      Math.max(0, Number(e.target.value || 0)),
-                                    ),
-                                  )
-                                }
-                                inputProps={{ min: 0, max: 100, step: "0.01" }}
-                              />
-                            </TableCell>
-                            <TableCell
-                              align="right"
-                              sx={{ py: 0.75, verticalAlign: "middle" }}
-                            >
-                              <Typography variant="body2" fontWeight={600}>
-                                {formatMoney(getCreateItemTotal(row))}
-                              </Typography>
-                            </TableCell>
-                            <TableCell
-                              align="center"
-                              sx={{ py: 0.75, verticalAlign: "middle" }}
-                            >
-                              <IconButton
-                                size="small"
-                                color="error"
-                                onClick={() => handleRemoveRow(row.id)}
-                                disabled={newFormik.values.rows.length === 1}
-                              >
-                                <DeleteRounded />
-                              </IconButton>
-                            </TableCell>
-                          </TableRow>
-                        ))}
-                      </TableBody>
-                    </Table>
-                  </TableContainer>
+                  <ProductsTable
+                    rows={createTableRows}
+                    editable
+                    productOptions={productOptions}
+                    onRowChange={handleRowChange}
+                    onRemoveRow={handleRemoveRow}
+                    canRemoveRow={() => newFormik.values.rows.length > 1}
+                  />
 
                   <Divider />
 
-                  <Stack alignItems="flex-end" spacing={0.5} sx={{ mt: "auto" }}>
-                    <Typography variant="body2" color="text.secondary">
-                      Subtotal: {formatMoney(newSubtotal)}
-                    </Typography>
-                    <Typography variant="body2" color="text.secondary">
-                      Descuento factura:{" "}
-                      {formatPercent(newFormik.values.discount)}
-                    </Typography>
-                    <Typography variant="h6" fontWeight={700}>
-                      Total: {formatMoney(newTotal)}
-                    </Typography>
-                  </Stack>
+                  <Box
+                    sx={{
+                      mt: "auto",
+                      display: "flex",
+                      justifyContent: "space-between",
+                      alignItems: "flex-end",
+                      gap: 1.5,
+                      flexWrap: "wrap",
+                    }}
+                  >
+                    <InvoiceTotalsSummary
+                      subtotal={newSubtotal}
+                      discountPercent={newFormik.values.discount}
+                      total={newTotal}
+                    />
 
-                  <Box display="flex" justifyContent="flex-end">
                     <Button
                       size="small"
                       variant="contained"
@@ -834,120 +937,21 @@ export default function InvoiceFormPage() {
                     Productos
                   </Typography>
 
-                  <TableContainer
-                    sx={{
-                      flex: "1 1 auto",
-                      minHeight: 0,
-                      overflowY: "auto",
-                      border: "1px solid",
-                      borderColor: "divider",
-                      borderRadius: 1.5,
-                    }}
-                  >
-                    <Table size="small" stickyHeader>
-                      <TableHead>
-                        <TableRow>
-                          <TableCell>Producto</TableCell>
-                          <TableCell>Cantidad</TableCell>
-                          <TableCell>Precio Unit.</TableCell>
-                          <TableCell>Desc. %</TableCell>
-                          <TableCell align="right">Total</TableCell>
-                        </TableRow>
-                      </TableHead>
-                      <TableBody>
-                        {invoiceProducts.map((item, i) => {
-                          const product =
-                            item.product_name ||
-                            (typeof item.product === "string"
-                              ? item.product
-                              : item.product?.name) ||
-                            "-";
-
-                          return (
-                            <TableRow key={`${item.id || product}-${i}`}>
-                              <TableCell
-                                sx={{ py: 0.75, verticalAlign: "middle" }}
-                              >
-                                <TextField
-                                  fullWidth
-                                  size="small"
-                                  value={product}
-                                  disabled
-                                />
-                              </TableCell>
-                              <TableCell
-                                sx={{ py: 0.75, verticalAlign: "middle" }}
-                              >
-                                <TextField
-                                  fullWidth
-                                  size="small"
-                                  value={item.amount ?? 0}
-                                  disabled
-                                />
-                              </TableCell>
-                              <TableCell
-                                sx={{ py: 0.75, verticalAlign: "middle" }}
-                              >
-                                <TextField
-                                  fullWidth
-                                  size="small"
-                                  value={formatMoney(item.unit_price)}
-                                  disabled
-                                />
-                              </TableCell>
-                              <TableCell
-                                sx={{ py: 0.75, verticalAlign: "middle" }}
-                              >
-                                <TextField
-                                  fullWidth
-                                  size="small"
-                                  value={formatPercent(item.discount)}
-                                  disabled
-                                />
-                              </TableCell>
-                              <TableCell
-                                align="right"
-                                sx={{ py: 0.75, verticalAlign: "middle" }}
-                              >
-                                <TextField
-                                  fullWidth
-                                  size="small"
-                                  value={formatMoney(getDetailItemTotal(item))}
-                                  disabled
-                                />
-                              </TableCell>
-                            </TableRow>
-                          );
-                        })}
-                      </TableBody>
-                    </Table>
-                  </TableContainer>
+                  <ProductsTable
+                    rows={detailTableRows}
+                    editable={false}
+                    productOptions={[]}
+                  />
 
                   <Divider />
 
-                  <Stack alignItems="flex-end" spacing={1} sx={{ mt: "auto" }}>
-                    <TextField
-                      size="small"
-                      label="Subtotal"
-                      value={formatMoney(detailSubtotal)}
-                      disabled
-                      sx={{ width: 220 }}
+                  <Box sx={{ mt: "auto" }}>
+                    <InvoiceTotalsSummary
+                      subtotal={detailSubtotal}
+                      discountPercent={editFormik.values.discount}
+                      total={detailTotal}
                     />
-                    <TextField
-                      size="small"
-                      label="Descuento factura"
-                      value={formatPercent(editFormik.values.discount)}
-                      disabled
-                      sx={{ width: 220 }}
-                    />
-                    <TextField
-                      size="small"
-                      label="Total"
-                      value={formatMoney(detailTotal)}
-                      disabled
-                      sx={{ width: 220 }}
-                    />
-                  </Stack>
+                  </Box>
                 </Stack>
               )}
             </CardContent>
