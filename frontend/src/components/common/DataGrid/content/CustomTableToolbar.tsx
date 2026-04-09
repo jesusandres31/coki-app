@@ -91,7 +91,11 @@ export default function CustomTableToolbar({
                 alignItems: "center",
               }}
             >
-              <FormControl variant="outlined" size="small" sx={{ width: "100%" }}>
+              <FormControl
+                variant="outlined"
+                size="small"
+                sx={{ width: "100%" }}
+              >
                 <InputLabel>{searchPlaceholder}</InputLabel>
                 <OutlinedInput
                   value={filter}
@@ -125,6 +129,7 @@ export default function CustomTableToolbar({
               marginLeft: "auto",
               justifyContent: "flex-end",
               alignItems: "center",
+              pr: 1,
             }}
           >
             {toolbarElement}

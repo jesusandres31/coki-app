@@ -6,7 +6,7 @@ import { getListArgsInitialState } from "src/constants";
 import { useGetInvoicesViewQuery } from "src/app/services/invoiceService";
 import { Column, DataGridRowAction, DetailColumn, GetList } from "src/types";
 import { VInvoicesResponse } from "src/types/pocketbase-types";
-import { formatDate, formatMoney } from "src/utils/format";
+import { formatDate, formatMoney, formatPercent } from "src/utils/format";
 import { useRouter } from "src/hooks";
 import { AppRoutes } from "src/config";
 
@@ -46,7 +46,7 @@ export default function Invoices() {
         label: "Descuento",
         minWidth: 140,
         disableSort: true,
-        render: (item: VInvoicesResponse) => formatMoney(item.discount),
+        render: (item: VInvoicesResponse) => formatPercent(item.discount),
       },
       {
         id: "total",
@@ -93,9 +93,9 @@ export default function Invoices() {
           },
           {
             id: "discount",
-            label: "Desc.",
+            label: "Desc. %",
             minWidth: 100,
-            render: (item: any) => formatMoney(item?.discount),
+            render: (item: any) => formatPercent(item?.discount),
           },
           {
             id: "total",

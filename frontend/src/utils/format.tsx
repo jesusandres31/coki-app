@@ -59,6 +59,15 @@ export const formatMoney = (num: number | undefined) => {
   return formattedPrice;
 };
 
+export const formatPercent = (num: number | undefined) => {
+  if (isNaN(Number(num)) || (!num && num !== 0)) {
+    return "NaN";
+  }
+  const value = Number(num);
+  const hasDecimals = value % 1 !== 0;
+  return `${hasDecimals ? value.toFixed(2) : value}%`;
+};
+
 export const formatPaid = (total: number, paid: number) => {
   return (
     <Chip

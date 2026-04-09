@@ -20,6 +20,7 @@ const invoicesViewTag = ApiTag.InvoicesView;
 const clientsTag = ApiTag.Clients;
 const productsTag = ApiTag.Products;
 const typedPb = pb as TypedPocketBase;
+const MAX_DISCOUNT_PERCENT = 100;
 
 interface CreateInvoiceItemReq {
   product: string;
@@ -35,8 +36,16 @@ export interface CreateInvoiceReq {
   items: CreateInvoiceItemReq[];
 }
 
-const getItemTotal = (item: CreateInvoiceItemReq) =>
-  Math.max(0, item.amount * item.unitPrice - item.discount);
+const normalizeDiscountPercent = (value: number) =>
+  Math.min(MAX_DISCOUNT_PERCENT, Math.max(0, Number(value || 0)));
+
+const getItemTotal = (item: CreateInvoiceItemReq) => {
+  const discountPercent = normalizeDiscountPercent(item.discount);
+  return Math.max(
+    0,
+    item.amount * item.unitPrice * (1 - discountPercent / 100),
+  );
+};
 
 export const invoiceApi = mainApi.injectEndpoints({
   endpoints: (build) => ({
@@ -100,12 +109,16 @@ export const invoiceApi = mainApi.injectEndpoints({
           (acc, item) => acc + item.total,
           0,
         );
-        const invoiceTotal = Math.max(0, subtotal - _arg.discount);
+        const invoiceDiscountPercent = normalizeDiscountPercent(_arg.discount);
+        const invoiceTotal = Math.max(
+          0,
+          subtotal * (1 - invoiceDiscountPercent / 100),
+        );
 
         const invoicePayload: Create<"invoices"> = {
           client: _arg.client,
           date: _arg.date,
-          discount: _arg.discount,
+          discount: invoiceDiscountPercent,
           total: invoiceTotal,
         };
 
@@ -118,7 +131,7 @@ export const invoiceApi = mainApi.injectEndpoints({
               product: item.product,
               amount: item.amount,
               unit_price: item.unitPrice,
-              discount: item.discount,
+              discount: normalizeDiscountPercent(item.discount),
               total: item.total,
             }),
           ),
