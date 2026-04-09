@@ -1,12 +1,17 @@
 import { useMemo, useState } from "react";
+import { Button } from "@mui/material";
+import { OpenInNewRounded } from "@mui/icons-material";
 import DataGrid from "src/components/common/DataGrid/DataGrid";
 import { getListArgsInitialState } from "src/constants";
 import { useGetInvoicesViewQuery } from "src/app/services/invoiceService";
-import { Column, DetailColumn, GetList } from "src/types";
+import { Column, DataGridRowAction, DetailColumn, GetList } from "src/types";
 import { VInvoicesResponse } from "src/types/pocketbase-types";
 import { formatDate, formatMoney } from "src/utils/format";
+import { useRouter } from "src/hooks";
+import { AppRoutes } from "src/config";
 
 export default function Invoices() {
+  const { handleGoTo } = useRouter();
   const [queryArgs, setQueryArgs] = useState<GetList>(
     () => ({ ...getListArgsInitialState, orderBy: "date" }),
   );
@@ -104,6 +109,18 @@ export default function Invoices() {
     [],
   );
 
+  const rowActions: DataGridRowAction[] = useMemo(
+    () => [
+      {
+        id: "open",
+        label: "Abrir factura",
+        icon: <OpenInNewRounded fontSize="small" />,
+        onClick: (item) => handleGoTo(`${AppRoutes.Invoices}/${item.id}`),
+      },
+    ],
+    [handleGoTo],
+  );
+
   return (
     <DataGrid
       data={data}
@@ -116,6 +133,16 @@ export default function Invoices() {
       searchPlaceholder="Buscar factura"
       initialQuery={queryArgs}
       onQueryChange={setQueryArgs}
+      rowActions={rowActions}
+      toolbarElement={
+        <Button
+          size="small"
+          variant="contained"
+          onClick={() => handleGoTo(AppRoutes.InvoicesNew)}
+        >
+          Crear factura
+        </Button>
+      }
     />
   );
 }

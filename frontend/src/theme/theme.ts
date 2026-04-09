@@ -38,7 +38,7 @@ const theme = createTheme({
     },
   },
   shape: {
-    borderRadius: 3,
+    borderRadius: 4,
   },
   typography: {
     fontFamily: ["Inter", "Segoe UI", "sans-serif"].join(","),
@@ -69,7 +69,7 @@ const theme = createTheme({
     MuiCard: {
       styleOverrides: {
         root: {
-          borderRadius: 3,
+          borderRadius: 4,
           border: "1px solid #E2E8F0",
           boxShadow: "0 1px 2px rgba(15, 23, 42, 0.04)",
         },
@@ -81,7 +81,7 @@ const theme = createTheme({
       },
       styleOverrides: {
         root: {
-          borderRadius: 3,
+          borderRadius: 4,
           textTransform: "none",
           fontWeight: 600,
         },
@@ -115,7 +115,7 @@ const theme = createTheme({
     MuiListItemButton: {
       styleOverrides: {
         root: {
-          borderRadius: 3,
+          borderRadius: 4,
         },
       },
     },
@@ -127,7 +127,7 @@ const theme = createTheme({
     MuiOutlinedInput: {
       styleOverrides: {
         root: {
-          borderRadius: 3,
+          borderRadius: 4,
           backgroundColor: "#FFFFFF",
         },
       },
@@ -146,7 +146,7 @@ const theme = createTheme({
           backgroundColor: "rgba(2, 6, 23, 0.35)",
         },
         paper: {
-          borderRadius: 3,
+          borderRadius: 4,
           border: "1px solid #E2E8F0",
           boxShadow: "0 20px 45px rgba(15, 23, 42, 0.15)",
         },
@@ -178,7 +178,7 @@ const theme = createTheme({
     MuiTableContainer: {
       styleOverrides: {
         root: {
-          borderRadius: 3,
+          borderRadius: 4,
         },
       },
     },
@@ -219,14 +219,14 @@ const theme = createTheme({
     MuiChip: {
       styleOverrides: {
         root: {
-          borderRadius: 3,
+          borderRadius: 4,
         },
       },
     },
     MuiMenu: {
       styleOverrides: {
         paper: {
-          borderRadius: 3,
+          borderRadius: 4,
           border: "1px solid #E2E8F0",
           boxShadow: "0 12px 24px rgba(15, 23, 42, 0.08)",
         },
@@ -235,7 +235,7 @@ const theme = createTheme({
     MuiMenuItem: {
       styleOverrides: {
         root: {
-          borderRadius: 3,
+          borderRadius: 4,
           marginInline: 6,
           marginBlock: 2,
         },
@@ -244,7 +244,7 @@ const theme = createTheme({
     MuiAlert: {
       styleOverrides: {
         root: {
-          borderRadius: 3,
+          borderRadius: 4,
         },
       },
     },

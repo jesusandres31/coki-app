@@ -19,7 +19,7 @@ export const version = packageJson.version;
 // application keys
 export const storageKey = {
   DRAWER: "drawer",
- };
+};
 
 // application routing
 export enum AppRoutes {
@@ -30,7 +30,9 @@ export enum AppRoutes {
   // private routes
   Profile = "/profile",
   Invoices = "/invoices",
- }
+  InvoicesNew = "/invoices/new",
+  InvoicesDetail = "/invoices/:invoiceId",
+}
 
 export const noLayoutRoutes = [AppRoutes.Profile];
 

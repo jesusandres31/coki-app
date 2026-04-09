@@ -1,11 +1,19 @@
 import React from "react";
-import { Column, DetailColumn, IColumn, DataItem } from "src/types";
+import {
+  Column,
+  DataGridRowAction,
+  DetailColumn,
+  IColumn,
+  DataItem,
+} from "src/types";
 import { useUI } from "src/hooks";
 import {
   TableCell,
   Typography,
   Checkbox,
   IconButton,
+  Tooltip,
+  Box,
   TableRow,
   TableBody,
 } from "@mui/material";
@@ -23,6 +31,7 @@ interface CustomTableBodyProps {
   detailColumns?: DetailColumn;
   collapseItem: string;
   hasCheckbox?: boolean;
+  rowActions?: DataGridRowAction[];
   handleToggleSelect: (id: string) => void;
   handleToggleCollapse: (id: string) => void;
   styles?: any;
@@ -35,12 +44,14 @@ export default function CustomTableBody({
   detailColumns,
   collapseItem,
   hasCheckbox = false,
+  rowActions = [],
   handleToggleSelect,
   handleToggleCollapse,
   styles,
 }: CustomTableBodyProps) {
   const { isMobile } = useUI();
   const isCollapsible = Boolean(detailColumns);
+  const hasRowActions = rowActions.length > 0;
 
   const isSelected = (selectedItems: string[], itemId: string) => {
     return selectedItems.some((selectedItem) => selectedItem === itemId);
@@ -83,13 +94,13 @@ export default function CustomTableBody({
 
                 return (
                   <TableCell
-                    height={52}
+                    height={44}
                     component="th"
                     scope="row"
                     size="small"
                     key={`${column.id}-${i}`}
                     align={column.align ?? "right"}
-                    sx={{ cursor: "pointer" }}
+                    sx={{ cursor: "pointer", py: 0.5 }}
                     onClick={() =>
                       isCollapsible ? handleToggleCollapse(row.id) : undefined
                     }
@@ -113,10 +124,32 @@ export default function CustomTableBody({
                 );
               })}
 
+              {hasRowActions ? (
+                <TableCell align="right" sx={{ py: 0.25 }}>
+                  <Box
+                    display="flex"
+                    justifyContent="flex-end"
+                    alignItems="center"
+                    gap={0.5}
+                  >
+                    {rowActions.map((action) => (
+                      <Tooltip key={action.id} title={action.label}>
+                        <IconButton onClick={() => action.onClick(row)}>
+                          {action.icon}
+                        </IconButton>
+                      </Tooltip>
+                    ))}
+                  </Box>
+                </TableCell>
+              ) : null}
+
               {isCollapsible ? (
                 <TableCell
                   align="right"
-                  sx={isMobile ? styles.stickyMobile : styles.sticky}
+                  sx={{
+                    ...(isMobile ? styles.stickyMobile : styles.sticky),
+                    py: 0.25,
+                  }}
                   onClick={() => handleToggleCollapse(row.id)}
                 >
                   <IconButton>
@@ -131,7 +164,12 @@ export default function CustomTableBody({
             </TableRow>
 
             <CustomCollapse
-              columnsLength={columns.length}
+              colSpan={
+                columns.length +
+                1 + // checkbox column (or its placeholder)
+                (hasRowActions ? 1 : 0) +
+                (isCollapsible ? 1 : 0)
+              }
               detailColumns={detailColumns}
               styles={styles}
               collapsed={collapsed}

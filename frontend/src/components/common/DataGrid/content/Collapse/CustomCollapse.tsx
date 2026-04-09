@@ -17,7 +17,7 @@ import NoItems from "../../../NoItems";
 import { CustomGrid } from "./../utils";
 
 interface CustomCollapseProps {
-  columnsLength: number;
+  colSpan: number;
   detailColumns?: DetailColumn;
   styles: any;
   collapsed: boolean;
@@ -25,7 +25,7 @@ interface CustomCollapseProps {
 }
 
 export default function CustomCollapse({
-  columnsLength,
+  colSpan,
   detailColumns,
   styles,
   collapsed,
@@ -44,10 +44,7 @@ export default function CustomCollapse({
           borderInline: "none",
           borderBlock: collapsed ? "" : "none",
         }}
-        colSpan={
-          // + 2 if collapsed because of the checkbox and the collapse cell.
-          columnsLength + (isCollapsible ? 2 : 1)
-        }
+        colSpan={colSpan}
       >
         <Collapse in={collapsed} timeout="auto" unmountOnExit>
           {(detailColumns as IDetailColumn<DataItem, DataItem>[]).map(

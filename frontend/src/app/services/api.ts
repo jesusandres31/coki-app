@@ -8,7 +8,10 @@ const baseQuery = fetchBaseQuery({});
  */
 export const ApiTag = {
   Users: "users",
+  Clients: "clients",
+  Products: "products",
   Invoices: "invoices",
+  InvoicesProducts: "invoices_products",
   InvoicesView: "v_invoices",
 };
 

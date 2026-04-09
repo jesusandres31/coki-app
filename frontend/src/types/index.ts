@@ -137,3 +137,10 @@ export type Column = IColumn<any>[];
 
 export type DetailColumn = IDetailColumn<any, any>[];
 
+export interface DataGridRowAction {
+  id: string;
+  label: string;
+  icon: React.ReactNode;
+  onClick: (item: DataItem) => void;
+}
+

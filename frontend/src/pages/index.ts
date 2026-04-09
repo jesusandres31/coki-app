@@ -6,3 +6,5 @@ export { default as SignIn } from "./public/SignIn/SignIn";
 // private
 export { default as Profile } from "./private/Profile/Profile";
 export { default as Invoices } from "./private/Invoices/Invoices";
+export { default as InvoicesNew } from "./private/Invoices/InvoicesNew";
+export { default as InvoiceDetail } from "./private/Invoices/InvoiceDetail";

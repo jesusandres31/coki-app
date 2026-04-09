@@ -1,8 +1,9 @@
-import { useEffect, useMemo, useState } from "react";
+import { ReactNode, useEffect, useMemo, useState } from "react";
 import {
   Column,
   DataGridData,
   DataGridError,
+  DataGridRowAction,
   DetailColumn,
   GetList,
   Order,
@@ -45,6 +46,8 @@ interface DataGridProps {
   searchPlaceholder?: string;
   initialQuery?: Partial<GetList>;
   onQueryChange?: (query: GetList) => void;
+  toolbarElement?: ReactNode;
+  rowActions?: DataGridRowAction[];
 }
 
 export default function DataGrid({
@@ -58,6 +61,8 @@ export default function DataGrid({
   searchPlaceholder,
   initialQuery,
   onQueryChange,
+  toolbarElement,
+  rowActions,
 }: DataGridProps) {
   const [page, setPage] = useState(initialQuery?.page ?? 1);
   const [filter, setFilter] = useState(initialQuery?.filter ?? "");
@@ -197,6 +202,7 @@ export default function DataGrid({
           selectedCount={selectedItems.length}
           onSearch={handleSetFilter}
           searchPlaceholder={searchPlaceholder}
+          toolbarElement={toolbarElement}
         />
       )}
 
@@ -222,6 +228,7 @@ export default function DataGrid({
               order={order}
               orderBy={orderBy}
               isCollapsible={isCollapsible}
+              hasRowActions={Boolean(rowActions?.length)}
               hasCheckbox={hasCheckbox}
               handleSelectAll={handleSelectAll}
               handleSortTable={handleSort}
@@ -234,6 +241,7 @@ export default function DataGrid({
               detailColumns={detailColumns}
               collapseItem={collapseItem}
               hasCheckbox={hasCheckbox}
+              rowActions={rowActions}
               handleToggleSelect={handleToggleSelect}
               handleToggleCollapse={handleToggleCollapse}
               styles={styles}

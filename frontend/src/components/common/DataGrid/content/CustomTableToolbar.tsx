@@ -1,6 +1,6 @@
-import { ChangeEvent } from "react";
+import { ChangeEvent, ReactNode } from "react";
 import {
-  Grid,
+  Box,
   Toolbar,
   Typography,
   IconButton,
@@ -19,6 +19,7 @@ interface CustomTableToolbarProps {
   selectedCount: number;
   onSearch: (value: string) => void;
   searchPlaceholder?: string;
+  toolbarElement?: ReactNode;
 }
 
 export default function CustomTableToolbar({
@@ -26,6 +27,7 @@ export default function CustomTableToolbar({
   selectedCount,
   onSearch,
   searchPlaceholder = "Search",
+  toolbarElement,
 }: CustomTableToolbarProps) {
   const theme = useTheme();
   const { isMobile } = useUI();
@@ -53,60 +55,82 @@ export default function CustomTableToolbar({
         borderColor: "divider",
       }}
     >
-      <Grid container justifyContent="space-between" alignItems="center">
-        {hasSelection ? (
-          <Grid
-            sx={{
-              height: 40,
-              display: "flex",
-              alignItems: "center",
-            }}
-          >
-            <Typography
-              variant={isMobile ? "subtitle2" : "subtitle1"}
-              id="tableTitle"
-              component="div"
-              color="text.primary"
+      <Box
+        sx={{
+          width: "100%",
+          display: "flex",
+          alignItems: "center",
+          gap: 1.5,
+        }}
+      >
+        <Box sx={{ flex: "1 1 auto", minWidth: 0 }}>
+          {hasSelection ? (
+            <Box
+              sx={{
+                height: 40,
+                display: "flex",
+                alignItems: "center",
+              }}
             >
-              {`${selectedCount} item${selectedCount === 1 ? "" : "s"} selected`}
-            </Typography>
-          </Grid>
-        ) : (
-          <Grid
+              <Typography
+                variant={isMobile ? "subtitle2" : "subtitle1"}
+                id="tableTitle"
+                component="div"
+                color="text.primary"
+              >
+                {`${selectedCount} item${selectedCount === 1 ? "" : "s"} selected`}
+              </Typography>
+            </Box>
+          ) : (
+            <Box
+              sx={{
+                width: "100%",
+                maxWidth: 450,
+                height: 40,
+                display: "flex",
+                alignItems: "center",
+              }}
+            >
+              <FormControl variant="outlined" size="small" sx={{ width: "100%" }}>
+                <InputLabel>{searchPlaceholder}</InputLabel>
+                <OutlinedInput
+                  value={filter}
+                  onChange={handleSearch}
+                  startAdornment={
+                    <InputAdornment
+                      position="start"
+                      sx={{ color: "text.disabled" }}
+                    >
+                      <SearchRounded />
+                    </InputAdornment>
+                  }
+                  endAdornment={
+                    <InputAdornment position="end">
+                      <IconButton edge="end" onClick={handleClear}>
+                        <ClearRounded />
+                      </IconButton>
+                    </InputAdornment>
+                  }
+                  label={searchPlaceholder}
+                />
+              </FormControl>
+            </Box>
+          )}
+        </Box>
+
+        {!hasSelection && toolbarElement ? (
+          <Box
             sx={{
-              width: "100%",
-              maxWidth: 450,
-              height: 40,
               display: "flex",
+              marginLeft: "auto",
+              justifyContent: "flex-end",
               alignItems: "center",
             }}
           >
-            <FormControl variant="outlined" size="small" sx={{ width: "100%" }}>
-              <InputLabel>{searchPlaceholder}</InputLabel>
-              <OutlinedInput
-                value={filter}
-                onChange={handleSearch}
-                startAdornment={
-                  <InputAdornment
-                    position="start"
-                    sx={{ color: "text.disabled" }}
-                  >
-                    <SearchRounded />
-                  </InputAdornment>
-                }
-                endAdornment={
-                  <InputAdornment position="end">
-                    <IconButton edge="end" onClick={handleClear}>
-                      <ClearRounded />
-                    </IconButton>
-                  </InputAdornment>
-                }
-                label={searchPlaceholder}
-              />
-            </FormControl>
-          </Grid>
-        )}
-      </Grid>
+            {toolbarElement}
+          </Box>
+        ) : null}
+      </Box>
     </Toolbar>
   );
 }

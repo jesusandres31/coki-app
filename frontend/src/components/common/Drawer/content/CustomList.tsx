@@ -37,12 +37,19 @@ export default function CustomList({
   const backgroundColor = alpha(theme.palette.primary.main, 0.12);
   // const borderRadius = 8;
 
+  const isSameOrChildRoute = (baseRoute?: string) => {
+    if (!baseRoute) return false;
+    return route === baseRoute || route.startsWith(`${baseRoute}/`);
+  };
+
   const isSelected = (item: IMenuItem) => {
     if (item.to) {
-      return item.to === route;
+      return isSameOrChildRoute(item.to);
     }
     if (!openDrawer) {
-      return item.nestedItems?.some((nestedItem) => nestedItem.to === route);
+      return item.nestedItems?.some((nestedItem) =>
+        isSameOrChildRoute(nestedItem.to),
+      );
     }
   };
 
@@ -96,7 +103,9 @@ export default function CustomList({
   };
 
   const isNestedSelected = (item: IMenuItem) => {
-    return item.nestedItems?.some((nestedItem) => nestedItem.to === route);
+    return item.nestedItems?.some((nestedItem) =>
+      isSameOrChildRoute(nestedItem.to),
+    );
   };
 
   return (

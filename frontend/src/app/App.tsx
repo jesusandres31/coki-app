@@ -17,6 +17,12 @@ const Profile = lazy(() =>
 const Invoices = lazy(() =>
   import("src/pages").then((module) => ({ default: module.Invoices })),
 );
+const InvoicesNew = lazy(() =>
+  import("src/pages").then((module) => ({ default: module.InvoicesNew })),
+);
+const InvoiceDetail = lazy(() =>
+  import("src/pages").then((module) => ({ default: module.InvoiceDetail })),
+);
 
 const privateRoutes = [
   {
@@ -26,6 +32,14 @@ const privateRoutes = [
   {
     route: AppRoutes.Invoices,
     render: <Invoices />,
+  },
+  {
+    route: AppRoutes.InvoicesNew,
+    render: <InvoicesNew />,
+  },
+  {
+    route: AppRoutes.InvoicesDetail,
+    render: <InvoiceDetail />,
   },
 ];
 

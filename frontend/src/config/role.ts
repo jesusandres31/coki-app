@@ -19,6 +19,8 @@ export enum SystemRole {
 export const routeRoles: RouteRoles = {
   [AppRoutes.Profile]: [SystemRole.ADMIN],
   [AppRoutes.Invoices]: [SystemRole.ADMIN, SystemRole.REGULAR],
+  [AppRoutes.InvoicesNew]: [SystemRole.ADMIN, SystemRole.REGULAR],
+  [AppRoutes.InvoicesDetail]: [SystemRole.ADMIN, SystemRole.REGULAR],
 };
 
 // utils

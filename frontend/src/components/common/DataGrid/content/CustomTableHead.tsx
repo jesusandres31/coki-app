@@ -16,6 +16,7 @@ interface CustomTableHeadProps {
   order: Order;
   orderBy: string;
   isCollapsible: boolean;
+  hasRowActions?: boolean;
   hasCheckbox?: boolean;
   handleSelectAll: () => void;
   handleSortTable: (columnId: string) => void;
@@ -29,6 +30,7 @@ export default function CustomTableHead({
   order,
   orderBy,
   isCollapsible,
+  hasRowActions = false,
   hasCheckbox = false,
   handleSelectAll,
   handleSortTable,
@@ -85,6 +87,8 @@ export default function CustomTableHead({
             </TableCell>
           );
         })}
+
+        {hasRowActions && <TableCell padding="checkbox" />}
 
         {isCollapsible && (
           <TableCell
