@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Button } from "@mui/material";
 import { OpenInNewRounded } from "@mui/icons-material";
 import DataGrid from "src/components/common/DataGrid/DataGrid";
@@ -9,12 +9,24 @@ import { VInvoicesResponse } from "src/types/pocketbase-types";
 import { formatDate, formatMoney, formatPercent } from "src/utils/format";
 import { useRouter } from "src/hooks";
 import { AppRoutes } from "src/config";
+import { useAppDispatch } from "src/app/store";
+import { resetBreadcrumbs, setBreadcrumbs } from "src/slices/uiSlice";
+import { invoiceBreadcrumbFlow } from "./breadcrumbFlow";
 
 export default function Invoices() {
+  const dispatch = useAppDispatch();
   const { handleGoTo } = useRouter();
   const [queryArgs, setQueryArgs] = useState<GetList>(
     () => ({ ...getListArgsInitialState, orderBy: "date" }),
   );
+
+  useEffect(() => {
+    dispatch(setBreadcrumbs(invoiceBreadcrumbFlow.list()));
+
+    return () => {
+      dispatch(resetBreadcrumbs());
+    };
+  }, [dispatch]);
 
   const { data, error, isFetching } = useGetInvoicesViewQuery(queryArgs);
 

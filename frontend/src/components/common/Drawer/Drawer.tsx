@@ -1,5 +1,5 @@
 import React from "react";
-import { Outlet } from "react-router-dom";
+import { Link as RouterLink, Outlet } from "react-router-dom";
 import {
   Toolbar,
   IconButton,
@@ -9,6 +9,8 @@ import {
   Drawer as BaseDrawer,
   Grid,
   Typography,
+  Breadcrumbs,
+  Link,
 } from "@mui/material";
 import { styled, useTheme, Theme, CSSObject } from "@mui/material/styles";
 import MuiDrawer from "@mui/material/Drawer";
@@ -22,13 +24,17 @@ import CustomList from "./content/CustomList";
 import LoginButton from "./content/LoginButton";
 import { useRouter, useUI } from "src/hooks";
 import { DRAWER_SECTIONS } from "src/config/drawer";
-import { toggleOpenDrawer, useUISelector } from "src/slices/uiSlice";
+import {
+  IUIBreadcrumb,
+  toggleOpenDrawer,
+  useUISelector,
+} from "src/slices/uiSlice";
 import { useAppDispatch } from "src/app/store";
 import { translateTitle } from "./utils";
 
 const DRAWER_WIDTH = 220;
 
-const APPBAR_HEIGHT = 50;
+const APPBAR_HEIGHT = 100;
 
 const openedMixin = (theme: Theme): CSSObject => ({
   width: DRAWER_WIDTH,
@@ -145,7 +151,7 @@ interface DrawerProps {
 export default function Drawer({ noTable }: DrawerProps) {
   const { isMobile } = useUI();
   const { route } = useRouter();
-  const { openDrawer } = useUISelector((state) => state.ui);
+  const { openDrawer, breadcrumbs } = useUISelector((state) => state.ui);
   const dispatch = useAppDispatch();
   const notMobAndOpen = !isMobile && openDrawer;
 
@@ -254,6 +260,40 @@ export default function Drawer({ noTable }: DrawerProps) {
         }}
       >
         <Toolbar variant="dense" />
+        {breadcrumbs.length > 0 && (
+          <Box sx={{ px: 3, pt: 3 }}>
+            <Breadcrumbs
+              aria-label="breadcrumb"
+              sx={{ mb: noTable ? 1 : 1.5, px: noTable ? 0 : 0.75 }}
+            >
+              {breadcrumbs.map((crumb: IUIBreadcrumb, index: number) => {
+                const isLast = index === breadcrumbs.length - 1;
+                const isClickable = Boolean(crumb.to) && !isLast;
+
+                return !isClickable ? (
+                  <Typography
+                    key={`${crumb.label}-${index}`}
+                    color="text.primary"
+                    variant="body1"
+                  >
+                    {crumb.label}
+                  </Typography>
+                ) : (
+                  <Link
+                    key={`${crumb.label}-${index}`}
+                    component={RouterLink}
+                    underline="hover"
+                    color="inherit"
+                    to={crumb.to as string}
+                    variant="body1"
+                  >
+                    {crumb.label}
+                  </Link>
+                );
+              })}
+            </Breadcrumbs>
+          </Box>
+        )}
         {noTable ? (
           <Box
             sx={{

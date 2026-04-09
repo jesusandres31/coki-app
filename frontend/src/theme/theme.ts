@@ -1,57 +1,55 @@
 import { alpha, createTheme } from "@mui/material";
 
+const github = {
+  fgDefault: "#1F2328",
+  fgMuted: "#57606A",
+  canvasDefault: "#FFFFFF",
+  canvasSubtle: "#F6F8FA",
+  borderDefault: "#D0D7DE",
+  accent: "#0969DA",
+  success: "#1A7F37",
+  warning: "#9A6700",
+  danger: "#CF222E",
+};
+
+const radius = 4;
+const border = `1px solid ${github.borderDefault}`;
+const shadowSm = "0 1px 2px rgba(31, 35, 40, 0.08)";
+const shadowMd = "0 12px 24px rgba(31, 35, 40, 0.12)";
+
 const theme = createTheme({
   palette: {
     primary: {
-      main: "#f16d00",
-    },
-    secondary: {
-      main: "#02292e",
-    },
-    /* primary: {
-      main: "#D19100",
-      dark: "#A36F00",
-      light: "#F2C65D",
-      contrastText: "#111827",
-    },
-    secondary: {
-      main: "#1E293B",
-      dark: "#0F172A",
-      light: "#334155",
+      main: github.success,
       contrastText: "#FFFFFF",
-    }, */
+    },
+    secondary: {
+      main: github.fgDefault,
+    },
     info: {
-      main: "#1D4ED8",
+      main: github.accent,
     },
     warning: {
-      main: "#B45309",
+      main: github.warning,
     },
     error: {
-      main: "#B91C1C",
+      main: github.danger,
     },
     success: {
-      main: "#166534",
+      main: github.success,
     },
-    /* text: {
-      primary: "#0F172A",
-      secondary: "#475569",
-      disabled: "#94A3B8",
-    },
-    divider: "#E2E8F0",
-    background: {
-      default: "#F8FAFC",
-      paper: "#FFFFFF",
-    }, */
     text: {
-      primary: "#050505",
+      primary: github.fgDefault,
+      secondary: github.fgMuted,
     },
+    divider: github.borderDefault,
     background: {
-      default: "#f1f1f1",
-      paper: "#ffffff",
+      default: github.canvasSubtle,
+      paper: github.canvasDefault,
     },
   },
   shape: {
-    borderRadius: 3.5,
+    borderRadius: radius,
   },
   typography: {
     fontFamily: ["Inter", "Segoe UI", "sans-serif"].join(","),
@@ -67,24 +65,24 @@ const theme = createTheme({
     MuiCssBaseline: {
       styleOverrides: {
         body: {
-          backgroundColor: "#F8FAFC",
-          color: "#0F172A",
+          backgroundColor: github.canvasSubtle,
+          color: github.fgDefault,
         },
       },
     },
     MuiPaper: {
       styleOverrides: {
         root: {
-          borderColor: "#E2E8F0",
+          borderColor: github.borderDefault,
         },
       },
     },
     MuiCard: {
       styleOverrides: {
         root: {
-          borderRadius: 3.5,
-          border: "1px solid #E2E8F0",
-          boxShadow: "0 1px 2px rgba(15, 23, 42, 0.04)",
+          borderRadius: radius,
+          border,
+          boxShadow: shadowSm,
         },
       },
     },
@@ -94,33 +92,30 @@ const theme = createTheme({
       },
       styleOverrides: {
         root: {
-          borderRadius: 3.5,
+          borderRadius: radius,
           textTransform: "none",
           fontWeight: 600,
-        },
-        containedPrimary: {
-          color: "#111827",
         },
       },
     },
     MuiIconButton: {
       styleOverrides: {
         root: {
-          color: "#475569",
+          color: github.fgMuted,
         },
       },
     },
     MuiAppBar: {
       styleOverrides: {
         root: {
-          boxShadow: "0 1px 2px rgba(15, 23, 42, 0.08)",
+          boxShadow: shadowSm,
         },
       },
     },
     MuiDrawer: {
       styleOverrides: {
         paper: {
-          borderRight: "1px solid #E2E8F0",
+          borderRight: border,
           backgroundImage: "none",
         },
       },
@@ -128,7 +123,7 @@ const theme = createTheme({
     MuiListItemButton: {
       styleOverrides: {
         root: {
-          borderRadius: 3.5,
+          borderRadius: radius,
         },
       },
     },
@@ -140,15 +135,15 @@ const theme = createTheme({
     MuiOutlinedInput: {
       styleOverrides: {
         root: {
-          borderRadius: 3.5,
-          backgroundColor: "#FFFFFF",
+          borderRadius: radius,
+          backgroundColor: github.canvasDefault,
         },
       },
     },
     MuiInputLabel: {
       styleOverrides: {
         root: {
-          color: "#64748B",
+          color: github.fgMuted,
         },
       },
     },
@@ -156,12 +151,12 @@ const theme = createTheme({
       styleOverrides: {
         root: {
           backdropFilter: "blur(2px)",
-          backgroundColor: "rgba(2, 6, 23, 0.35)",
+          backgroundColor: "rgba(31, 35, 40, 0.35)",
         },
         paper: {
-          borderRadius: 3.5,
-          border: "1px solid #E2E8F0",
-          boxShadow: "0 20px 45px rgba(15, 23, 42, 0.15)",
+          borderRadius: radius,
+          border,
+          boxShadow: shadowMd,
         },
       },
     },
@@ -191,18 +186,18 @@ const theme = createTheme({
     MuiTableContainer: {
       styleOverrides: {
         root: {
-          borderRadius: 3.5,
+          borderRadius: radius,
         },
       },
     },
     MuiTableCell: {
       styleOverrides: {
         root: {
-          borderBottom: "1px solid #E2E8F0",
+          borderBottom: border,
         },
         head: {
-          color: "#475569",
-          backgroundColor: "#F8FAFC",
+          color: github.fgMuted,
+          backgroundColor: github.canvasSubtle,
           fontWeight: 700,
         },
       },
@@ -211,13 +206,13 @@ const theme = createTheme({
       styleOverrides: {
         root: {
           "&:hover": {
-            backgroundColor: alpha("#1E293B", 0.03),
+            backgroundColor: alpha(github.fgDefault, 0.03),
           },
           "&.Mui-selected": {
-            backgroundColor: alpha("#D19100", 0.11),
+            backgroundColor: alpha(github.accent, 0.1),
           },
           "&.Mui-selected:hover": {
-            backgroundColor: alpha("#D19100", 0.16),
+            backgroundColor: alpha(github.accent, 0.15),
           },
         },
       },
@@ -232,23 +227,23 @@ const theme = createTheme({
     MuiChip: {
       styleOverrides: {
         root: {
-          borderRadius: 3.5,
+          borderRadius: radius,
         },
       },
     },
     MuiMenu: {
       styleOverrides: {
         paper: {
-          borderRadius: 3.5,
-          border: "1px solid #E2E8F0",
-          boxShadow: "0 12px 24px rgba(15, 23, 42, 0.08)",
+          borderRadius: radius,
+          border,
+          boxShadow: shadowMd,
         },
       },
     },
     MuiMenuItem: {
       styleOverrides: {
         root: {
-          borderRadius: 3.5,
+          borderRadius: radius,
           marginInline: 6,
           marginBlock: 2,
         },
@@ -257,7 +252,7 @@ const theme = createTheme({
     MuiAlert: {
       styleOverrides: {
         root: {
-          borderRadius: 3.5,
+          borderRadius: radius,
         },
       },
     },

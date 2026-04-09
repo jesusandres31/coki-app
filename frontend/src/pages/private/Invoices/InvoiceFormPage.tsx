@@ -44,8 +44,13 @@ import PageContainer from "src/components/common/PageContainer/PageContainer";
 import { SEARCH } from "src/constants";
 import { AppRoutes } from "src/config";
 import { useRouter } from "src/hooks";
-import { setSnackbar } from "src/slices/uiSlice";
+import {
+  resetBreadcrumbs,
+  setBreadcrumbs,
+  setSnackbar,
+} from "src/slices/uiSlice";
 import { formatMoney, formatPercent } from "src/utils/format";
+import { invoiceBreadcrumbFlow } from "./breadcrumbFlow";
 
 type InvoicePageMode = "new" | "review" | "edit";
 
@@ -388,6 +393,23 @@ export default function InvoiceFormPage() {
 
   const isNewMode = mode === "new";
   const isEditMode = mode === "edit";
+
+  useEffect(() => {
+    if (isNewMode) {
+      dispatch(setBreadcrumbs(invoiceBreadcrumbFlow.create()));
+      return;
+    }
+
+    dispatch(
+      setBreadcrumbs(invoiceBreadcrumbFlow.detail(invoiceId || "", isEditMode)),
+    );
+  }, [dispatch, invoiceId, isEditMode, isNewMode]);
+
+  useEffect(() => {
+    return () => {
+      dispatch(resetBreadcrumbs());
+    };
+  }, [dispatch]);
 
   const { data: clients = [] } = useGetClientsQuery(undefined, {
     skip: !isNewMode,

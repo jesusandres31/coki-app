@@ -16,10 +16,16 @@ interface ISnackbar {
   };
 }
 
+export interface IUIBreadcrumb {
+  label: string;
+  to?: string;
+}
+
 interface IUIState {
   openDrawer: boolean;
   collapseItem: string;
   navbar: string | null;
+  breadcrumbs: IUIBreadcrumb[];
   snackbar: ISnackbar;
   selectedItems: string[];
   page: number;
@@ -33,6 +39,7 @@ export const uiInitialState: IUIState = {
   openDrawer: drawer.get(),
   collapseItem: "",
   navbar: null,
+  breadcrumbs: [],
   snackbar: {
     message: "",
     type: "success",
@@ -71,6 +78,15 @@ const ui = createSlice({
     },
     setNavbar(state: IUIState, { payload }: PayloadAction<string | null>) {
       state.navbar = payload;
+    },
+    setBreadcrumbs(
+      state: IUIState,
+      { payload }: PayloadAction<IUIBreadcrumb[]>,
+    ) {
+      state.breadcrumbs = payload;
+    },
+    resetBreadcrumbs(state: IUIState) {
+      state.breadcrumbs = uiInitialState.breadcrumbs;
     },
     setSnackbar(state: IUIState, { payload }: PayloadAction<ISnackbar>) {
       state.snackbar.message = payload.message;
@@ -129,6 +145,8 @@ export const {
   setCollapseItem,
   toggleOpenDrawer,
   setNavbar,
+  setBreadcrumbs,
+  resetBreadcrumbs,
   setSnackbar,
   resetSnackbar,
   setSelectedItems,
