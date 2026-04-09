@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { Button } from "@mui/material";
+import { Button, Chip, ChipProps } from "@mui/material";
 import { OpenInNewRounded } from "@mui/icons-material";
 import DataGrid from "src/components/common/DataGrid/DataGrid";
 import { getListArgsInitialState } from "src/constants";
@@ -13,12 +13,41 @@ import { useAppDispatch } from "src/app/store";
 import { resetBreadcrumbs, setBreadcrumbs } from "src/slices/uiSlice";
 import { invoiceBreadcrumbFlow } from "./breadcrumbFlow";
 
+type InvoiceState = "void" | "draft" | "open";
+
+const invoiceStateMeta: Record<
+  InvoiceState,
+  { color: ChipProps["color"]; label: string }
+> = {
+  void: { color: "error", label: "Cancelada" },
+  draft: { color: "info", label: "Borrador" },
+  open: { color: "success", label: "Confirmada" },
+};
+
+const getInvoiceStateValue = (item: VInvoicesResponse) => {
+  const state = (item as VInvoicesResponse & { state?: unknown }).state;
+  if (typeof state === "string") return state;
+  if (state && typeof state === "object" && "name" in state) {
+    const stateName = (state as { name?: unknown }).name;
+    return typeof stateName === "string" ? stateName : "";
+  }
+  return "";
+};
+
+const translateInvoiceState = (state: string) => {
+  if (state in invoiceStateMeta) {
+    return invoiceStateMeta[state as InvoiceState];
+  }
+  return { color: "default" as const, label: state || "-" };
+};
+
 export default function Invoices() {
   const dispatch = useAppDispatch();
   const { handleGoTo } = useRouter();
-  const [queryArgs, setQueryArgs] = useState<GetList>(
-    () => ({ ...getListArgsInitialState, orderBy: "date" }),
-  );
+  const [queryArgs, setQueryArgs] = useState<GetList>(() => ({
+    ...getListArgsInitialState,
+    orderBy: "date",
+  }));
 
   useEffect(() => {
     dispatch(setBreadcrumbs(invoiceBreadcrumbFlow.list()));
@@ -52,6 +81,7 @@ export default function Invoices() {
           }
           return "-";
         },
+        disableSort: true,
       },
       {
         id: "discount",
@@ -59,6 +89,21 @@ export default function Invoices() {
         minWidth: 140,
         disableSort: true,
         render: (item: VInvoicesResponse) => formatPercent(item.discount),
+      },
+      {
+        id: "state",
+        label: "Estado",
+        align: "left",
+        minWidth: 160,
+        disableSort: true,
+        render: (item: VInvoicesResponse) => {
+          const state = getInvoiceStateValue(item);
+          const { color, label } = translateInvoiceState(state);
+
+          return (
+            <Chip size="small" variant="outlined" color={color} label={label} />
+          );
+        },
       },
       {
         id: "total",
@@ -84,7 +129,10 @@ export default function Invoices() {
             minWidth: 180,
             render: (item: any) => {
               if (item?.product_name) return item.product_name;
-              const product = item?.product as { name?: string } | string | null;
+              const product = item?.product as
+                | { name?: string }
+                | string
+                | null;
               if (typeof product === "string") return product;
               if (product && typeof product === "object" && product.name) {
                 return product.name;

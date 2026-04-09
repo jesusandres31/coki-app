@@ -261,7 +261,9 @@ function ProductsTable({
                     valueId={row.productId}
                     placeholder="Seleccionar producto"
                     variant="standard"
-                    onChange={(value) => onRowChange?.(row.id, "product", value)}
+                    onChange={(value) =>
+                      onRowChange?.(row.id, "product", value)
+                    }
                   />
                 ) : (
                   <TextField
@@ -331,14 +333,20 @@ function ProductsTable({
                 />
               </TableCell>
 
-              <TableCell align="right" sx={{ py: 0.75, verticalAlign: "middle" }}>
+              <TableCell
+                align="right"
+                sx={{ py: 0.75, verticalAlign: "middle" }}
+              >
                 <Typography variant="body2" fontWeight={600}>
                   {formatMoney(row.total)}
                 </Typography>
               </TableCell>
 
               {editable && (
-                <TableCell align="center" sx={{ py: 0.75, verticalAlign: "middle" }}>
+                <TableCell
+                  align="center"
+                  sx={{ py: 0.75, verticalAlign: "middle" }}
+                >
                   <IconButton
                     size="small"
                     color="error"
@@ -600,7 +608,8 @@ export default function InvoiceFormPage() {
     () =>
       newFormik.values.rows.map((row) => {
         const productName =
-          productOptions.find((option) => option.id === row.product)?.name || "";
+          productOptions.find((option) => option.id === row.product)?.name ||
+          "";
         return {
           id: row.id,
           productId: row.product,
@@ -621,7 +630,9 @@ export default function InvoiceFormPage() {
         productId: "",
         productName:
           item.product_name ||
-          (typeof item.product === "string" ? item.product : item.product?.name) ||
+          (typeof item.product === "string"
+            ? item.product
+            : item.product?.name) ||
           "-",
         amount: Number(item.amount ?? 0),
         unitPrice: Number(item.unit_price ?? 0),
@@ -728,7 +739,7 @@ export default function InvoiceFormPage() {
             mb={2}
           >
             <Typography variant="h6" fontWeight={600}>
-              {isNewMode ? "Crear factura" : `Factura ${invoice?.id || ""}`}
+              {isNewMode ? "Crear factura" : `Factura "${invoice?.id || ""}"`}
             </Typography>
 
             <Stack direction={{ xs: "column", sm: "row" }} spacing={1}>
@@ -748,6 +759,7 @@ export default function InvoiceFormPage() {
                     size="small"
                     variant="contained"
                     startIcon={<EditRounded />}
+                    color="info"
                     onClick={() => setMode("edit")}
                   >
                     Editar
@@ -839,8 +851,8 @@ export default function InvoiceFormPage() {
                     alignItems={{ xs: "stretch", sm: "center" }}
                     spacing={1}
                   >
-                    <Typography variant="h6" fontWeight={600}>
-                      Productos vendidos
+                    <Typography variant="subtitle1" fontWeight={600}>
+                      Productos
                     </Typography>
                     <Button
                       size="small"

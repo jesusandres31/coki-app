@@ -163,8 +163,9 @@ export default function Drawer({ noTable }: DrawerProps) {
         open={notMobAndOpen}
         sx={{
           backgroundColor: "secondary.dark",
+          color: "common.white",
           borderBottom: "1px solid",
-          borderColor: "divider",
+          borderColor: "rgba(255, 255, 255, 0.16)",
         }}
       >
         <Toolbar
@@ -190,7 +191,7 @@ export default function Drawer({ noTable }: DrawerProps) {
                         mr: 2.5,
                         pl: 1.5,
                       }),
-                  color: "white",
+                  color: "inherit",
                 }}
               >
                 <MenuRounded />
@@ -202,7 +203,7 @@ export default function Drawer({ noTable }: DrawerProps) {
                 noWrap
                 component="div"
                 sx={{
-                  color: "white",
+                  color: "inherit",
                   letterSpacing: "0.01em",
                   ...(notMobAndOpen && { paddingLeft: 1.5 }),
                 }}
@@ -216,7 +217,7 @@ export default function Drawer({ noTable }: DrawerProps) {
             direction="row"
             justifyContent="flex-end"
             alignItems="center"
-            sx={{ width: 50, color: "white" }}
+            sx={{ width: 50, color: "inherit" }}
           >
             <LoginButton />
           </Grid>
@@ -310,7 +311,7 @@ export default function Drawer({ noTable }: DrawerProps) {
             sx={{
               height: isMobile ? "95%" : `calc(100% - 30px)`,
               backgroundColor: "background.paper",
-              borderRadius: 3,
+              borderRadius: 1.5,
               border: "1px solid",
               borderColor: "divider",
             }}

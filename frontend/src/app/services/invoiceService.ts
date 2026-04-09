@@ -21,6 +21,7 @@ const clientsTag = ApiTag.Clients;
 const productsTag = ApiTag.Products;
 const typedPb = pb as TypedPocketBase;
 const MAX_DISCOUNT_PERCENT = 100;
+const DEFAULT_INVOICE_STATE = "open";
 
 interface CreateInvoiceItemReq {
   product: string;
@@ -120,6 +121,11 @@ export const invoiceApi = mainApi.injectEndpoints({
           date: _arg.date,
           discount: invoiceDiscountPercent,
           total: invoiceTotal,
+          state: (
+            await typedPb
+              .collection("invoicestates")
+              .getFirstListItem(`name = "${DEFAULT_INVOICE_STATE}"`)
+          ).id,
         };
 
         const invoice = await typedPb.collection("invoices").create(invoicePayload);

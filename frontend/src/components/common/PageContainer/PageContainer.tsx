@@ -24,7 +24,7 @@ export default function PageContainer({ children }: PageContainerProps) {
           display: "flex",
           flexDirection: "column",
           overflow: "auto",
-          borderRadius: 3,
+          borderRadius: 1.5,
         }}
       >
         {children}

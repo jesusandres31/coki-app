@@ -3,8 +3,10 @@ import { alpha, createTheme } from "@mui/material";
 const github = {
   fgDefault: "#1F2328",
   fgMuted: "#57606A",
+  fgSubtle: "#656D76",
   canvasDefault: "#FFFFFF",
   canvasSubtle: "#F6F8FA",
+  canvasInset: "#F3F4F6",
   borderDefault: "#D0D7DE",
   accent: "#0969DA",
   success: "#1A7F37",
@@ -12,10 +14,11 @@ const github = {
   danger: "#CF222E",
 };
 
-const radius = 4;
+const radius = 6;
 const border = `1px solid ${github.borderDefault}`;
 const shadowSm = "0 1px 2px rgba(31, 35, 40, 0.08)";
 const shadowMd = "0 12px 24px rgba(31, 35, 40, 0.12)";
+const focusRing = `0 0 0 3px ${alpha(github.accent, 0.25)}`;
 
 const theme = createTheme({
   palette: {
@@ -24,7 +27,8 @@ const theme = createTheme({
       contrastText: "#FFFFFF",
     },
     secondary: {
-      main: github.fgDefault,
+      main: github.fgMuted,
+      dark: github.fgDefault,
     },
     info: {
       main: github.accent,
@@ -37,6 +41,11 @@ const theme = createTheme({
     },
     success: {
       main: github.success,
+    },
+    action: {
+      hover: alpha(github.fgDefault, 0.06),
+      selected: alpha(github.accent, 0.12),
+      focus: alpha(github.accent, 0.2),
     },
     text: {
       primary: github.fgDefault,
@@ -52,11 +61,25 @@ const theme = createTheme({
     borderRadius: radius,
   },
   typography: {
-    fontFamily: ["Inter", "Segoe UI", "sans-serif"].join(","),
+    fontFamily: [
+      "-apple-system",
+      "BlinkMacSystemFont",
+      '"Segoe UI"',
+      "Helvetica",
+      "Arial",
+      "sans-serif",
+      '"Apple Color Emoji"',
+      '"Segoe UI Emoji"',
+    ].join(","),
     fontSize: 13,
+    h1: { fontWeight: 600, letterSpacing: "-0.02em" },
+    h2: { fontWeight: 600, letterSpacing: "-0.02em" },
+    h3: { fontWeight: 600, letterSpacing: "-0.02em" },
     h4: { fontWeight: 700, letterSpacing: "-0.01em" },
     h5: { fontWeight: 700, letterSpacing: "-0.01em" },
     h6: { fontWeight: 600, letterSpacing: "-0.01em" },
+    body1: { lineHeight: 1.45 },
+    body2: { lineHeight: 1.45 },
     subtitle1: { fontWeight: 600 },
     subtitle2: { fontWeight: 600 },
     button: { fontWeight: 600, textTransform: "none" },
@@ -64,15 +87,30 @@ const theme = createTheme({
   components: {
     MuiCssBaseline: {
       styleOverrides: {
+        html: {
+          WebkitFontSmoothing: "antialiased",
+          MozOsxFontSmoothing: "grayscale",
+        },
         body: {
           backgroundColor: github.canvasSubtle,
           color: github.fgDefault,
+        },
+        "#root": {
+          minHeight: "100vh",
+        },
+      },
+    },
+    MuiDivider: {
+      styleOverrides: {
+        root: {
+          borderColor: github.borderDefault,
         },
       },
     },
     MuiPaper: {
       styleOverrides: {
         root: {
+          backgroundImage: "none",
           borderColor: github.borderDefault,
         },
       },
@@ -93,8 +131,37 @@ const theme = createTheme({
       styleOverrides: {
         root: {
           borderRadius: radius,
+          minHeight: 32,
+          paddingInline: 12,
           textTransform: "none",
           fontWeight: 600,
+          lineHeight: 1.2,
+        },
+        contained: {
+          boxShadow: "none",
+          "&:hover": {
+            boxShadow: "none",
+          },
+        },
+        containedPrimary: {
+          backgroundColor: github.success,
+          "&:hover": {
+            backgroundColor: "#176F32",
+          },
+        },
+        outlined: {
+          borderColor: github.borderDefault,
+          backgroundColor: github.canvasDefault,
+          "&:hover": {
+            backgroundColor: github.canvasSubtle,
+            borderColor: github.borderDefault,
+          },
+        },
+        text: {
+          color: github.fgDefault,
+          "&:hover": {
+            backgroundColor: alpha(github.fgDefault, 0.06),
+          },
         },
       },
     },
@@ -102,13 +169,19 @@ const theme = createTheme({
       styleOverrides: {
         root: {
           color: github.fgMuted,
+          "&:hover": {
+            backgroundColor: alpha(github.fgDefault, 0.06),
+          },
         },
       },
     },
     MuiAppBar: {
       styleOverrides: {
         root: {
-          boxShadow: shadowSm,
+          backgroundColor: github.canvasDefault,
+          color: github.fgDefault,
+          boxShadow: "none",
+          borderBottom: border,
         },
       },
     },
@@ -127,6 +200,21 @@ const theme = createTheme({
         },
       },
     },
+    MuiBreadcrumbs: {
+      styleOverrides: {
+        separator: {
+          color: github.fgSubtle,
+        },
+      },
+    },
+    MuiLink: {
+      styleOverrides: {
+        root: {
+          color: github.accent,
+          fontWeight: 500,
+        },
+      },
+    },
     MuiTextField: {
       defaultProps: {
         size: "small",
@@ -137,6 +225,17 @@ const theme = createTheme({
         root: {
           borderRadius: radius,
           backgroundColor: github.canvasDefault,
+          "&:hover .MuiOutlinedInput-notchedOutline": {
+            borderColor: github.fgSubtle,
+          },
+          "&.Mui-focused .MuiOutlinedInput-notchedOutline": {
+            borderColor: github.accent,
+            boxShadow: focusRing,
+          },
+        },
+        input: {
+          paddingTop: 9,
+          paddingBottom: 9,
         },
       },
     },
@@ -186,7 +285,8 @@ const theme = createTheme({
     MuiTableContainer: {
       styleOverrides: {
         root: {
-          borderRadius: radius,
+          border: 0,
+          borderRadius: 0,
         },
       },
     },
@@ -199,6 +299,8 @@ const theme = createTheme({
           color: github.fgMuted,
           backgroundColor: github.canvasSubtle,
           fontWeight: 700,
+          fontSize: 12,
+          letterSpacing: "0.02em",
         },
       },
     },

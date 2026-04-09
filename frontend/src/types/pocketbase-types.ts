@@ -9,6 +9,7 @@ export enum Collections {
 	Clients = "clients",
 	Invoices = "invoices",
 	InvoicesProducts = "invoices_products",
+	Invoicestates = "invoicestates",
 	Measureunits = "measureunits",
 	Products = "products",
 	Roles = "roles",
@@ -63,6 +64,7 @@ export type InvoicesRecord = {
 	deleted?: IsoDateString
 	deleted_by?: RecordIdString
 	discount?: number
+	state: RecordIdString
 	total?: number
 	updated_by?: RecordIdString
 }
@@ -78,6 +80,10 @@ export type InvoicesProductsRecord = {
 	total?: number
 	unit_price?: number
 	updated_by?: RecordIdString
+}
+
+export type InvoicestatesRecord = {
+	name?: string
 }
 
 export type MeasureunitsRecord = {
@@ -129,6 +135,7 @@ export type XDeletedRecord<Trecord = unknown> = {
 export type ClientsResponse<Texpand = unknown> = Required<ClientsRecord> & BaseSystemFields<Texpand>
 export type InvoicesResponse<Texpand = unknown> = Required<InvoicesRecord> & BaseSystemFields<Texpand>
 export type InvoicesProductsResponse<Texpand = unknown> = Required<InvoicesProductsRecord> & BaseSystemFields<Texpand>
+export type InvoicestatesResponse<Texpand = unknown> = Required<InvoicestatesRecord> & BaseSystemFields<Texpand>
 export type MeasureunitsResponse<Texpand = unknown> = Required<MeasureunitsRecord> & BaseSystemFields<Texpand>
 export type ProductsResponse<Texpand = unknown> = Required<ProductsRecord> & BaseSystemFields<Texpand>
 export type RolesResponse<Texpand = unknown> = Required<RolesRecord> & BaseSystemFields<Texpand>
@@ -142,6 +149,7 @@ export type CollectionRecords = {
 	clients: ClientsRecord
 	invoices: InvoicesRecord
 	invoices_products: InvoicesProductsRecord
+	invoicestates: InvoicestatesRecord
 	measureunits: MeasureunitsRecord
 	products: ProductsRecord
 	roles: RolesRecord
@@ -154,6 +162,7 @@ export type CollectionResponses = {
 	clients: ClientsResponse
 	invoices: InvoicesResponse
 	invoices_products: InvoicesProductsResponse
+	invoicestates: InvoicestatesResponse
 	measureunits: MeasureunitsResponse
 	products: ProductsResponse
 	roles: RolesResponse

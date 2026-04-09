@@ -34,8 +34,7 @@ export default function CustomList({
   const { openDrawer } = useUISelector((state) => state.ui);
   const dispatch = useAppDispatch();
   const theme = useTheme();
-  const backgroundColor = alpha(theme.palette.primary.main, 0.12);
-  // const borderRadius = 8;
+  const backgroundColor = alpha(theme.palette.success.main, 0.12);
 
   const isSameOrChildRoute = (baseRoute?: string) => {
     if (!baseRoute) return false;
@@ -72,7 +71,7 @@ export default function CustomList({
     items.forEach((item, index) => {
       if (item.nestedItems) {
         const hasNestedSelected = item.nestedItems.some(
-          (nestedItem) => route === nestedItem.to
+          (nestedItem) => route === nestedItem.to,
         );
         newOpenCollapses[item.to || `index-${index}`] = hasNestedSelected;
       }
@@ -89,7 +88,7 @@ export default function CustomList({
 
   const handleCollapse = (
     e: React.MouseEvent<HTMLDivElement, MouseEvent>,
-    itemKey: string
+    itemKey: string,
   ) => {
     if (!openDrawer) {
       // Store the item to open after drawer opens
@@ -133,9 +132,9 @@ export default function CustomList({
 
         return (
           <React.Fragment key={`${index}-${item.to}`}>
-          <ListItem
-            disablePadding
-            sx={{
+            <ListItem
+              disablePadding
+              sx={{
                 marginBottom: 0.35,
                 pl: isNested ? 1.5 : 0,
                 minHeight: 44,
@@ -149,7 +148,7 @@ export default function CustomList({
                   backgroundColor,
                 },
                 backgroundColor: selected ? backgroundColor : "transparent",
-                borderRadius: 2,
+                borderRadius: 1.5,
                 transition: "background-color 0.2s ease",
                 display: "block",
               }}
@@ -169,14 +168,14 @@ export default function CustomList({
                   },
                   minHeight: 44,
                   justifyContent: openDrawer ? "initial" : "center",
-                  borderRadius: 2,
+                  borderRadius: 1.5,
                 }}
               >
                 {item.icon && (
                   <Box display="flex">
                     <ListItemIcon
                       sx={{
-                        color: selected ? "secondary.main" : "text.secondary",
+                        color: selected ? "success.main" : "text.secondary",
                         minWidth: 0,
                         mr: openDrawer ? 2 : "auto",
                         justifyContent: "center",
@@ -194,9 +193,7 @@ export default function CustomList({
                         opacity: openDrawer ? 1 : 0,
                       }}
                       fontWeight={selected ? 700 : 600}
-                      color={
-                        isSelected(item) ? "secondary.main" : "text.secondary"
-                      }
+                      color={selected ? "success.main" : "text.secondary"}
                     >
                       {item.text || translateTitle(removeForeslash(item.to))}
                     </Typography>
