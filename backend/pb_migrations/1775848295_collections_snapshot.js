@@ -4,7 +4,7 @@ migrate((db) => {
     {
       "id": "_pb_users_auth_",
       "created": "2024-01-07 18:43:10.502Z",
-      "updated": "2026-04-08 18:11:15.352Z",
+      "updated": "2026-04-09 10:55:23.445Z",
       "name": "users",
       "type": "auth",
       "system": false,
@@ -47,7 +47,7 @@ migrate((db) => {
     {
       "id": "3ghq3okw4e9u3h7",
       "created": "2024-02-28 13:25:59.525Z",
-      "updated": "2026-04-07 23:20:44.287Z",
+      "updated": "2026-04-09 10:55:23.448Z",
       "name": "clients",
       "type": "base",
       "system": false,
@@ -167,7 +167,7 @@ migrate((db) => {
     {
       "id": "d7owddkjq6byksd",
       "created": "2024-02-28 13:27:47.755Z",
-      "updated": "2026-04-07 23:20:44.287Z",
+      "updated": "2026-04-09 10:55:23.448Z",
       "name": "products",
       "type": "base",
       "system": false,
@@ -289,7 +289,7 @@ migrate((db) => {
     {
       "id": "wabqv9usgiljong",
       "created": "2024-02-28 16:06:49.539Z",
-      "updated": "2026-04-08 18:17:15.787Z",
+      "updated": "2026-04-10 15:23:30.693Z",
       "name": "invoices",
       "type": "base",
       "system": false,
@@ -349,6 +349,22 @@ migrate((db) => {
           "options": {
             "min": "",
             "max": ""
+          }
+        },
+        {
+          "system": false,
+          "id": "i5jmasls",
+          "name": "state",
+          "type": "relation",
+          "required": true,
+          "presentable": false,
+          "unique": false,
+          "options": {
+            "collectionId": "x93unrz0eq3eda1",
+            "cascadeDelete": false,
+            "minSelect": null,
+            "maxSelect": 1,
+            "displayFields": null
           }
         },
         {
@@ -424,7 +440,7 @@ migrate((db) => {
     {
       "id": "cbusqm5pbt7nh92",
       "created": "2024-02-28 16:13:18.692Z",
-      "updated": "2026-04-08 18:22:58.166Z",
+      "updated": "2026-04-09 10:55:23.448Z",
       "name": "invoices_products",
       "type": "base",
       "system": false,
@@ -592,7 +608,7 @@ migrate((db) => {
     {
       "id": "oit1426bxc4n50d",
       "created": "2024-04-11 19:19:45.024Z",
-      "updated": "2026-04-07 23:20:44.287Z",
+      "updated": "2026-04-09 10:55:23.448Z",
       "name": "roles",
       "type": "base",
       "system": false,
@@ -684,14 +700,14 @@ migrate((db) => {
     {
       "id": "ur14h8gcnpxdzyv",
       "created": "2024-04-12 19:51:59.944Z",
-      "updated": "2026-04-08 20:53:56.725Z",
+      "updated": "2026-04-09 20:28:50.235Z",
       "name": "v_invoices",
       "type": "view",
       "system": false,
       "schema": [
         {
           "system": false,
-          "id": "jmula1q0",
+          "id": "wwomlgpo",
           "name": "date",
           "type": "date",
           "required": true,
@@ -704,7 +720,7 @@ migrate((db) => {
         },
         {
           "system": false,
-          "id": "akihkqdn",
+          "id": "aliktzwd",
           "name": "discount",
           "type": "number",
           "required": false,
@@ -718,7 +734,7 @@ migrate((db) => {
         },
         {
           "system": false,
-          "id": "afw9ynrz",
+          "id": "51bcnf0h",
           "name": "total",
           "type": "number",
           "required": false,
@@ -732,7 +748,21 @@ migrate((db) => {
         },
         {
           "system": false,
-          "id": "0ydzvkb4",
+          "id": "behxuyao",
+          "name": "state",
+          "type": "text",
+          "required": false,
+          "presentable": false,
+          "unique": false,
+          "options": {
+            "min": null,
+            "max": null,
+            "pattern": ""
+          }
+        },
+        {
+          "system": false,
+          "id": "kvwokm3r",
           "name": "client",
           "type": "json",
           "required": false,
@@ -744,7 +774,7 @@ migrate((db) => {
         },
         {
           "system": false,
-          "id": "ed18iaac",
+          "id": "gsknpnej",
           "name": "invoice_products",
           "type": "json",
           "required": false,
@@ -756,7 +786,7 @@ migrate((db) => {
         },
         {
           "system": false,
-          "id": "nx9okx49",
+          "id": "zvnmrxqe",
           "name": "deleted",
           "type": "date",
           "required": false,
@@ -775,13 +805,13 @@ migrate((db) => {
       "updateRule": null,
       "deleteRule": null,
       "options": {
-        "query": "SELECT\n  i.id,\n  i.date,\n  i.discount,\n  i.total,\n  JSON_OBJECT(\n    'id', c.id,\n    'name', c.name\n  ) AS client,\n  COALESCE(\n    JSON_GROUP_ARRAY(\n      JSON_OBJECT(\n        'id', ii.id,\n        'product_id', ii.product,\n        'product_name', p.name,\n        'unit_price', ii.unit_price,\n        'amount', ii.amount,\n        'discount', ii.discount,\n        'total', ii.total\n      )\n    ) FILTER (WHERE ii.id IS NOT NULL),\n    JSON('[]')\n  ) AS invoice_products,\n  i.created,\n  i.updated,\n  i.deleted\nFROM invoices i\nLEFT JOIN clients c\n  ON c.id = i.client\nLEFT JOIN invoices_products ii\n  ON ii.invoice = i.id\nLEFT JOIN products p\n  ON p.id = ii.product\nWHERE COALESCE(i.deleted, '') = ''\nGROUP BY\n  i.id,\n  i.date,\n  i.discount,\n  i.total,\n  c.id,\n  c.name,\n  i.created,\n  i.updated,\n  i.deleted;\n"
+        "query": "SELECT\n  i.id,\n  i.date,\n  i.discount,\n  i.total,\n  s.name AS state,\n  JSON_OBJECT(\n    'id', c.id,\n    'name', c.name\n  ) AS client,\n  COALESCE(\n    JSON_GROUP_ARRAY(\n      JSON_OBJECT(\n        'id', ii.id,\n        'product_id', ii.product,\n        'product_name', p.name,\n        'unit_price', ii.unit_price,\n        'amount', ii.amount,\n        'discount', ii.discount,\n        'total', ii.total\n      )\n    ) FILTER (WHERE ii.id IS NOT NULL),\n    JSON('[]')\n  ) AS invoice_products,\n  i.created,\n  i.updated,\n  i.deleted\nFROM invoices i\nLEFT JOIN invoicestates s\n  ON s.id = i.state\nLEFT JOIN clients c\n  ON c.id = i.client\nLEFT JOIN invoices_products ii\n  ON ii.invoice = i.id\nLEFT JOIN products p\n  ON p.id = ii.product\nWHERE COALESCE(i.deleted, '') = ''\nGROUP BY\n  i.id,\n  i.date,\n  i.discount,\n  i.total,\n  s.name,\n  c.id,\n  c.name,\n  i.created,\n  i.updated,\n  i.deleted;\n"
       }
     },
     {
       "id": "kgipq57hx2r1m59",
       "created": "2024-05-01 18:30:42.094Z",
-      "updated": "2026-04-07 23:20:44.289Z",
+      "updated": "2026-04-09 10:55:23.448Z",
       "name": "x_deleted",
       "type": "base",
       "system": false,
@@ -840,7 +870,7 @@ migrate((db) => {
     {
       "id": "defnylqa6c3g49s",
       "created": "2024-09-11 20:00:53.496Z",
-      "updated": "2026-04-08 18:24:57.700Z",
+      "updated": "2026-04-09 10:55:23.448Z",
       "name": "measureunits",
       "type": "base",
       "system": false,
@@ -918,6 +948,37 @@ migrate((db) => {
           "options": {
             "min": "",
             "max": ""
+          }
+        }
+      ],
+      "indexes": [],
+      "listRule": "",
+      "viewRule": "",
+      "createRule": "",
+      "updateRule": "",
+      "deleteRule": "",
+      "options": {}
+    },
+    {
+      "id": "x93unrz0eq3eda1",
+      "created": "2026-04-09 20:13:29.528Z",
+      "updated": "2026-04-10 13:49:16.485Z",
+      "name": "invoicestates",
+      "type": "base",
+      "system": false,
+      "schema": [
+        {
+          "system": false,
+          "id": "cjj7pxct",
+          "name": "name",
+          "type": "text",
+          "required": false,
+          "presentable": false,
+          "unique": false,
+          "options": {
+            "min": null,
+            "max": null,
+            "pattern": ""
           }
         }
       ],
