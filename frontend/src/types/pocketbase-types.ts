@@ -122,6 +122,7 @@ export type VInvoicesRecord<Tclient = unknown, Tinvoice_products = unknown> = {
 	deleted?: IsoDateString
 	discount?: number
 	invoice_products?: null | Tinvoice_products
+	state?: string
 	total?: number
 }
 

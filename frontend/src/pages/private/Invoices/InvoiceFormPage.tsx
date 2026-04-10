@@ -4,6 +4,7 @@ import dayjs, { Dayjs } from "dayjs";
 import { useFormik } from "formik";
 import {
   AddRounded,
+  CancelRounded,
   ChevronLeftRounded,
   DeleteRounded,
   EditRounded,
@@ -31,11 +32,14 @@ import {
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 import { DatePicker } from "@mui/x-date-pickers/DatePicker";
 import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
+import { Theme } from "@mui/material/styles";
 import { useAppDispatch } from "src/app/store";
 import {
   useCreateInvoiceMutation,
   useGetClientsQuery,
   useGetInvoiceViewByIdQuery,
+  useGetInvoiceStatesQuery,
+  useGetMeasureUnitsQuery,
   useGetProductsQuery,
   useUpdateInvoiceMutation,
 } from "src/app/services/invoiceService";
@@ -53,6 +57,7 @@ import { formatMoney, formatPercent } from "src/utils/format";
 import { invoiceBreadcrumbFlow } from "./breadcrumbFlow";
 
 type InvoicePageMode = "new" | "review" | "edit";
+type InvoiceState = "draft" | "open" | "void";
 
 interface InvoiceProductInput {
   id: string;
@@ -64,7 +69,8 @@ interface InvoiceProductInput {
 
 interface InvoiceProductRow {
   id?: string;
-  product?: { name?: string } | string | null;
+  product_id?: string;
+  product?: { id?: string; name?: string } | string | null;
   product_name?: string;
   amount?: number;
   unit_price?: number;
@@ -91,6 +97,7 @@ interface ProductTableRowData {
   id: string;
   productId: string;
   productName: string;
+  measureUnitName: string;
   amount: number;
   unitPrice: number;
   discount: number;
@@ -116,6 +123,13 @@ interface InvoiceTotalsSummaryProps {
   total: number;
 }
 
+interface InvoiceFormValues {
+  client: string;
+  date: string;
+  discount: number;
+  rows: InvoiceProductInput[];
+}
+
 const getLocalDate = () => {
   const now = new Date();
   const offset = now.getTimezoneOffset() * 60000;
@@ -125,6 +139,15 @@ const getLocalDate = () => {
 const parsePickerDate = (value: string) => (value ? dayjs(value) : null);
 const formatPickerDate = (value: Dayjs | null) =>
   value ? value.format("YYYY-MM-DD") : "";
+const normalizeIsoDate = (value: string) => {
+  const parsed = dayjs(value, "YYYY-MM-DD", true);
+  if (!parsed.isValid()) return "";
+
+  const year = parsed.year();
+  if (year < 2000 || year > 2100) return "";
+
+  return parsed.format("YYYY-MM-DD");
+};
 
 const getRowId = () =>
   `${Date.now()}-${Math.random().toString(16).slice(2, 10)}`;
@@ -145,16 +168,77 @@ const getCreateItemTotal = (item: InvoiceProductInput) =>
       (1 - Math.max(0, Math.min(100, item.discount)) / 100),
   );
 
-const getDetailItemTotal = (item: InvoiceProductRow) =>
-  Math.max(
-    0,
-    Number(
-      item.total ??
-        Number(item.amount ?? 0) *
-          Number(item.unit_price ?? 0) *
-          (1 - Math.max(0, Math.min(100, Number(item.discount ?? 0))) / 100),
-    ),
+const clampDiscount = (value: number) => Math.min(100, Math.max(0, value));
+
+const hasInvalidInvoiceRows = (rows: InvoiceProductInput[]) =>
+  rows.some(
+    (row) =>
+      !row.product ||
+      row.amount <= 0 ||
+      row.unitPrice < 0 ||
+      row.discount < 0 ||
+      row.discount > 100,
   );
+
+const readableDisabledFieldSx = (theme: Theme) => ({
+  "& .MuiInputBase-input.Mui-disabled": {
+    WebkitTextFillColor: theme.palette.text.primary,
+    color: theme.palette.text.primary,
+    opacity: 1,
+  },
+  "& .MuiPickersInputBase-root.Mui-disabled": {
+    color: theme.palette.text.primary,
+    WebkitTextFillColor: theme.palette.text.primary,
+    opacity: 1,
+  },
+  "& .MuiPickersInputBase-root.Mui-disabled .MuiPickersSectionList-root": {
+    color: theme.palette.text.primary,
+    WebkitTextFillColor: theme.palette.text.primary,
+    opacity: 1,
+  },
+  "& .MuiPickersInputBase-root.Mui-disabled .MuiPickersSectionList-section": {
+    color: theme.palette.text.primary,
+    WebkitTextFillColor: theme.palette.text.primary,
+    opacity: 1,
+  },
+  "& .MuiPickersInputBase-root.Mui-disabled .MuiPickersSectionList-sectionSeparator":
+    {
+      color: theme.palette.text.primary,
+      WebkitTextFillColor: theme.palette.text.primary,
+      opacity: 1,
+    },
+  "& .MuiInputBase-root.Mui-disabled": {
+    backgroundColor: theme.palette.action.hover,
+    borderRadius: 1,
+  },
+  "& .MuiFormLabel-root.Mui-disabled": {
+    color: theme.palette.text.secondary,
+  },
+});
+
+const parseJsonValue = <T,>(value: unknown): T | null => {
+  if (value == null) return null;
+  if (typeof value === "string") {
+    try {
+      return JSON.parse(value) as T;
+    } catch {
+      return null;
+    }
+  }
+  if (typeof value === "object") return value as T;
+  return null;
+};
+
+const getInvoiceStateValue = (value: unknown) => {
+  if (typeof value === "string") return value;
+
+  if (value && typeof value === "object" && "name" in value) {
+    const stateName = (value as { name?: unknown }).name;
+    return typeof stateName === "string" ? stateName : "";
+  }
+
+  return "";
+};
 
 function DebouncedAutocomplete({
   options,
@@ -241,11 +325,12 @@ function ProductsTable({
       <Table size="small" stickyHeader>
         <TableHead>
           <TableRow>
-            <TableCell sx={{ width: "36%" }}>Producto</TableCell>
+            <TableCell sx={{ width: "31%" }}>Producto</TableCell>
             <TableCell sx={{ width: "12%" }}>Cantidad</TableCell>
-            <TableCell sx={{ width: "16%" }}>Precio unit.</TableCell>
-            <TableCell sx={{ width: "16%" }}>Descuento (%)</TableCell>
-            <TableCell sx={{ width: "16%" }} align="right">
+            <TableCell sx={{ width: "12%" }}>Unidad</TableCell>
+            <TableCell sx={{ width: "14%" }}>Precio unit.</TableCell>
+            <TableCell sx={{ width: "14%" }}>Descuento (%)</TableCell>
+            <TableCell sx={{ width: "15%" }} align="right">
               Total
             </TableCell>
             {editable && <TableCell sx={{ width: 56 }} />}
@@ -272,6 +357,7 @@ function ProductsTable({
                     variant="standard"
                     value={row.productName}
                     disabled
+                    sx={readableDisabledFieldSx}
                   />
                 )}
               </TableCell>
@@ -292,6 +378,18 @@ function ProductsTable({
                   }
                   inputProps={{ min: 1, step: 1 }}
                   disabled={!editable}
+                  sx={readableDisabledFieldSx}
+                />
+              </TableCell>
+
+              <TableCell sx={{ py: 0.75, verticalAlign: "middle" }}>
+                <TextField
+                  fullWidth
+                  size="small"
+                  variant="standard"
+                  value={row.measureUnitName}
+                  disabled
+                  sx={readableDisabledFieldSx}
                 />
               </TableCell>
 
@@ -311,6 +409,7 @@ function ProductsTable({
                   }
                   inputProps={{ min: 0, step: "0.01" }}
                   disabled={!editable}
+                  sx={readableDisabledFieldSx}
                 />
               </TableCell>
 
@@ -325,11 +424,12 @@ function ProductsTable({
                     onRowChange?.(
                       row.id,
                       "discount",
-                      Math.min(100, Math.max(0, Number(e.target.value || 0))),
+                      clampDiscount(Number(e.target.value || 0)),
                     )
                   }
                   inputProps={{ min: 0, max: 100, step: "0.01" }}
                   disabled={!editable}
+                  sx={readableDisabledFieldSx}
                 />
               </TableCell>
 
@@ -420,10 +520,16 @@ export default function InvoiceFormPage() {
   }, [dispatch]);
 
   const { data: clients = [] } = useGetClientsQuery(undefined, {
-    skip: !isNewMode,
+    skip: !isNewMode && !isEditMode,
+  });
+  const { data: invoiceStates = [] } = useGetInvoiceStatesQuery(undefined, {
+    skip: !isDetailRoute,
+  });
+  const { data: measureUnits = [] } = useGetMeasureUnitsQuery(undefined, {
+    skip: !isNewMode && !isDetailRoute,
   });
   const { data: products = [], isLoading: isProductsLoading } =
-    useGetProductsQuery(undefined, { skip: !isNewMode });
+    useGetProductsQuery(undefined, { skip: !isNewMode && !isDetailRoute });
   const {
     data: invoice,
     isFetching,
@@ -452,12 +558,24 @@ export default function InvoiceFormPage() {
     [products],
   );
 
-  const newFormik = useFormik<{
-    client: string;
-    date: string;
-    discount: number;
-    rows: InvoiceProductInput[];
-  }>({
+  const measureUnitById = useMemo(
+    () =>
+      new Map(measureUnits.map((unit) => [unit.id, String(unit.name || "-")])),
+    [measureUnits],
+  );
+
+  const invoiceStateByName = useMemo(
+    () =>
+      new Map(
+        invoiceStates.map((state) => [
+          String(state.name || "").toLowerCase(),
+          state,
+        ]),
+      ),
+    [invoiceStates],
+  );
+
+  const newFormik = useFormik<InvoiceFormValues>({
     initialValues: {
       client: "",
       date: getLocalDate(),
@@ -465,6 +583,17 @@ export default function InvoiceFormPage() {
       rows: [buildEmptyRow()],
     },
     onSubmit: async (values) => {
+      const normalizedDate = normalizeIsoDate(values.date);
+      if (!normalizedDate) {
+        dispatch(
+          setSnackbar({
+            message: "Fecha inválida. Seleccioná una fecha entre 2000 y 2100.",
+            type: "error",
+          }),
+        );
+        return;
+      }
+
       if (!values.client) {
         dispatch(
           setSnackbar({ message: "Seleccioná un cliente.", type: "error" }),
@@ -472,14 +601,7 @@ export default function InvoiceFormPage() {
         return;
       }
 
-      const invalidRows = values.rows.some(
-        (row) =>
-          !row.product ||
-          row.amount <= 0 ||
-          row.unitPrice < 0 ||
-          row.discount < 0 ||
-          row.discount > 100,
-      );
+      const invalidRows = hasInvalidInvoiceRows(values.rows);
 
       if (values.rows.length === 0 || invalidRows) {
         dispatch(
@@ -495,8 +617,9 @@ export default function InvoiceFormPage() {
       try {
         const created = await createInvoice({
           client: values.client,
-          date: values.date,
+          date: normalizedDate,
           discount: values.discount,
+          state: "open",
           items: values.rows.map((row) => ({
             product: row.product,
             amount: row.amount,
@@ -518,28 +641,84 @@ export default function InvoiceFormPage() {
     },
   });
 
-  const editFormik = useFormik<{
-    date: string;
-    discount: number;
-  }>({
+  const editFormik = useFormik<InvoiceFormValues>({
     initialValues: {
+      client: "",
       date: "",
       discount: 0,
+      rows: [buildEmptyRow()],
     },
     onSubmit: async (values) => {
       if (!invoiceId) return;
+      const normalizedDate = normalizeIsoDate(values.date);
+      if (!normalizedDate) {
+        dispatch(
+          setSnackbar({
+            message: "Fecha inválida. Seleccioná una fecha entre 2000 y 2100.",
+            type: "error",
+          }),
+        );
+        return;
+      }
+
+      const parsedInvoiceClient = parseJsonValue<{
+        id?: string;
+        name?: string;
+      }>(invoice?.client);
+      const selectedClientId = values.client || parsedInvoiceClient?.id || "";
+
+      const normalizedRows = values.rows.map((row) => {
+        const normalizedProductId = productById.has(row.product)
+          ? row.product
+          : products.find((product) => product.name === row.product)?.id || "";
+
+        return {
+          ...row,
+          product: normalizedProductId,
+        };
+      });
+
+      if (!selectedClientId) {
+        dispatch(
+          setSnackbar({ message: "Seleccioná un cliente.", type: "error" }),
+        );
+        return;
+      }
+
+      const invalidRows = hasInvalidInvoiceRows(normalizedRows);
+
+      if (values.rows.length === 0 || invalidRows) {
+        dispatch(
+          setSnackbar({
+            message:
+              "Completá los productos con cantidad válida, precio y descuentos correctos.",
+            type: "error",
+          }),
+        );
+        return;
+      }
+
       try {
         await updateInvoice({
           id: invoiceId,
           data: {
-            date: values.date,
+            client: selectedClientId,
+            date: normalizedDate,
             discount: values.discount,
-            total: Math.max(0, detailSubtotal * (1 - values.discount / 100)),
           },
+          items: normalizedRows.map((row) => ({
+            product: row.product,
+            amount: row.amount,
+            unitPrice: row.unitPrice,
+            discount: row.discount,
+          })),
         }).unwrap();
 
         dispatch(
-          setSnackbar({ message: "Factura actualizada satisfactoriamente." }),
+          setSnackbar({
+            message: "Factura actualizada satisfactoriamente.",
+            type: "success",
+          }),
         );
         setMode("review");
       } catch {
@@ -550,20 +729,48 @@ export default function InvoiceFormPage() {
 
   useEffect(() => {
     if (!invoice || isNewMode || isEditMode) return;
+
+    const parsedClient = parseJsonValue<{ id?: string; name?: string }>(
+      invoice.client,
+    );
+
+    const rawInvoiceProducts =
+      parseJsonValue<InvoiceProductRow[]>(invoice.invoice_products) || [];
+
+    const detailRows =
+      Array.isArray(rawInvoiceProducts) && rawInvoiceProducts.length > 0
+        ? rawInvoiceProducts.map((item, i) => ({
+            id: item.id || `row-${i}`,
+            product:
+              String(
+                item.product_id ??
+                  (typeof item.product === "string"
+                    ? item.product
+                    : item.product?.id) ??
+                  "",
+              ) || "",
+            amount: Math.max(1, Number(item.amount ?? 1)),
+            unitPrice: Math.max(0, Number(item.unit_price ?? 0)),
+            discount: Math.min(100, Math.max(0, Number(item.discount ?? 0))),
+          }))
+        : [buildEmptyRow()];
+
     editFormik.setValues({
+      client: parsedClient?.id || "",
       date: String(invoice.date).slice(0, 10),
       discount: Number(invoice.discount ?? 0),
+      rows: detailRows,
     });
   }, [invoice, isEditMode, isNewMode]);
 
   const invoiceProducts: InvoiceProductRow[] = useMemo(() => {
-    if (
-      !invoice?.invoice_products ||
-      !Array.isArray(invoice.invoice_products)
-    ) {
+    const parsed = parseJsonValue<InvoiceProductRow[]>(
+      invoice?.invoice_products,
+    );
+    if (!parsed || !Array.isArray(parsed)) {
       return [];
     }
-    return invoice.invoice_products as InvoiceProductRow[];
+    return parsed;
   }, [invoice?.invoice_products]);
 
   const productById = useMemo(
@@ -575,6 +782,7 @@ export default function InvoiceFormPage() {
             id: product.id,
             name: product.name,
             unitPrice: Number(product.unit_price ?? 0),
+            measureUnitId: String(product.measure_unit || ""),
           },
         ]),
       ),
@@ -596,13 +804,56 @@ export default function InvoiceFormPage() {
 
   const detailSubtotal = useMemo(
     () =>
-      invoiceProducts.reduce((acc, item) => acc + getDetailItemTotal(item), 0),
-    [invoiceProducts],
+      editFormik.values.rows.reduce(
+        (acc, row) => acc + getCreateItemTotal(row),
+        0,
+      ),
+    [editFormik.values.rows],
   );
   const detailTotal = useMemo(
     () => Math.max(0, detailSubtotal * (1 - editFormik.values.discount / 100)),
     [detailSubtotal, editFormik.values.discount],
   );
+
+  const currentInvoiceState = useMemo(() => {
+    const rawState = getInvoiceStateValue(
+      (invoice as typeof invoice & { state?: unknown })?.state,
+    ).toLowerCase();
+
+    if (rawState === "draft" || rawState === "open" || rawState === "void") {
+      return rawState as InvoiceState;
+    }
+
+    return "";
+  }, [invoice]);
+
+  const stateActionConfig = useMemo(() => {
+    if (currentInvoiceState === "open") {
+      return {
+        nextState: "void" as InvoiceState,
+        label: "Anular factura",
+        color: "error" as const,
+      };
+    }
+
+    if (currentInvoiceState === "void") {
+      return {
+        nextState: "open" as InvoiceState,
+        label: "Reabrir factura",
+        color: "success" as const,
+      };
+    }
+
+    if (currentInvoiceState === "draft") {
+      return {
+        nextState: "open" as InvoiceState,
+        label: "Abrir factura",
+        color: "success" as const,
+      };
+    }
+
+    return null;
+  }, [currentInvoiceState]);
 
   const createTableRows = useMemo<ProductTableRowData[]>(
     () =>
@@ -614,59 +865,154 @@ export default function InvoiceFormPage() {
           id: row.id,
           productId: row.product,
           productName,
+          measureUnitName:
+            measureUnitById.get(
+              productById.get(row.product)?.measureUnitId || "",
+            ) || "-",
           amount: row.amount,
           unitPrice: row.unitPrice,
           discount: row.discount,
           total: getCreateItemTotal(row),
         };
       }),
-    [newFormik.values.rows, productOptions],
+    [newFormik.values.rows, productOptions, measureUnitById, productById],
   );
 
   const detailTableRows = useMemo<ProductTableRowData[]>(
     () =>
-      invoiceProducts.map((item, i) => ({
-        id: item.id || `row-${i}`,
-        productId: "",
-        productName:
-          item.product_name ||
-          (typeof item.product === "string"
-            ? item.product
-            : item.product?.name) ||
-          "-",
-        amount: Number(item.amount ?? 0),
-        unitPrice: Number(item.unit_price ?? 0),
-        discount: Number(item.discount ?? 0),
-        total: getDetailItemTotal(item),
-      })),
-    [invoiceProducts],
+      editFormik.values.rows.map((row) => {
+        const productName =
+          productOptions.find((option) => option.id === row.product)?.name ||
+          invoiceProducts.find((item) => item.id === row.id)?.product_name ||
+          "-";
+
+        return {
+          id: row.id,
+          productId: row.product,
+          productName,
+          measureUnitName:
+            measureUnitById.get(
+              productById.get(row.product)?.measureUnitId || "",
+            ) || "-",
+          amount: row.amount,
+          unitPrice: row.unitPrice,
+          discount: row.discount,
+          total: getCreateItemTotal(row),
+        };
+      }),
+    [
+      editFormik.values.rows,
+      invoiceProducts,
+      measureUnitById,
+      productById,
+      productOptions,
+    ],
   );
 
-  const hasInvalidRows = newFormik.values.rows.some(
-    (row) =>
-      !row.product ||
-      row.amount <= 0 ||
-      row.unitPrice < 0 ||
-      row.discount < 0 ||
-      row.discount > 100,
-  );
+  const hasInvalidRows = hasInvalidInvoiceRows(newFormik.values.rows);
   const canCreate =
     !!newFormik.values.client &&
     newFormik.values.rows.length > 0 &&
     !hasInvalidRows;
 
+  const submitNewInvoice = async (targetState: InvoiceState) => {
+    const values = newFormik.values;
+    const normalizedDate = normalizeIsoDate(values.date);
+    if (!normalizedDate) {
+      dispatch(
+        setSnackbar({
+          message: "Fecha inválida. Seleccioná una fecha entre 2000 y 2100.",
+          type: "error",
+        }),
+      );
+      return;
+    }
+
+    if (!values.client) {
+      dispatch(
+        setSnackbar({ message: "Seleccioná un cliente.", type: "error" }),
+      );
+      return;
+    }
+
+    const invalidRows = hasInvalidInvoiceRows(values.rows);
+
+    if (values.rows.length === 0 || invalidRows) {
+      dispatch(
+        setSnackbar({
+          message:
+            "Completá los productos con cantidad válida, precio y descuentos correctos.",
+          type: "error",
+        }),
+      );
+      return;
+    }
+
+    try {
+      const created = await createInvoice({
+        client: values.client,
+        date: normalizedDate,
+        discount: values.discount,
+        state: targetState,
+        items: values.rows.map((row) => ({
+          product: row.product,
+          amount: row.amount,
+          unitPrice: row.unitPrice,
+          discount: row.discount,
+        })),
+      }).unwrap();
+
+      dispatch(
+        setSnackbar({
+          message:
+            targetState === "draft"
+              ? "Factura guardada como borrador."
+              : "Factura creada satisfactoriamente.",
+          type: "success",
+        }),
+      );
+
+      setMode("review");
+      handleGoTo(`${AppRoutes.Invoices}/${created.invoice.id}`);
+    } catch {
+      // Error feedback is already handled by RTK middleware.
+    }
+  };
+
+  const handleCreateInvoice = () => {
+    void submitNewInvoice("open");
+  };
+
+  const handleCreateDraft = () => {
+    void submitNewInvoice("draft");
+  };
+
+  const activeFormik = isNewMode ? newFormik : editFormik;
+  const isEditable = isNewMode || isEditMode;
+  const tableRows = isNewMode ? createTableRows : detailTableRows;
+  const summarySubtotal = isNewMode ? newSubtotal : detailSubtotal;
+  const summaryTotal = isNewMode ? newTotal : detailTotal;
+
+  const parsedClient = parseJsonValue<{
+    id?: string;
+    name?: string;
+  }>(invoice?.client);
+  const invoiceClientName =
+    parsedClient?.name ||
+    (typeof invoice?.client === "string" ? invoice.client : "-");
+
   const handleAddRow = () => {
-    newFormik.setFieldValue("rows", [
-      ...newFormik.values.rows,
+    activeFormik.setFieldValue("rows", [
+      ...activeFormik.values.rows,
       buildEmptyRow(),
     ]);
   };
 
   const handleRemoveRow = (id: string) => {
-    if (newFormik.values.rows.length <= 1) return;
-    newFormik.setFieldValue(
+    if (activeFormik.values.rows.length <= 1) return;
+    activeFormik.setFieldValue(
       "rows",
-      newFormik.values.rows.filter((row) => row.id !== id),
+      activeFormik.values.rows.filter((row) => row.id !== id),
     );
   };
 
@@ -675,9 +1021,9 @@ export default function InvoiceFormPage() {
     field: keyof Omit<InvoiceProductInput, "id">,
     value: string | number,
   ) => {
-    newFormik.setFieldValue(
+    activeFormik.setFieldValue(
       "rows",
-      newFormik.values.rows.map((row) => {
+      activeFormik.values.rows.map((row) => {
         if (row.id !== id) return row;
 
         if (field === "product") {
@@ -695,6 +1041,44 @@ export default function InvoiceFormPage() {
         };
       }),
     );
+  };
+
+  const handleCancelEdit = () => {
+    setMode("review");
+  };
+
+  const handleUpdateState = async (nextState: InvoiceState) => {
+    if (!invoiceId) return;
+
+    const nextStateId = invoiceStateByName.get(nextState)?.id;
+
+    if (!nextStateId) {
+      dispatch(
+        setSnackbar({
+          message: "No se pudo identificar el estado de factura solicitado.",
+          type: "error",
+        }),
+      );
+      return;
+    }
+
+    try {
+      await updateInvoice({
+        id: invoiceId,
+        data: {
+          state: nextStateId,
+        },
+      }).unwrap();
+
+      dispatch(
+        setSnackbar({
+          message: "Estado de factura actualizado satisfactoriamente.",
+          type: "success",
+        }),
+      );
+    } catch {
+      // Error feedback is already handled by RTK middleware.
+    }
   };
 
   if (isDetailRoute && isFetching) {
@@ -745,25 +1129,52 @@ export default function InvoiceFormPage() {
             <Stack direction={{ xs: "column", sm: "row" }} spacing={1}>
               {!isNewMode &&
                 (isEditMode ? (
-                  <Button
-                    size="small"
-                    variant="contained"
-                    startIcon={<SaveRounded />}
-                    onClick={() => void editFormik.submitForm()}
-                    loading={isUpdating}
-                  >
-                    Guardar
-                  </Button>
+                  <>
+                    <Button
+                      size="small"
+                      variant="contained"
+                      startIcon={<SaveRounded />}
+                      onClick={() => void editFormik.submitForm()}
+                      loading={isUpdating}
+                    >
+                      Guardar
+                    </Button>
+                    <Button
+                      color="secondary"
+                      size="small"
+                      variant="outlined"
+                      startIcon={<CancelRounded />}
+                      onClick={handleCancelEdit}
+                      disabled={isUpdating}
+                    >
+                      Cancelar edición
+                    </Button>
+                  </>
                 ) : (
-                  <Button
-                    size="small"
-                    variant="contained"
-                    startIcon={<EditRounded />}
-                    color="info"
-                    onClick={() => setMode("edit")}
-                  >
-                    Editar
-                  </Button>
+                  <>
+                    <Button
+                      size="small"
+                      variant="contained"
+                      startIcon={<EditRounded />}
+                      color="info"
+                      onClick={() => setMode("edit")}
+                    >
+                      Editar
+                    </Button>
+                    {stateActionConfig && (
+                      <Button
+                        size="small"
+                        variant="outlined"
+                        color={stateActionConfig.color}
+                        onClick={() =>
+                          void handleUpdateState(stateActionConfig.nextState)
+                        }
+                        loading={isUpdating}
+                      >
+                        {stateActionConfig.label}
+                      </Button>
+                    )}
+                  </>
                 ))}
               <Button
                 color="secondary"
@@ -798,196 +1209,155 @@ export default function InvoiceFormPage() {
                 overflow: "hidden",
               }}
             >
-              {isNewMode ? (
-                <Stack spacing={2.5} sx={{ flex: "1 1 auto", minHeight: 0 }}>
-                  <Stack direction={{ xs: "column", md: "row" }} spacing={1.5}>
-                    <DebouncedAutocomplete
-                      options={clientOptions}
-                      valueId={newFormik.values.client}
-                      label="Cliente"
-                      placeholder="Seleccionar cliente"
-                      onChange={(value) =>
-                        newFormik.setFieldValue("client", value)
-                      }
-                    />
-                    <DatePicker
-                      label="Fecha"
-                      value={parsePickerDate(newFormik.values.date)}
-                      onChange={(value) =>
-                        newFormik.setFieldValue("date", formatPickerDate(value))
-                      }
-                      format="DD/MM/YYYY"
-                      slotProps={{
-                        textField: {
-                          size: "small",
-                        },
-                      }}
-                      sx={{ minWidth: { md: 180 } }}
-                    />
-                    <TextField
-                      size="small"
-                      label="Descuento factura (%)"
-                      type="number"
-                      value={newFormik.values.discount}
-                      onChange={(e) =>
-                        newFormik.setFieldValue(
-                          "discount",
-                          Math.min(
-                            100,
-                            Math.max(0, Number(e.target.value || 0)),
-                          ),
-                        )
-                      }
-                      inputProps={{ min: 0, max: 100, step: "0.01" }}
-                      sx={{ minWidth: { md: 200 } }}
-                    />
-                  </Stack>
-
-                  <Divider />
-
-                  <Stack
-                    direction={{ xs: "column", sm: "row" }}
-                    justifyContent="space-between"
-                    alignItems={{ xs: "stretch", sm: "center" }}
-                    spacing={1}
-                  >
-                    <Typography variant="subtitle1" fontWeight={600}>
-                      Productos
-                    </Typography>
-                    <Button
-                      size="small"
-                      variant="outlined"
-                      color="secondary"
-                      startIcon={<AddRounded />}
-                      onClick={handleAddRow}
-                      disabled={isProductsLoading}
-                    >
-                      Agregar producto
-                    </Button>
-                  </Stack>
-
-                  <ProductsTable
-                    rows={createTableRows}
-                    editable
-                    productOptions={productOptions}
-                    onRowChange={handleRowChange}
-                    onRemoveRow={handleRemoveRow}
-                    canRemoveRow={() => newFormik.values.rows.length > 1}
-                  />
-
-                  <Divider />
-
-                  <Box
-                    sx={{
-                      mt: "auto",
-                      display: "flex",
-                      justifyContent: "space-between",
-                      alignItems: "flex-end",
-                      gap: 1.5,
-                      flexWrap: "wrap",
-                    }}
-                  >
-                    <InvoiceTotalsSummary
-                      subtotal={newSubtotal}
-                      discountPercent={newFormik.values.discount}
-                      total={newTotal}
-                    />
-
-                    <Button
-                      size="small"
-                      variant="contained"
-                      onClick={() => void newFormik.submitForm()}
-                      loading={isCreating}
-                      disabled={!canCreate}
-                    >
-                      Crear factura
-                    </Button>
-                  </Box>
-                </Stack>
-              ) : (
-                <Stack spacing={2.5} sx={{ flex: "1 1 auto", minHeight: 0 }}>
-                  <Stack direction={{ xs: "column", md: "row" }} spacing={1.5}>
-                    <Box sx={{ flex: 1 }}>
+              <Stack spacing={2.5} sx={{ flex: "1 1 auto", minHeight: 0 }}>
+                <Stack direction={{ xs: "column", md: "row" }} spacing={1.5}>
+                  <Box sx={{ flex: 1 }}>
+                    {isEditable ? (
+                      <DebouncedAutocomplete
+                        options={clientOptions}
+                        valueId={activeFormik.values.client}
+                        label="Cliente"
+                        placeholder="Seleccionar cliente"
+                        onChange={(value) =>
+                          activeFormik.setFieldValue("client", value)
+                        }
+                      />
+                    ) : (
                       <TextField
                         fullWidth
                         size="small"
                         label="Cliente"
-                        value={
-                          typeof invoice?.client === "string"
-                            ? invoice.client
-                            : (invoice?.client as { name?: string } | null)
-                                ?.name || "-"
-                        }
+                        value={invoiceClientName}
                         disabled
+                        sx={readableDisabledFieldSx}
                       />
-                    </Box>
+                    )}
+                  </Box>
 
-                    <Box sx={{ minWidth: { md: 220 } }}>
-                      <DatePicker
-                        label="Fecha"
-                        value={parsePickerDate(editFormik.values.date)}
-                        onChange={(value) =>
-                          editFormik.setFieldValue(
-                            "date",
-                            formatPickerDate(value),
-                          )
-                        }
-                        format="DD/MM/YYYY"
-                        disabled={!isEditMode}
-                        slotProps={{
-                          textField: {
-                            size: "small",
-                            fullWidth: true,
-                          },
-                        }}
-                      />
-                    </Box>
+                  <Box sx={{ minWidth: { md: 220 } }}>
+                    <DatePicker
+                      label="Fecha"
+                      value={parsePickerDate(activeFormik.values.date)}
+                      onChange={(value) =>
+                        activeFormik.setFieldValue("date", formatPickerDate(value))
+                      }
+                      format="DD/MM/YYYY"
+                      disabled={!isEditable}
+                      slotProps={{
+                        field: {
+                          readOnly: true,
+                        },
+                        textField: {
+                          size: "small",
+                          fullWidth: true,
+                          sx: !isEditable ? readableDisabledFieldSx : undefined,
+                        },
+                      }}
+                    />
+                  </Box>
 
-                    <Box sx={{ minWidth: { md: 220 } }}>
-                      <TextField
-                        size="small"
-                        fullWidth
-                        label="Descuento factura (%)"
-                        type="number"
-                        value={editFormik.values.discount}
-                        onChange={(e) =>
-                          editFormik.setFieldValue(
-                            "discount",
-                            Math.min(
-                              100,
-                              Math.max(0, Number(e.target.value || 0)),
-                            ),
-                          )
-                        }
-                        inputProps={{ min: 0, max: 100, step: "0.01" }}
-                        disabled={!isEditMode}
-                      />
-                    </Box>
-                  </Stack>
-
-                  <Divider />
-
-                  <Typography variant="subtitle1" fontWeight={600}>
-                    Productos
-                  </Typography>
-
-                  <ProductsTable
-                    rows={detailTableRows}
-                    editable={false}
-                    productOptions={[]}
-                  />
-
-                  <Divider />
-
-                  <Box sx={{ mt: "auto" }}>
-                    <InvoiceTotalsSummary
-                      subtotal={detailSubtotal}
-                      discountPercent={editFormik.values.discount}
-                      total={detailTotal}
+                  <Box sx={{ minWidth: { md: 220 } }}>
+                    <TextField
+                      size="small"
+                      fullWidth
+                      label="Descuento factura (%)"
+                      type="number"
+                      value={activeFormik.values.discount}
+                      onChange={(e) =>
+                        activeFormik.setFieldValue(
+                          "discount",
+                          clampDiscount(Number(e.target.value || 0)),
+                        )
+                      }
+                      inputProps={{ min: 0, max: 100, step: "0.01" }}
+                      disabled={!isEditable}
+                      sx={!isEditable ? readableDisabledFieldSx : undefined}
                     />
                   </Box>
                 </Stack>
-              )}
+
+                <Divider />
+
+                <Stack
+                  direction={{ xs: "column", sm: "row" }}
+                  justifyContent="space-between"
+                  alignItems={{ xs: "stretch", sm: "center" }}
+                  spacing={1}
+                >
+                  <Typography variant="subtitle1" fontWeight={600}>
+                    Productos
+                  </Typography>
+                  <Button
+                    size="small"
+                    variant="outlined"
+                    color="secondary"
+                    startIcon={<AddRounded />}
+                    onClick={isEditable ? handleAddRow : undefined}
+                    disabled={!isEditable || isProductsLoading}
+                    tabIndex={isEditable ? 0 : -1}
+                    aria-hidden={!isEditable}
+                    sx={{
+                      visibility: isEditable ? "visible" : "hidden",
+                      pointerEvents: isEditable ? "auto" : "none",
+                    }}
+                  >
+                    Agregar producto
+                  </Button>
+                </Stack>
+
+                <ProductsTable
+                  rows={tableRows}
+                  editable={isEditable}
+                  productOptions={productOptions}
+                  onRowChange={handleRowChange}
+                  onRemoveRow={handleRemoveRow}
+                  canRemoveRow={() => activeFormik.values.rows.length > 1}
+                />
+
+                <Divider />
+
+                <Box
+                  sx={{
+                    mt: "auto",
+                    display: "flex",
+                    justifyContent: "space-between",
+                    alignItems: "center",
+                    gap: 1.5,
+                    flexWrap: "wrap",
+                  }}
+                >
+                  <InvoiceTotalsSummary
+                    subtotal={summarySubtotal}
+                    discountPercent={activeFormik.values.discount}
+                    total={summaryTotal}
+                  />
+
+                  {isNewMode && (
+                    <Stack direction="row" spacing={1} sx={{ ml: "auto" }}>
+                      <Button
+                        size="small"
+                        variant="outlined"
+                        color="secondary"
+                        onClick={handleCreateDraft}
+                        loading={isCreating}
+                        disabled={!canCreate}
+                      >
+                        Guardar borrador
+                      </Button>
+
+                      <Button
+                        size="small"
+                        variant="contained"
+                        onClick={handleCreateInvoice}
+                        loading={isCreating}
+                        disabled={!canCreate}
+                      >
+                        Crear factura
+                      </Button>
+                    </Stack>
+                  )}
+                </Box>
+              </Stack>
             </CardContent>
           </Card>
         </Container>

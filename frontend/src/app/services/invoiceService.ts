@@ -1,12 +1,13 @@
 import { ListResult } from "pocketbase";
-import { UpdateItemReq } from "src/interfaces";
 import { pb } from "src/libs";
 import { GetList } from "src/types";
 import {
   ClientsResponse,
   Create,
+  InvoicestatesResponse,
   InvoicesProductsResponse,
   InvoicesResponse,
+  MeasureunitsResponse,
   ProductsResponse,
   TypedPocketBase,
   Update,
@@ -17,8 +18,10 @@ import { ApiTag, mainApi, pbFilter, pbSort } from "./api";
 const invoiceTag = ApiTag.Invoices;
 const invoiceProductsTag = ApiTag.InvoicesProducts;
 const invoicesViewTag = ApiTag.InvoicesView;
+const invoiceStatesTag = ApiTag.InvoiceStates;
 const clientsTag = ApiTag.Clients;
 const productsTag = ApiTag.Products;
+const measureUnitsTag = ApiTag.MeasureUnits;
 const typedPb = pb as TypedPocketBase;
 const MAX_DISCOUNT_PERCENT = 100;
 const DEFAULT_INVOICE_STATE = "open";
@@ -35,6 +38,13 @@ export interface CreateInvoiceReq {
   date: string;
   discount: number;
   items: CreateInvoiceItemReq[];
+  state?: "draft" | "open" | "void";
+}
+
+export interface UpdateInvoiceReq {
+  id: string;
+  data: Update<"invoices">;
+  items?: CreateInvoiceItemReq[];
 }
 
 const normalizeDiscountPercent = (value: number) =>
@@ -83,6 +93,15 @@ export const invoiceApi = mainApi.injectEndpoints({
       },
       providesTags: [clientsTag],
     }),
+    getInvoiceStates: build.query<InvoicestatesResponse[], void>({
+      queryFn: async () => {
+        const res = await typedPb.collection("invoicestates").getFullList({
+          sort: "+name",
+        });
+        return { data: res };
+      },
+      providesTags: [invoiceStatesTag],
+    }),
     getProducts: build.query<ProductsResponse[], void>({
       queryFn: async () => {
         const res = await typedPb.collection("products").getFullList({
@@ -92,6 +111,16 @@ export const invoiceApi = mainApi.injectEndpoints({
         return { data: res };
       },
       providesTags: [productsTag],
+    }),
+    getMeasureUnits: build.query<MeasureunitsResponse[], void>({
+      queryFn: async () => {
+        const res = await typedPb.collection("measureunits").getFullList({
+          filter: `deleted = ""`,
+          sort: "+name",
+        });
+        return { data: res };
+      },
+      providesTags: [measureUnitsTag],
     }),
     createInvoice: build.mutation<
       {
@@ -116,6 +145,8 @@ export const invoiceApi = mainApi.injectEndpoints({
           subtotal * (1 - invoiceDiscountPercent / 100),
         );
 
+        const invoiceStateName = _arg.state || DEFAULT_INVOICE_STATE;
+
         const invoicePayload: Create<"invoices"> = {
           client: _arg.client,
           date: _arg.date,
@@ -124,7 +155,7 @@ export const invoiceApi = mainApi.injectEndpoints({
           state: (
             await typedPb
               .collection("invoicestates")
-              .getFirstListItem(`name = "${DEFAULT_INVOICE_STATE}"`)
+              .getFirstListItem(`name = "${invoiceStateName}"`)
           ).id,
         };
 
@@ -147,15 +178,72 @@ export const invoiceApi = mainApi.injectEndpoints({
       },
       invalidatesTags: [invoiceTag, invoiceProductsTag, invoicesViewTag],
     }),
-    updateInvoice: build.mutation<
-      InvoicesResponse,
-      UpdateItemReq<Update<"invoices">>
-    >({
+    updateInvoice: build.mutation<InvoicesResponse, UpdateInvoiceReq>({
       queryFn: async (_arg, _api, _options) => {
-        const res = await typedPb.collection("invoices").update(_arg.id, _arg.data);
+        const currentInvoice = await typedPb.collection("invoices").getOne(_arg.id);
+
+        const invoiceDiscountPercent =
+          _arg.data.discount === undefined
+            ? normalizeDiscountPercent(Number(currentInvoice.discount ?? 0))
+            : normalizeDiscountPercent(Number(_arg.data.discount));
+
+        let subtotal = 0;
+
+        if (_arg.items) {
+          const existingItems = await typedPb
+            .collection("invoices_products")
+            .getFullList({
+              filter: `invoice = "${_arg.id}"`,
+            });
+
+          await Promise.all(
+            existingItems.map((item) =>
+              typedPb.collection("invoices_products").delete(item.id),
+            ),
+          );
+
+          const nextItems = _arg.items.map((item) => ({
+            ...item,
+            total: getItemTotal(item),
+          }));
+
+          subtotal = nextItems.reduce((acc, item) => acc + item.total, 0);
+
+          await Promise.all(
+            nextItems.map((item) =>
+              typedPb.collection("invoices_products").create({
+                invoice: _arg.id,
+                product: item.product,
+                amount: item.amount,
+                unit_price: item.unitPrice,
+                discount: normalizeDiscountPercent(item.discount),
+                total: item.total,
+              }),
+            ),
+          );
+        } else {
+          const existingItems = await typedPb
+            .collection("invoices_products")
+            .getFullList({
+              filter: `invoice = "${_arg.id}"`,
+            });
+
+          subtotal = existingItems.reduce(
+            (acc, item) => acc + Number(item.total ?? 0),
+            0,
+          );
+        }
+
+        const total = Math.max(0, subtotal * (1 - invoiceDiscountPercent / 100));
+
+        const res = await typedPb.collection("invoices").update(_arg.id, {
+          ..._arg.data,
+          discount: invoiceDiscountPercent,
+          total,
+        });
         return { data: res };
       },
-      invalidatesTags: [invoiceTag, invoicesViewTag],
+      invalidatesTags: [invoiceTag, invoiceProductsTag, invoicesViewTag],
     }),
   }),
 });
@@ -164,7 +252,9 @@ export const {
   useCreateInvoiceMutation,
   useGetClientsQuery,
   useGetInvoiceViewByIdQuery,
+  useGetInvoiceStatesQuery,
   useGetInvoicesViewQuery,
+  useGetMeasureUnitsQuery,
   useGetProductsQuery,
   useUpdateInvoiceMutation,
 } = invoiceApi;

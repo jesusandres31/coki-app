@@ -162,7 +162,7 @@ export default function CustomMultipleAutocomplete({
               endAdornment: (
                 <>
                   {loading ? (
-                    <CircularProgress color="inherit" size={20} />
+                    <CircularProgress size={20} sx={{ color: "common.black" }} />
                   ) : null}
                   {params.InputProps.endAdornment}
                 </>

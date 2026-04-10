@@ -56,8 +56,8 @@ export default function DataGrid({
   isFetching,
   columns,
   detailColumns,
-  hasCheckbox = true,
-  hasSearch = true,
+  hasCheckbox = false,
+  hasSearch = false,
   searchPlaceholder,
   initialQuery,
   onQueryChange,
@@ -103,7 +103,9 @@ export default function DataGrid({
 
   const handleToggleSelect = (id: string) => {
     setSelectedItems((prev) =>
-      prev.includes(id) ? prev.filter((itemId) => itemId !== id) : [...prev, id],
+      prev.includes(id)
+        ? prev.filter((itemId) => itemId !== id)
+        : [...prev, id],
     );
   };
 
@@ -206,7 +208,9 @@ export default function DataGrid({
         />
       )}
 
-      {dataForRender && dataForRender.items && dataForRender.items.length > 0 ? (
+      {dataForRender &&
+      dataForRender.items &&
+      dataForRender.items.length > 0 ? (
         <TableContainer
           sx={{
             flex: "1 1 auto",
@@ -248,7 +252,9 @@ export default function DataGrid({
             />
           </Table>
         </TableContainer>
-      ) : dataForRender && dataForRender.items && dataForRender.items.length === 0 ? (
+      ) : dataForRender &&
+        dataForRender.items &&
+        dataForRender.items.length === 0 ? (
         <CustomGrid>
           <NoItems />
         </CustomGrid>

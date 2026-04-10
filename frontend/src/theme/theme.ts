@@ -14,7 +14,7 @@ const github = {
   danger: "#CF222E",
 };
 
-const radius = 6;
+const radius = 5;
 const border = `1px solid ${github.borderDefault}`;
 const shadowSm = "0 1px 2px rgba(31, 35, 40, 0.08)";
 const shadowMd = "0 12px 24px rgba(31, 35, 40, 0.12)";
@@ -82,7 +82,7 @@ const theme = createTheme({
     body2: { lineHeight: 1.45 },
     subtitle1: { fontWeight: 600 },
     subtitle2: { fontWeight: 600 },
-    button: { fontWeight: 600, textTransform: "none" },
+    button: { fontWeight: 600, textTransform: "uppercase" },
   },
   components: {
     MuiCssBaseline: {
@@ -100,30 +100,30 @@ const theme = createTheme({
         },
       },
     },
-    MuiDivider: {
-      styleOverrides: {
-        root: {
-          borderColor: github.borderDefault,
-        },
-      },
-    },
-    MuiPaper: {
-      styleOverrides: {
-        root: {
-          backgroundImage: "none",
-          borderColor: github.borderDefault,
-        },
-      },
-    },
-    MuiCard: {
-      styleOverrides: {
-        root: {
-          borderRadius: radius,
-          border,
-          boxShadow: shadowSm,
-        },
-      },
-    },
+    // MuiDivider: {
+    //   styleOverrides: {
+    //     root: {
+    //       borderColor: github.borderDefault,
+    //     },
+    //   },
+    // },
+    // MuiPaper: {
+    //   styleOverrides: {
+    //     root: {
+    //       backgroundImage: "none",
+    //       borderColor: github.borderDefault,
+    //     },
+    //   },
+    // },
+    // MuiCard: {
+    //   styleOverrides: {
+    //     root: {
+    //       borderRadius: radius,
+    //       border,
+    //       boxShadow: shadowSm,
+    //     },
+    //   },
+    // },
     MuiButton: {
       defaultProps: {
         disableElevation: true,
@@ -133,7 +133,7 @@ const theme = createTheme({
           borderRadius: radius,
           minHeight: 32,
           paddingInline: 12,
-          textTransform: "none",
+          textTransform: "uppercase",
           fontWeight: 600,
           lineHeight: 1.2,
         },
@@ -165,16 +165,16 @@ const theme = createTheme({
         },
       },
     },
-    MuiIconButton: {
-      styleOverrides: {
-        root: {
-          color: github.fgMuted,
-          "&:hover": {
-            backgroundColor: alpha(github.fgDefault, 0.06),
-          },
-        },
-      },
-    },
+    // MuiIconButton: {
+    //   styleOverrides: {
+    //     root: {
+    //       color: github.fgMuted,
+    //       "&:hover": {
+    //         backgroundColor: alpha(github.fgDefault, 0.06),
+    //       },
+    //     },
+    //   },
+    // },
     MuiAppBar: {
       styleOverrides: {
         root: {
@@ -193,13 +193,13 @@ const theme = createTheme({
         },
       },
     },
-    MuiListItemButton: {
-      styleOverrides: {
-        root: {
-          borderRadius: radius,
-        },
-      },
-    },
+    // MuiListItemButton: {
+    //   styleOverrides: {
+    //     root: {
+    //       borderRadius: radius,
+    //     },
+    //   },
+    // },
     MuiBreadcrumbs: {
       styleOverrides: {
         separator: {
@@ -220,32 +220,32 @@ const theme = createTheme({
         size: "small",
       },
     },
-    MuiOutlinedInput: {
-      styleOverrides: {
-        root: {
-          borderRadius: radius,
-          backgroundColor: github.canvasDefault,
-          "&:hover .MuiOutlinedInput-notchedOutline": {
-            borderColor: github.fgSubtle,
-          },
-          "&.Mui-focused .MuiOutlinedInput-notchedOutline": {
-            borderColor: github.accent,
-            boxShadow: focusRing,
-          },
-        },
-        input: {
-          paddingTop: 9,
-          paddingBottom: 9,
-        },
-      },
-    },
-    MuiInputLabel: {
-      styleOverrides: {
-        root: {
-          color: github.fgMuted,
-        },
-      },
-    },
+    // MuiOutlinedInput: {
+    //   styleOverrides: {
+    //     root: {
+    //       borderRadius: radius,
+    //       backgroundColor: github.canvasDefault,
+    //       "&:hover .MuiOutlinedInput-notchedOutline": {
+    //         borderColor: github.fgSubtle,
+    //       },
+    //       "&.Mui-focused .MuiOutlinedInput-notchedOutline": {
+    //         borderColor: github.accent,
+    //         boxShadow: focusRing,
+    //       },
+    //     },
+    //     input: {
+    //       paddingTop: 9,
+    //       paddingBottom: 9,
+    //     },
+    //   },
+    // },
+    // MuiInputLabel: {
+    //   styleOverrides: {
+    //     root: {
+    //       color: github.fgMuted,
+    //     },
+    //   },
+    // },
     MuiDialog: {
       styleOverrides: {
         root: {
@@ -282,14 +282,14 @@ const theme = createTheme({
         },
       },
     },
-    MuiTableContainer: {
-      styleOverrides: {
-        root: {
-          border: 0,
-          borderRadius: 0,
-        },
-      },
-    },
+    // MuiTableContainer: {
+    //   styleOverrides: {
+    //     root: {
+    //       border: 0,
+    //       borderRadius: 0,
+    //     },
+    //   },
+    // },
     MuiTableCell: {
       styleOverrides: {
         root: {
@@ -304,35 +304,35 @@ const theme = createTheme({
         },
       },
     },
-    MuiTableRow: {
-      styleOverrides: {
-        root: {
-          "&:hover": {
-            backgroundColor: alpha(github.fgDefault, 0.03),
-          },
-          "&.Mui-selected": {
-            backgroundColor: alpha(github.accent, 0.1),
-          },
-          "&.Mui-selected:hover": {
-            backgroundColor: alpha(github.accent, 0.15),
-          },
-        },
-      },
-    },
-    MuiTablePagination: {
-      styleOverrides: {
-        toolbar: {
-          minHeight: 52,
-        },
-      },
-    },
-    MuiChip: {
-      styleOverrides: {
-        root: {
-          borderRadius: radius,
-        },
-      },
-    },
+    // MuiTableRow: {
+    //   styleOverrides: {
+    //     root: {
+    //       "&:hover": {
+    //         backgroundColor: alpha(github.fgDefault, 0.03),
+    //       },
+    //       "&.Mui-selected": {
+    //         backgroundColor: alpha(github.accent, 0.1),
+    //       },
+    //       "&.Mui-selected:hover": {
+    //         backgroundColor: alpha(github.accent, 0.15),
+    //       },
+    //     },
+    //   },
+    // },
+    // MuiTablePagination: {
+    //   styleOverrides: {
+    //     toolbar: {
+    //       minHeight: 52,
+    //     },
+    //   },
+    // },
+    // MuiChip: {
+    //   styleOverrides: {
+    //     root: {
+    //       borderRadius: radius,
+    //     },
+    //   },
+    // },
     MuiMenu: {
       styleOverrides: {
         paper: {
@@ -351,13 +351,13 @@ const theme = createTheme({
         },
       },
     },
-    MuiAlert: {
-      styleOverrides: {
-        root: {
-          borderRadius: radius,
-        },
-      },
-    },
+    // MuiAlert: {
+    //   styleOverrides: {
+    //     root: {
+    //       borderRadius: radius,
+    //     },
+    //   },
+    // },
   },
 });
 

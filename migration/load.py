@@ -198,6 +198,9 @@ class PBClient:
     def create_record(self, collection: str, data: dict[str, Any]) -> dict[str, Any]:
         return self._request("POST", f"/api/collections/{collection}/records", data)
 
+    def delete_record(self, collection: str, record_id: str) -> None:
+        self._request("DELETE", f"/api/collections/{collection}/records/{record_id}")
+
 
 @dataclass
 class ImportStats:
@@ -232,6 +235,37 @@ def build_measure_unit_map(client: PBClient, dry_run: bool) -> dict[str, str]:
         if unit_id:
             result[legacy_id] = unit_id
     return result
+
+
+def resolve_invoice_state_open_id(client: PBClient) -> str:
+    records = client.list_records("invoicestates", fields=["id", "name"])
+    for rec in records:
+        if normalize_key(rec.get("name")) == "open" and rec.get("id"):
+            return rec["id"]
+    raise RuntimeError("No 'open' record found in invoicestates collection.")
+
+
+def clear_import_collections(client: PBClient, dry_run: bool) -> None:
+    # Delete children first to avoid relation constraints when clearing invoices.
+    ordered_collections = ["invoices_products", "invoices", "clients", "products"]
+    if dry_run:
+        print("Dry-run: skipping cleanup of invoices_products, invoices, clients, products.")
+        return
+
+    for collection in ordered_collections:
+        records = client.list_records(collection, fields=["id"])
+        deleted = 0
+        failed = 0
+        for rec in records:
+            rec_id = rec.get("id")
+            if not rec_id:
+                continue
+            try:
+                client.delete_record(collection, rec_id)
+                deleted += 1
+            except Exception:
+                failed += 1
+        print(f"cleanup {collection}: deleted={deleted} failed={failed}")
 
 
 def import_clients(client: PBClient, rows: list[dict[str, str]], dry_run: bool) -> tuple[ImportStats, dict[str, str]]:
@@ -321,6 +355,7 @@ def import_invoices(
     client: PBClient,
     rows: list[dict[str, str]],
     client_id_map: dict[str, str],
+    default_state_id: str,
     dry_run: bool,
 ) -> tuple[ImportStats, dict[str, str]]:
     stats = ImportStats()
@@ -340,6 +375,7 @@ def import_invoices(
             "discount": parse_number(row.get("Recargo1")) or 0.0,
             "total": parse_number(row.get("Total")),
             "date": date,
+            "state": default_state_id,
         }
         payload = {k: v for k, v in payload.items() if v is not None}
 
@@ -447,6 +483,12 @@ def main() -> int:
     detalle_rows = read_csv_rows(required_files["factura_detalle"])
 
     try:
+        clear_import_collections(client, args.dry_run)
+    except Exception as exc:
+        print(f"Failed while cleaning target collections: {exc}", file=sys.stderr)
+        return 8
+
+    try:
         measure_unit_map = build_measure_unit_map(client, args.dry_run)
     except Exception as exc:
         print(f"Failed to load measure units: {exc}", file=sys.stderr)
@@ -459,11 +501,23 @@ def main() -> int:
         )
         return 5
 
+    try:
+        open_state_id = resolve_invoice_state_open_id(client)
+    except Exception as exc:
+        print(f"Failed to resolve invoice state 'open': {exc}", file=sys.stderr)
+        return 7
+
     clients_stats, client_id_map = import_clients(client, clientes_rows, args.dry_run)
     products_stats, product_by_id_art, product_by_codigo = import_products(
         client, articulos_rows, measure_unit_map, args.dry_run
     )
-    invoices_stats, invoice_by_doc = import_invoices(client, factura_rows, client_id_map, args.dry_run)
+    invoices_stats, invoice_by_doc = import_invoices(
+        client,
+        factura_rows,
+        client_id_map,
+        open_state_id,
+        args.dry_run,
+    )
     inv_products_stats = import_invoice_products(
         client,
         detalle_rows,

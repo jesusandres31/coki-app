@@ -10,9 +10,11 @@ export const ApiTag = {
   Users: "users",
   Clients: "clients",
   Products: "products",
+  MeasureUnits: "measureunits",
   Invoices: "invoices",
   InvoicesProducts: "invoices_products",
   InvoicesView: "v_invoices",
+  InvoiceStates: "invoicestates",
 };
 
 export const ApiView = {};

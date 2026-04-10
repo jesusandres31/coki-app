@@ -88,7 +88,13 @@ export default function CustomTableHead({
           );
         })}
 
-        {hasRowActions && <TableCell padding="checkbox" />}
+        {hasRowActions && (
+          <TableCell padding="checkbox">
+            <Typography variant="body2" fontWeight={700} sx={{ mt: 0.3 }}>
+              Acciones
+            </Typography>
+          </TableCell>
+        )}
 
         {isCollapsible && (
           <TableCell

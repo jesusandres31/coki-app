@@ -10,7 +10,7 @@ export default function Loading() {
         justifyContent: "center",
       }}
     >
-      <CircularProgress color="primary" />
+      <CircularProgress sx={{ color: "common.black" }} />
     </Box>
   );
 }
