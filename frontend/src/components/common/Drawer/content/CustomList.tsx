@@ -175,7 +175,7 @@ export default function CustomList({
                   <Box display="flex">
                     <ListItemIcon
                       sx={{
-                        color: selected ? "success.main" : "text.secondary",
+                        color: selected ? "success.light" : "text.secondary",
                         minWidth: 0,
                         mr: openDrawer ? 2 : "auto",
                         justifyContent: "center",
@@ -193,7 +193,7 @@ export default function CustomList({
                         opacity: openDrawer ? 1 : 0,
                       }}
                       fontWeight={selected ? 700 : 600}
-                      color={selected ? "success.main" : "text.secondary"}
+                      color={selected ? "success.light" : "text.secondary"}
                     >
                       {item.text || translateTitle(removeForeslash(item.to))}
                     </Typography>

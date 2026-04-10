@@ -68,8 +68,8 @@ const theme = createTheme({
     // fontFamily: ["Inter", "sans-serif"].join(","),
     fontSize: 12.5,
     fontFamily: [
-      "-apple-system",
-      "BlinkMacSystemFont",
+      // "-apple-system",
+      // "BlinkMacSystemFont",
       '"Segoe UI"',
       "Helvetica",
       "Arial",
