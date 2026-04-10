@@ -24,7 +24,7 @@ const styles = StyleSheet.create({
     marginBottom: 16,
     borderWidth: 1,
     borderColor: "#E5E7EB",
-    borderRadius: 6,
+    borderRadius: 3,
     padding: 10,
     gap: 4,
   },
@@ -41,7 +41,7 @@ const styles = StyleSheet.create({
   table: {
     borderWidth: 1,
     borderColor: "#E5E7EB",
-    borderRadius: 6,
+    borderRadius: 3,
     overflow: "hidden",
   },
   row: {
