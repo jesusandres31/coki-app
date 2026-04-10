@@ -8,6 +8,7 @@ import {
   ChevronLeftRounded,
   DeleteRounded,
   EditRounded,
+  PrintRounded,
   SaveRounded,
 } from "@mui/icons-material";
 import {
@@ -55,6 +56,11 @@ import {
 } from "src/slices/uiSlice";
 import { formatMoney, formatPercent } from "src/utils/format";
 import { invoiceBreadcrumbFlow } from "./breadcrumbFlow";
+import {
+  buildInvoicePdfModel,
+  openInvoicePdfInViewer,
+  openInvoicePdfTab,
+} from "./pdf";
 
 type InvoicePageMode = "new" | "review" | "edit";
 type InvoiceState = "draft" | "open" | "void";
@@ -319,7 +325,7 @@ function ProductsTable({
         overflowY: "auto",
         border: "1px solid",
         borderColor: "divider",
-        borderRadius: 1.5,
+        borderRadius: 1,
       }}
     >
       <Table size="small" stickyHeader>
@@ -494,6 +500,7 @@ export default function InvoiceFormPage() {
   const [mode, setMode] = useState<InvoicePageMode>(
     isDetailRoute ? "review" : "new",
   );
+  const [isPrinting, setIsPrinting] = useState(false);
 
   useEffect(() => {
     setMode(isDetailRoute ? "review" : "new");
@@ -1081,6 +1088,45 @@ export default function InvoiceFormPage() {
     }
   };
 
+  const handlePrintInvoice = async () => {
+    if (!invoice) return;
+    const popup = openInvoicePdfTab();
+
+    if (!popup) {
+      dispatch(
+        setSnackbar({
+          message:
+            "No se pudo abrir el PDF en una pestaña nueva. Verificá el bloqueo de popups.",
+          type: "error",
+        }),
+      );
+      return;
+    }
+
+    setIsPrinting(true);
+
+    try {
+      const invoicePdfModel = buildInvoicePdfModel({
+        invoice,
+        products,
+        measureUnits,
+      });
+
+      await openInvoicePdfInViewer(invoicePdfModel, popup);
+    } catch {
+      popup.close();
+      dispatch(
+        setSnackbar({
+          message:
+            "No se pudo generar o abrir el PDF en la pestaña nueva.",
+          type: "error",
+        }),
+      );
+    } finally {
+      setIsPrinting(false);
+    }
+  };
+
   if (isDetailRoute && isFetching) {
     return (
       <PageContainer>
@@ -1154,6 +1200,16 @@ export default function InvoiceFormPage() {
                   <>
                     <Button
                       size="small"
+                      variant="outlined"
+                      startIcon={<PrintRounded />}
+                      onClick={() => void handlePrintInvoice()}
+                      loading={isPrinting}
+                      loadingPosition="start"
+                    >
+                      Imprimir
+                    </Button>
+                    <Button
+                      size="small"
                       variant="contained"
                       startIcon={<EditRounded />}
                       color="info"
@@ -1194,7 +1250,6 @@ export default function InvoiceFormPage() {
               flex: "1 1 auto",
               minHeight: 0,
               overflow: "hidden",
-              borderRadius: 3,
               borderColor: "divider",
               boxShadow: "0 1px 2px rgba(0,0,0,0.06)",
             }}
@@ -1239,7 +1294,10 @@ export default function InvoiceFormPage() {
                       label="Fecha"
                       value={parsePickerDate(activeFormik.values.date)}
                       onChange={(value) =>
-                        activeFormik.setFieldValue("date", formatPickerDate(value))
+                        activeFormik.setFieldValue(
+                          "date",
+                          formatPickerDate(value),
+                        )
                       }
                       format="DD/MM/YYYY"
                       disabled={!isEditable}

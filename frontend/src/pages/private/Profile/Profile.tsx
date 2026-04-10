@@ -33,7 +33,12 @@ export default function UpdateProfile() {
     <Container component="main" maxWidth="md" sx={{ py: { xs: 3, md: 5 } }}>
       <CssBaseline />
 
-      <Stack direction="row" justifyContent="space-between" alignItems="center" mb={3}>
+      <Stack
+        direction="row"
+        justifyContent="space-between"
+        alignItems="center"
+        mb={3}
+      >
         <Typography variant="h5" fontWeight={600} color="text.primary">
           Mi perfil
         </Typography>
@@ -51,15 +56,25 @@ export default function UpdateProfile() {
       <Card
         variant="outlined"
         sx={{
-          borderRadius: 3,
           borderColor: "divider",
           boxShadow: "0 1px 2px rgba(0,0,0,0.06)",
         }}
       >
         <CardContent sx={{ p: { xs: 3, md: 4 } }}>
           <Stack spacing={3}>
-            <Stack direction={{ xs: "column", sm: "row" }} spacing={2} alignItems={{ xs: "flex-start", sm: "center" }}>
-              <Avatar sx={{ bgcolor: "secondary.main", width: 56, height: 56, fontWeight: 700 }}>
+            <Stack
+              direction={{ xs: "column", sm: "row" }}
+              spacing={2}
+              alignItems={{ xs: "flex-start", sm: "center" }}
+            >
+              <Avatar
+                sx={{
+                  bgcolor: "secondary.main",
+                  width: 56,
+                  height: 56,
+                  fontWeight: 700,
+                }}
+              >
                 {initials}
               </Avatar>
               <Box>
@@ -93,13 +108,23 @@ export default function UpdateProfile() {
 
             <Divider />
 
-            <Stack direction={{ xs: "column", sm: "row" }} spacing={1.5} alignItems={{ xs: "stretch", sm: "center" }} justifyContent="space-between">
+            <Stack
+              direction={{ xs: "column", sm: "row" }}
+              spacing={1.5}
+              alignItems={{ xs: "stretch", sm: "center" }}
+              justifyContent="space-between"
+            >
               <Box>
-                <Typography variant="subtitle1" fontWeight={600} color="text.primary">
+                <Typography
+                  variant="subtitle1"
+                  fontWeight={600}
+                  color="text.primary"
+                >
                   Seguridad
                 </Typography>
                 <Typography variant="body2" color="text.secondary">
-                  Cambiá tu contraseña y se cerrará la sesión actual por seguridad.
+                  Cambiá tu contraseña y se cerrará la sesión actual por
+                  seguridad.
                 </Typography>
               </Box>
               <Button
@@ -120,4 +145,3 @@ export default function UpdateProfile() {
     </Container>
   );
 }
-
