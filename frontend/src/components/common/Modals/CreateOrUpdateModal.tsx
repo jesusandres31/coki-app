@@ -52,7 +52,7 @@ export default function CreateOrUpdateModal({
   return (
     <Dialog
       open={open}
-      onClose={handleClose}
+      onClose={loading ? undefined : handleClose}
       scroll="paper"
       maxWidth={maxWidth}
       fullWidth
@@ -127,7 +127,12 @@ export default function CreateOrUpdateModal({
       </DialogContent>
       <DialogActions>
         {!noCancelBtn && (
-          <Button variant="outlined" color="secondary" onClick={handleClose}>
+          <Button
+            variant="outlined"
+            color="secondary"
+            onClick={handleClose}
+            disabled={loading}
+          >
             Cancelar
           </Button>
         )}

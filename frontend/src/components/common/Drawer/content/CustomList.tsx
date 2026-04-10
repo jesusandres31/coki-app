@@ -34,7 +34,7 @@ export default function CustomList({
   const { openDrawer } = useUISelector((state) => state.ui);
   const dispatch = useAppDispatch();
   const theme = useTheme();
-  const backgroundColor = alpha(theme.palette.secondary.main, 0.08);
+  const backgroundColor = alpha(theme.palette.success.main, 0.12);
 
   const isSameOrChildRoute = (baseRoute?: string) => {
     if (!baseRoute) return false;
@@ -148,10 +148,8 @@ export default function CustomList({
                   backgroundColor,
                 },
                 backgroundColor: selected ? backgroundColor : "transparent",
-                border: "1px solid",
-                borderColor: selected ? "secondary.dark" : "transparent",
                 borderRadius: 1.5,
-                transition: "background-color 0.2s ease, border-color 0.2s ease",
+                transition: "background-color 0.2s ease",
                 display: "block",
               }}
             >
@@ -177,7 +175,7 @@ export default function CustomList({
                   <Box display="flex">
                     <ListItemIcon
                       sx={{
-                        color: selected ? "secondary.dark" : "text.secondary",
+                        color: selected ? "success.main" : "text.secondary",
                         minWidth: 0,
                         mr: openDrawer ? 2 : "auto",
                         justifyContent: "center",
@@ -195,7 +193,7 @@ export default function CustomList({
                         opacity: openDrawer ? 1 : 0,
                       }}
                       fontWeight={selected ? 700 : 600}
-                      color={selected ? "secondary.dark" : "text.secondary"}
+                      color={selected ? "success.main" : "text.secondary"}
                     >
                       {item.text || translateTitle(removeForeslash(item.to))}
                     </Typography>

@@ -163,18 +163,20 @@ export default function CustomTableBody({
               ) : null}
             </TableRow>
 
-            <CustomCollapse
-              colSpan={
-                columns.length +
-                1 + // checkbox column (or its placeholder)
-                (hasRowActions ? 1 : 0) +
-                (isCollapsible ? 1 : 0)
-              }
-              detailColumns={detailColumns}
-              styles={styles}
-              collapsed={collapsed}
-              row={row}
-            />
+            {isCollapsible ? (
+              <CustomCollapse
+                colSpan={
+                  columns.length +
+                  1 + // checkbox column (or its placeholder)
+                  (hasRowActions ? 1 : 0) +
+                  (isCollapsible ? 1 : 0)
+                }
+                detailColumns={detailColumns}
+                styles={styles}
+                collapsed={collapsed}
+                row={row}
+              />
+            ) : null}
           </React.Fragment>
         );
       })}

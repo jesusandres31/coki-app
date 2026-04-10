@@ -52,7 +52,7 @@ export default function SignIn() {
     }),
     onSubmit: async (data: SignInRequest) => {
       try {
-        handleSignIn(data);
+        await handleSignIn(data);
         formik.setValues(formik.initialValues);
         handleResetError();
       } catch (err) {

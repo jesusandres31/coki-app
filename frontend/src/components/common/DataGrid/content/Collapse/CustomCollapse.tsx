@@ -33,7 +33,8 @@ export default function CustomCollapse({
 }: CustomCollapseProps) {
   const { isMobile } = useUI();
   const theme = useTheme();
-  const isCollapsible = Boolean(detailColumns);
+
+  if (!detailColumns?.length) return null;
 
   return (
     <TableRow>

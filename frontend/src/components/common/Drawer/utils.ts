@@ -8,10 +8,20 @@ export const translateTitle = (title?: string) => {
   if (route.startsWith(AppRoutes.Invoices)) {
     return "Facturación";
   }
+  if (route.startsWith(AppRoutes.Clients)) {
+    return "Clientes";
+  }
+  if (route.startsWith(AppRoutes.Products)) {
+    return "Productos";
+  }
 
   switch (title) {
     case AppRoutes.Invoices:
       return "Facturación";
+    case AppRoutes.Clients:
+      return "Clientes";
+    case AppRoutes.Products:
+      return "Productos";
     default:
       return title;
   }

@@ -35,7 +35,7 @@ export default function DeleteModal({
   };
 
   return (
-    <Dialog open={open} onClose={handleClose}>
+    <Dialog open={open} onClose={isDeleting ? undefined : handleClose}>
       <DialogTitle>{`Eliminar ${label}`}</DialogTitle>
       <DialogContent>
         <DialogContentText>
@@ -44,7 +44,12 @@ export default function DeleteModal({
         </DialogContentText>
       </DialogContent>
       <DialogActions>
-        <Button variant="outlined" color="secondary" onClick={handleClose}>
+        <Button
+          variant="outlined"
+          color="secondary"
+          onClick={handleClose}
+          disabled={isDeleting}
+        >
           Cancelar
         </Button>
         <Button

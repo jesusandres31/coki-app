@@ -47,6 +47,16 @@ export interface UpdateInvoiceReq {
   items?: CreateInvoiceItemReq[];
 }
 
+interface UpdateClientReq {
+  id: string;
+  data: Update<"clients">;
+}
+
+interface UpdateProductReq {
+  id: string;
+  data: Update<"products">;
+}
+
 const normalizeDiscountPercent = (value: number) =>
   Math.min(MAX_DISCOUNT_PERCENT, Math.max(0, Number(value || 0)));
 
@@ -102,6 +112,20 @@ export const invoiceApi = mainApi.injectEndpoints({
       },
       providesTags: [invoiceStatesTag],
     }),
+    getClientsList: build.query<ListResult<ClientsResponse>, GetList>({
+      queryFn: async (_arg) => {
+        const res = await typedPb.collection("clients").getList(
+          _arg.page,
+          _arg.perPage,
+          {
+            filter: pbFilter(_arg.filter, ["name", "address", "phone"]),
+            sort: pbSort(_arg.order, _arg.orderBy),
+          },
+        );
+        return { data: res };
+      },
+      providesTags: [clientsTag],
+    }),
     getProducts: build.query<ProductsResponse[], void>({
       queryFn: async () => {
         const res = await typedPb.collection("products").getFullList({
@@ -121,6 +145,20 @@ export const invoiceApi = mainApi.injectEndpoints({
         return { data: res };
       },
       providesTags: [measureUnitsTag],
+    }),
+    getProductsList: build.query<ListResult<ProductsResponse>, GetList>({
+      queryFn: async (_arg) => {
+        const res = await typedPb.collection("products").getList(
+          _arg.page,
+          _arg.perPage,
+          {
+            filter: pbFilter(_arg.filter, ["name"]),
+            sort: pbSort(_arg.order, _arg.orderBy),
+          },
+        );
+        return { data: res };
+      },
+      providesTags: [productsTag],
     }),
     createInvoice: build.mutation<
       {
@@ -245,16 +283,36 @@ export const invoiceApi = mainApi.injectEndpoints({
       },
       invalidatesTags: [invoiceTag, invoiceProductsTag, invoicesViewTag],
     }),
+    updateClient: build.mutation<ClientsResponse, UpdateClientReq>({
+      queryFn: async (_arg) => {
+        const res = await typedPb.collection("clients").update(_arg.id, _arg.data);
+        return { data: res };
+      },
+      invalidatesTags: [clientsTag],
+    }),
+    updateProduct: build.mutation<ProductsResponse, UpdateProductReq>({
+      queryFn: async (_arg) => {
+        const res = await typedPb
+          .collection("products")
+          .update(_arg.id, _arg.data);
+        return { data: res };
+      },
+      invalidatesTags: [productsTag],
+    }),
   }),
 });
 
 export const {
   useCreateInvoiceMutation,
   useGetClientsQuery,
+  useGetClientsListQuery,
   useGetInvoiceViewByIdQuery,
   useGetInvoiceStatesQuery,
   useGetInvoicesViewQuery,
   useGetMeasureUnitsQuery,
   useGetProductsQuery,
+  useGetProductsListQuery,
+  useUpdateClientMutation,
   useUpdateInvoiceMutation,
+  useUpdateProductMutation,
 } = invoiceApi;

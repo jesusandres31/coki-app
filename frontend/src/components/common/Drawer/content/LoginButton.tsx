@@ -5,6 +5,7 @@ import {
   Menu,
   MenuItem,
   IconButton,
+  CircularProgress,
 } from "@mui/material";
 import {
   AccountCircleRounded,
@@ -17,6 +18,7 @@ import { IMenuItem } from "src/types";
 
 export default function LoginButton() {
   const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
+  const [isSigningOut, setIsSigningOut] = React.useState(false);
   const open = Boolean(anchorEl);
   const { handleSignOut } = useAuth();
   const { handleGoTo } = useRouter();
@@ -29,8 +31,13 @@ export default function LoginButton() {
     setAnchorEl(null);
   };
 
-  const handleLogout = () => {
-    handleSignOut();
+  const handleLogout = async () => {
+    setIsSigningOut(true);
+    try {
+      await handleSignOut();
+    } finally {
+      setIsSigningOut(false);
+    }
   };
 
   const ITEMS: IMenuItem[] = [
@@ -44,7 +51,6 @@ export default function LoginButton() {
       text: "Cerrar sesión",
       icon: <PowerSettingsNewRounded />,
       to: AppRoutes.Login,
-      onClick: handleLogout,
     },
   ];
 
@@ -56,6 +62,7 @@ export default function LoginButton() {
         aria-haspopup="true"
         onClick={handleClick}
         color="inherit"
+        disabled={isSigningOut}
       >
         <AccountCircleRounded />
       </IconButton>
@@ -76,7 +83,13 @@ export default function LoginButton() {
         {ITEMS.map((item) => (
           <MenuItem
             key={item.to}
-            onClick={() => {
+            disabled={isSigningOut}
+            onClick={async () => {
+              if (item.to === AppRoutes.Login) {
+                await handleLogout();
+                return;
+              }
+
               item.onClick?.();
               handleClose();
             }}
@@ -85,6 +98,9 @@ export default function LoginButton() {
               {item.icon}
             </ListItemIcon>
             <Typography variant="subtitle2">{item.text}</Typography>
+            {item.to === AppRoutes.Login && isSigningOut ? (
+              <CircularProgress size={16} sx={{ ml: 1 }} />
+            ) : null}
           </MenuItem>
         ))}
       </Menu>
