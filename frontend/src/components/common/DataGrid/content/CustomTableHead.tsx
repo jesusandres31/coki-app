@@ -49,7 +49,13 @@ export default function CustomTableHead({
 
   return (
     <TableHead>
-      <TableRow>
+      <TableRow
+        sx={{
+          "& .MuiTableCell-head": {
+            py: 1,
+          },
+        }}
+      >
         {hasCheckbox ? (
           <TableCell padding="checkbox">
             <Checkbox
@@ -83,6 +89,7 @@ export default function CustomTableHead({
                 onClick={() => handleSortTable(String(column.id))}
                 disabled={column.disableSort}
                 sx={{
+                  minHeight: 24,
                   "& .MuiTableSortLabel-icon": {
                     color: "text.secondary !important",
                   },
@@ -103,7 +110,7 @@ export default function CustomTableHead({
               fontWeight={700}
               sx={{ mt: 0.3, display: { xs: "none", sm: "block" } }}
             >
-              Acciones
+              Accs.
             </Typography>
           </TableCell>
         )}
