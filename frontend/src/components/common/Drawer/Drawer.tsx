@@ -279,7 +279,7 @@ export default function Drawer({ noTable }: DrawerProps) {
                 <Typography
                   key={`${crumb.label}-${index}`}
                   color="text.primary"
-                  variant="body1"
+                  variant="subtitle1"
                 >
                   {crumb.label}
                 </Typography>
@@ -290,7 +290,7 @@ export default function Drawer({ noTable }: DrawerProps) {
                   underline="hover"
                   color="inherit"
                   to={crumb.to as string}
-                  variant="body1"
+                  variant="subtitle1"
                 >
                   {crumb.label}
                 </Link>

@@ -95,7 +95,8 @@ export default function Products() {
   };
 
   const measureUnitById = useMemo(
-    () => new Map(measureUnits.map((item) => [item.id, String(item.name || "-")])),
+    () =>
+      new Map(measureUnits.map((item) => [item.id, String(item.name || "-")])),
     [measureUnits],
   );
 
@@ -131,7 +132,7 @@ export default function Products() {
       {
         id: "edit",
         label: "Editar",
-        icon: <EditRounded fontSize="small" />,
+        icon: <EditRounded fontSize="small" color="secondary" />,
         onClick: (item) => setEditingProduct(item as ProductsResponse),
       },
     ],
@@ -171,7 +172,8 @@ export default function Products() {
       options: measureUnits,
       loading: isMeasureUnitsFetching,
       startValue: selectedMeasureUnit || undefined,
-      getOptionLabel: (option) => String((option as MeasureunitsResponse).name || ""),
+      getOptionLabel: (option) =>
+        String((option as MeasureunitsResponse).name || ""),
     },
   ];
 

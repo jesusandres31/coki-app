@@ -149,18 +149,20 @@ const theme = createTheme({
             boxShadow: "none",
           },
         },
-        containedPrimary: {
-          backgroundColor: github.success,
-          "&:hover": {
-            backgroundColor: "#176F32",
-          },
-        },
+        // containedPrimary: {
+        //   backgroundColor: github.success,
+        //   "&:hover": {
+        //     backgroundColor: "#176F32",
+        //   },
+        // },
         outlined: {
-          borderColor: github.borderDefault,
+          borderWidth: 1,
+          borderColor: "currentColor",
           backgroundColor: github.canvasDefault,
           "&:hover": {
             backgroundColor: github.canvasSubtle,
-            borderColor: github.borderDefault,
+            borderWidth: 1,
+            borderColor: "currentColor",
           },
         },
         text: {

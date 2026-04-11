@@ -2,7 +2,6 @@ import { DetailColumn, IColumn, IDetailColumn, DataItem } from "src/types";
 import { useUI } from "src/hooks";
 import {
   TableCell,
-  Typography,
   TableHead,
   useTheme,
   TableRow,

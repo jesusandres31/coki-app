@@ -1117,8 +1117,7 @@ export default function InvoiceFormPage() {
       popup.close();
       dispatch(
         setSnackbar({
-          message:
-            "No se pudo generar o abrir el PDF en la pestaña nueva.",
+          message: "No se pudo generar o abrir el PDF en la pestaña nueva.",
           type: "error",
         }),
       );
@@ -1210,7 +1209,7 @@ export default function InvoiceFormPage() {
                     </Button>
                     <Button
                       size="small"
-                      variant="contained"
+                      variant="outlined"
                       startIcon={<EditRounded />}
                       color="info"
                       onClick={() => setMode("edit")}

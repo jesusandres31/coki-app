@@ -162,9 +162,15 @@ export default function Invoices() {
         render: (item: VInvoicesResponse) => formatPercent(item.discount),
       },
       {
+        id: "total",
+        label: "Total",
+        minWidth: 140,
+        disableSort: true,
+        render: (item: VInvoicesResponse) => formatMoney(item.total),
+      },
+      {
         id: "state",
         label: "Estado",
-        align: "left",
         minWidth: 160,
         disableSort: true,
         render: (item: VInvoicesResponse) => {
@@ -175,13 +181,6 @@ export default function Invoices() {
             <Chip size="small" variant="outlined" color={color} label={label} />
           );
         },
-      },
-      {
-        id: "total",
-        label: "Total",
-        minWidth: 140,
-        disableSort: true,
-        render: (item: VInvoicesResponse) => formatMoney(item.total),
       },
     ],
     [stateNameById],
@@ -254,7 +253,7 @@ export default function Invoices() {
       {
         id: "open",
         label: "Abrir factura",
-        icon: <OpenInNewRounded fontSize="small" />,
+        icon: <OpenInNewRounded fontSize="small" color="secondary" />,
         onClick: (item) => handleGoTo(`${AppRoutes.Invoices}/${item.id}`),
       },
     ],

@@ -115,7 +115,7 @@ export default function Clients() {
       {
         id: "edit",
         label: "Editar",
-        icon: <EditRounded fontSize="small" />,
+        icon: <EditRounded fontSize="small" color="secondary" />,
         onClick: (item) => setEditingClient(item as ClientsResponse),
       },
     ],

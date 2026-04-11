@@ -100,7 +100,7 @@ export default function CustomTableBody({
                     size="small"
                     key={`${column.id}-${i}`}
                     align={column.align ?? "right"}
-                    sx={{ cursor: "pointer", py: 0.5 }}
+                    sx={{ cursor: isCollapsible ? "pointer" : "default", py: 0.5 }}
                     onClick={() =>
                       isCollapsible ? handleToggleCollapse(row.id) : undefined
                     }
@@ -114,7 +114,7 @@ export default function CustomTableBody({
                         overflow: "hidden",
                         textOverflow: "ellipsis",
                         whiteSpace: "nowrap",
-                        fontWeight: 500,
+                        fontWeight: 450,
                       }}
                     >
                       {isEmail ? value : renderValue(value)}
@@ -125,10 +125,10 @@ export default function CustomTableBody({
               })}
 
               {hasRowActions ? (
-                <TableCell align="right" sx={{ py: 0.25 }}>
+                <TableCell align="center" sx={{ py: 0.25 }}>
                   <Box
                     display="flex"
-                    justifyContent="flex-end"
+                    justifyContent="center"
                     alignItems="center"
                     gap={0.5}
                   >
@@ -152,7 +152,7 @@ export default function CustomTableBody({
                   }}
                   onClick={() => handleToggleCollapse(row.id)}
                 >
-                  <IconButton>
+                  <IconButton sx={{ color: "secondary.main" }}>
                     {collapsed ? (
                       <KeyboardArrowUpRounded />
                     ) : (
