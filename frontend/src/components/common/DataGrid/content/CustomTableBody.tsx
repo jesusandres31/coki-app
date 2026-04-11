@@ -52,6 +52,14 @@ export default function CustomTableBody({
   const { isMobile } = useUI();
   const isCollapsible = Boolean(detailColumns);
   const hasRowActions = rowActions.length > 0;
+  const actionsStickySx = isMobile
+    ? {
+        position: "sticky",
+        right: isCollapsible ? 48 : 0,
+        zIndex: 1,
+        backgroundColor: "background.paper",
+      }
+    : undefined;
 
   const isSelected = (selectedItems: string[], itemId: string) => {
     return selectedItems.some((selectedItem) => selectedItem === itemId);
@@ -125,7 +133,7 @@ export default function CustomTableBody({
               })}
 
               {hasRowActions ? (
-                <TableCell align="center" sx={{ py: 0.25 }}>
+                <TableCell align="center" sx={{ py: 0.25, ...actionsStickySx }}>
                   <Box
                     display="flex"
                     justifyContent="center"

@@ -38,6 +38,14 @@ export default function CustomTableHead({
 }: CustomTableHeadProps) {
   const { isMobile } = useUI();
   const isAllSelected = items.length === selectedItems.length;
+  const actionsStickySx = isMobile
+    ? {
+        position: "sticky",
+        right: isCollapsible ? 48 : 0,
+        zIndex: 2,
+        backgroundColor: "background.paper",
+      }
+    : undefined;
 
   return (
     <TableHead>
@@ -89,8 +97,12 @@ export default function CustomTableHead({
         })}
 
         {hasRowActions && (
-          <TableCell padding="checkbox" align="center">
-            <Typography variant="body2" fontWeight={700} sx={{ mt: 0.3 }}>
+          <TableCell padding="checkbox" align="center" sx={actionsStickySx}>
+            <Typography
+              variant="body2"
+              fontWeight={700}
+              sx={{ mt: 0.3, display: { xs: "none", sm: "block" } }}
+            >
               Acciones
             </Typography>
           </TableCell>
