@@ -1141,8 +1141,29 @@ export default function InvoiceFormPage() {
   if (isDetailRoute && isFetching) {
     return (
       <PageContainer>
-        <Container component="main" maxWidth="lg" sx={{ py: 3 }}>
-          <Loading />
+        <Container component="main" maxWidth="lg" sx={{ py: 3, width: "100%", mx: "auto" }}>
+          <Card
+            variant="outlined"
+            sx={{
+              minHeight: { xs: 320, md: 420 },
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              borderColor: "divider",
+              boxShadow: "0 1px 2px rgba(0,0,0,0.06)",
+            }}
+          >
+            <Box
+              sx={{
+                width: "100%",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+              }}
+            >
+              <Loading />
+            </Box>
+          </Card>
         </Container>
       </PageContainer>
     );
@@ -1151,8 +1172,30 @@ export default function InvoiceFormPage() {
   if (isDetailRoute && (error || !invoice)) {
     return (
       <PageContainer>
-        <Container component="main" maxWidth="lg" sx={{ py: 3 }}>
-          <ErrorMsg />
+        <Container component="main" maxWidth="lg" sx={{ py: 3, width: "100%", mx: "auto" }}>
+          <Card
+            variant="outlined"
+            sx={{
+              minHeight: { xs: 320, md: 420 },
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              borderColor: "divider",
+              boxShadow: "0 1px 2px rgba(0,0,0,0.06)",
+            }}
+          >
+            <Box
+              sx={{
+                width: "100%",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                textAlign: "center",
+              }}
+            >
+              <ErrorMsg />
+            </Box>
+          </Card>
         </Container>
       </PageContainer>
     );
@@ -1166,6 +1209,8 @@ export default function InvoiceFormPage() {
           maxWidth="lg"
           sx={{
             py: { xs: 2, md: 3 },
+            width: "100%",
+            mx: "auto",
             height: "100%",
             display: "flex",
             flexDirection: "column",
