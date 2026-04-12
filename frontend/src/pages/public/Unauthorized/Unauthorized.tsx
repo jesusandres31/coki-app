@@ -18,10 +18,10 @@ export default function NotFound(): JSX.Element {
             <Typography variant="h4" align="center">
               Acceso no autorizado
             </Typography>
-            <Typography variant="body1" color="text.secondary" align="center">
+            <Typography variant="body1" color="text.primary" align="center">
               No tenés permisos para ingresar a esta sección.
             </Typography>
-            <Link color="secondary" href="/">
+            <Link color="primary" href="/">
               Volver al inicio
             </Link>
           </Stack>
@@ -30,3 +30,5 @@ export default function NotFound(): JSX.Element {
     </Container>
   );
 }
+
+

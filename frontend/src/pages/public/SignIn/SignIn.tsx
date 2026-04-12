@@ -74,13 +74,13 @@ export default function SignIn() {
       <Card variant="outlined" sx={{ maxWidth: 460, mx: "auto" }}>
         <CardContent sx={{ p: { xs: 3, sm: 4 } }}>
           <Stack spacing={2} alignItems="center">
-            <Avatar sx={{ bgcolor: "secondary.main", width: 48, height: 48 }}>
+            <Avatar sx={{ bgcolor: "primary.main", width: 48, height: 48 }}>
               <LockRounded />
             </Avatar>
             <Typography component="h1" variant="h5">
               Iniciar sesión
             </Typography>
-            <Typography variant="body2" color="text.secondary">
+            <Typography variant="body2" color="text.primary">
               Ingresá con tu usuario para acceder al sistema.
             </Typography>
           </Stack>
@@ -134,7 +134,7 @@ export default function SignIn() {
               type="submit"
               fullWidth
               variant="contained"
-              color="secondary"
+              color="primary"
               sx={{ mt: 2, mb: 1 }}
               loading={isSigningIn}
             >
@@ -146,3 +146,5 @@ export default function SignIn() {
     </Container>
   );
 }
+
+

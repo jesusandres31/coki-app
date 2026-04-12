@@ -43,7 +43,7 @@ export default function CustomTableHead({
         position: "sticky",
         right: isCollapsible ? 48 : 0,
         zIndex: 2,
-        backgroundColor: "background.paper",
+        backgroundColor: "#F4F6FB",
       }
     : undefined;
 
@@ -91,7 +91,7 @@ export default function CustomTableHead({
                 sx={{
                   minHeight: 24,
                   "& .MuiTableSortLabel-icon": {
-                    color: "text.secondary !important",
+                    color: "text.primary !important",
                   },
                 }}
               >
@@ -118,10 +118,15 @@ export default function CustomTableHead({
         {isCollapsible && (
           <TableCell
             padding="checkbox"
-            sx={isMobile ? styles.stickyMobile : styles.sticky}
+            sx={{
+              ...(isMobile ? styles.stickyMobile : styles.sticky),
+              backgroundColor: "#F4F6FB",
+              zIndex: 2,
+            }}
           />
         )}
       </TableRow>
     </TableHead>
   );
 }
+

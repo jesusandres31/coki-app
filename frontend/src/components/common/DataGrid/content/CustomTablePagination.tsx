@@ -43,7 +43,7 @@ export default function CustomTablePagination({
             <Typography
               component="span"
               variant="subtitle2"
-              color="text.secondary"
+              color="text.primary"
             >
               {`Results ${info.from} - ${
                 info.to === -1 ? info.count : info.to
@@ -62,3 +62,4 @@ export default function CustomTablePagination({
     </Grid>
   );
 }
+

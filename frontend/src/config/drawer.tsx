@@ -12,6 +12,7 @@ export const DRAWER_SECTIONS: DrawerSection[] = [
     menuItems: [],
   }, */
   {
+    title: "Menu",
     menuItems: [
       {
         text: "Facturación",

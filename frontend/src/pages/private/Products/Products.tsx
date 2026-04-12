@@ -132,7 +132,7 @@ export default function Products() {
       {
         id: "edit",
         label: "Editar",
-        icon: <EditRounded fontSize="small" color="secondary" />,
+        icon: <EditRounded fontSize="small" color="primary" />,
         onClick: (item) => setEditingProduct(item as ProductsResponse),
       },
     ],
@@ -205,3 +205,4 @@ export default function Products() {
     </>
   );
 }
+

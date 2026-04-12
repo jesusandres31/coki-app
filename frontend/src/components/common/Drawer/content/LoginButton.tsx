@@ -94,7 +94,7 @@ export default function LoginButton() {
               handleClose();
             }}
           >
-            <ListItemIcon sx={{ minWidth: "40px", color: "secondary.light" }}>
+            <ListItemIcon sx={{ minWidth: "40px", color: "primary.main" }}>
               {item.icon}
             </ListItemIcon>
             <Typography variant="subtitle2">{item.text}</Typography>
@@ -107,3 +107,4 @@ export default function LoginButton() {
     </>
   );
 }
+

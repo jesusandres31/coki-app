@@ -43,9 +43,9 @@ export default function UpdateProfile() {
           Mi perfil
         </Typography>
         <Button
-          color="secondary"
+          color="primary"
           size="medium"
-          variant="outlined"
+          variant="contained"
           startIcon={<ChevronLeftRounded />}
           onClick={() => handleGoTo(AppRoutes.Index)}
         >
@@ -69,7 +69,7 @@ export default function UpdateProfile() {
             >
               <Avatar
                 sx={{
-                  bgcolor: "secondary.main",
+                  bgcolor: "primary.main",
                   width: 56,
                   height: 56,
                   fontWeight: 700,
@@ -81,7 +81,7 @@ export default function UpdateProfile() {
                 <Typography variant="h6" fontWeight={600} color="text.primary">
                   {authUser?.username || "Usuario"}
                 </Typography>
-                <Typography variant="body2" color="text.secondary">
+                <Typography variant="body2" color="text.primary">
                   Información de cuenta y seguridad
                 </Typography>
               </Box>
@@ -90,7 +90,7 @@ export default function UpdateProfile() {
             <Divider />
 
             <Stack spacing={1.5}>
-              <Typography variant="body2" color="text.secondary">
+              <Typography variant="body2" color="text.primary">
                 Correo electrónico
               </Typography>
               <Typography variant="body1" color="text.primary">
@@ -122,13 +122,13 @@ export default function UpdateProfile() {
                 >
                   Seguridad
                 </Typography>
-                <Typography variant="body2" color="text.secondary">
+                <Typography variant="body2" color="text.primary">
                   Cambiá tu contraseña y se cerrará la sesión actual por
                   seguridad.
                 </Typography>
               </Box>
               <Button
-                color="secondary"
+                color="primary"
                 variant="contained"
                 startIcon={<LockResetRounded />}
                 onClick={() => setOpen(true)}
@@ -145,3 +145,6 @@ export default function UpdateProfile() {
     </Container>
   );
 }
+
+
+

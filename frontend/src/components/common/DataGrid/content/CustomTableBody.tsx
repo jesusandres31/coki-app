@@ -52,6 +52,14 @@ export default function CustomTableBody({
   const { isMobile } = useUI();
   const isCollapsible = Boolean(detailColumns);
   const hasRowActions = rowActions.length > 0;
+  const tableIconButtonSx = {
+    width: 30,
+    height: 30,
+    border: "1px solid",
+    borderColor: "divider",
+    borderRadius: 1.25,
+    p: 0.5,
+  };
   const actionsStickySx = isMobile
     ? {
         position: "sticky",
@@ -77,6 +85,9 @@ export default function CustomTableBody({
               selected={selected}
               sx={{
                 "& > *": { borderBottom: collapsed ? "0px" : "unset" },
+                "&:hover .row-sticky-cell": {
+                  backgroundColor: "#F4F6FB",
+                },
               }}
             >
               {hasCheckbox ? (
@@ -133,7 +144,11 @@ export default function CustomTableBody({
               })}
 
               {hasRowActions ? (
-                <TableCell align="center" sx={{ py: 0.25, ...actionsStickySx }}>
+                <TableCell
+                  align="center"
+                  className="row-sticky-cell"
+                  sx={{ py: 0.25, ...actionsStickySx }}
+                >
                   <Box
                     display="flex"
                     justifyContent="center"
@@ -142,7 +157,10 @@ export default function CustomTableBody({
                   >
                     {rowActions.map((action) => (
                       <Tooltip key={action.id} title={action.label}>
-                        <IconButton onClick={() => action.onClick(row)}>
+                        <IconButton
+                          onClick={() => action.onClick(row)}
+                          sx={tableIconButtonSx}
+                        >
                           {action.icon}
                         </IconButton>
                       </Tooltip>
@@ -154,13 +172,21 @@ export default function CustomTableBody({
               {isCollapsible ? (
                 <TableCell
                   align="right"
+                  className="row-sticky-cell"
                   sx={{
                     ...(isMobile ? styles.stickyMobile : styles.sticky),
                     py: 0.25,
                   }}
                   onClick={() => handleToggleCollapse(row.id)}
                 >
-                  <IconButton sx={{ color: "secondary.main" }}>
+                  <IconButton
+                    sx={{
+                      width: 30,
+                      height: 30,
+                      p: 0.5,
+                      color: "primary.main",
+                    }}
+                  >
                     {collapsed ? (
                       <KeyboardArrowUpRounded />
                     ) : (
@@ -191,3 +217,4 @@ export default function CustomTableBody({
     </TableBody>
   );
 }
+

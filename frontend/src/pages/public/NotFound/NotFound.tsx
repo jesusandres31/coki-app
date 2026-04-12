@@ -15,16 +15,16 @@ export default function NotFound(): JSX.Element {
       <Card variant="outlined" sx={{ maxWidth: 520, mx: "auto" }}>
         <CardContent sx={{ py: 5 }}>
           <Stack spacing={1.5} alignItems="center">
-            <Typography variant="h2" align="center" color="secondary.main">
+            <Typography variant="h2" align="center" color="primary.main">
               404
             </Typography>
             <Typography variant="h5" align="center">
               Página no encontrada
             </Typography>
-            <Typography variant="body1" color="text.secondary" align="center">
+            <Typography variant="body1" color="text.primary" align="center">
               El recurso que buscás no existe o fue movido.
             </Typography>
-            <Link color="secondary" href="/">
+            <Link color="primary" href="/">
               Volver
             </Link>
           </Stack>
@@ -33,3 +33,5 @@ export default function NotFound(): JSX.Element {
     </Container>
   );
 }
+
+

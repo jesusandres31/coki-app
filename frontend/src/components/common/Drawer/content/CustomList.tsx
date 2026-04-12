@@ -12,7 +12,7 @@ import {
   Collapse,
   alpha,
 } from "@mui/material";
-import { ExpandLess, ExpandMore } from "@mui/icons-material";
+import { ExpandLessRounded, ExpandMoreRounded } from "@mui/icons-material";
 import { useRouter } from "src/hooks";
 import { IMenuItem } from "src/types";
 import { toggleOpenDrawer, useUISelector } from "src/slices/uiSlice";
@@ -34,7 +34,8 @@ export default function CustomList({
   const { openDrawer } = useUISelector((state) => state.ui);
   const dispatch = useAppDispatch();
   const theme = useTheme();
-  const backgroundColor = alpha(theme.palette.secondary.main, 0.12);
+  const backgroundColor = alpha(theme.palette.primary.main, 0.07);
+  const mutedItemColor = alpha(theme.palette.text.secondary, 0.82);
 
   const isSameOrChildRoute = (baseRoute?: string) => {
     if (!baseRoute) return false;
@@ -110,15 +111,40 @@ export default function CustomList({
   return (
     <List
       component="div"
+      sx={{ overflowX: "hidden" }}
       subheader={
-        subheader && openDrawer ? (
-          <ListSubheader>
-            <Box py={1.5}>
+        subheader ? (
+          <ListSubheader
+            sx={{
+              height: 44,
+              backgroundColor: "transparent",
+              p: 0,
+              lineHeight: "normal",
+              userSelect: "none",
+            }}
+          >
+            <Box
+              sx={{
+                height: "100%",
+                width: "100%",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "flex-start",
+                pl: 1.5,
+              }}
+            >
               <Typography
-                variant="subtitle2"
-                sx={{ opacity: openDrawer ? 1 : 0 }}
+                variant={"caption"}
+                fontWeight={600}
+                color="text.secondary"
+                sx={{
+                  textAlign: "center",
+                  lineHeight: 1.2,
+                  userSelect: "none",
+                  pointerEvents: "none",
+                }}
               >
-                {openDrawer ? subheader : ""}
+                {subheader}
               </Typography>
             </Box>
           </ListSubheader>
@@ -137,7 +163,7 @@ export default function CustomList({
               sx={{
                 marginBottom: 0.35,
                 pl: isNested ? 1.5 : 0,
-                minHeight: 44,
+                minHeight: 40,
                 "&.Mui-selected": {
                   backgroundColor,
                 },
@@ -166,7 +192,9 @@ export default function CustomList({
                   "&:hover": {
                     backgroundColor: "transparent",
                   },
-                  minHeight: 44,
+                  minHeight: 40,
+                  height: 40,
+                  alignItems: "center",
                   justifyContent: openDrawer ? "initial" : "center",
                   borderRadius: 1.5,
                 }}
@@ -175,7 +203,7 @@ export default function CustomList({
                   <Box display="flex">
                     <ListItemIcon
                       sx={{
-                        color: selected ? "secondary.main" : "text.secondary",
+                        color: selected ? "text.primary" : mutedItemColor,
                         minWidth: 0,
                         mr: openDrawer ? 2 : "auto",
                         justifyContent: "center",
@@ -192,8 +220,8 @@ export default function CustomList({
                         fontSize: isNested ? 12 : 13.5,
                         opacity: openDrawer ? 1 : 0,
                       }}
-                      fontWeight={selected ? 700 : 600}
-                      color={selected ? "secondary.main" : "text.secondary"}
+                      fontWeight={700}
+                      color={selected ? "text.primary" : mutedItemColor}
                     >
                       {item.text || translateTitle(removeForeslash(item.to))}
                     </Typography>
@@ -209,7 +237,7 @@ export default function CustomList({
                     }}
                     onClick={(e) => handleCollapse(e, itemKey)}
                   >
-                    {openCollapse ? <ExpandLess /> : <ExpandMore />}
+                    {openCollapse ? <ExpandLessRounded /> : <ExpandMoreRounded />}
                   </div>
                 )}
               </ListItemButton>

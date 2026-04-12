@@ -60,12 +60,7 @@ export default function CreateOrUpdateModal({
       <DialogTitle>
         {title ? title : `${isUpdate ? "Actualizar" : "Crear nuevo"} ${label}`}
       </DialogTitle>
-      <DialogContent
-        dividers
-        sx={{
-          pt: 2,
-        }}
-      >
+      <DialogContent>
         <Grid
           container
           spacing={2}
@@ -73,6 +68,10 @@ export default function CreateOrUpdateModal({
           direction={direction}
           justifyContent="center"
           alignItems="center"
+          sx={{
+            pt: 3,
+            mb: -1.5,
+          }}
         >
           {inputs.map((input) => (
             <Grid
@@ -128,8 +127,9 @@ export default function CreateOrUpdateModal({
       <DialogActions>
         {!noCancelBtn && (
           <Button
-            variant="outlined"
-            color="secondary"
+            variant="text"
+            color="inherit"
+            sx={{ color: "text.secondary" }}
             onClick={handleClose}
             disabled={loading}
           >
@@ -141,7 +141,9 @@ export default function CreateOrUpdateModal({
           onClick={hanleConfirm}
           type="submit"
           autoFocus
-          variant="contained"
+          variant="text"
+          color="inherit"
+          sx={{ color: "text.secondary" }}
         >
           {confBtnLabel ? confBtnLabel : isUpdate ? "Actualizar" : "Crear"}
         </Button>
@@ -149,4 +151,3 @@ export default function CreateOrUpdateModal({
     </Dialog>
   );
 }
-

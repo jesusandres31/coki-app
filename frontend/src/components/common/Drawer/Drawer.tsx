@@ -19,6 +19,7 @@ import {
   MenuRounded,
   ChevronRightRounded,
   ChevronLeftRounded,
+  NavigateNextRounded,
 } from "@mui/icons-material";
 import CustomList from "./content/CustomList";
 import LoginButton from "./content/LoginButton";
@@ -167,10 +168,10 @@ export default function Drawer({ noTable }: DrawerProps) {
         position="fixed"
         open={notMobAndOpen}
         sx={{
-          backgroundColor: "secondary.dark",
-          color: "common.white",
+          backgroundColor: "#f4f6fb",
+          color: "text.primary",
           borderBottom: "1px solid",
-          borderColor: "rgba(255, 255, 255, 0.16)",
+          borderColor: "divider",
         }}
       >
         <Toolbar
@@ -204,16 +205,20 @@ export default function Drawer({ noTable }: DrawerProps) {
             </Grid>
             <Grid>
               <Typography
-                variant="subtitle1"
                 noWrap
                 component="div"
                 sx={{
-                  color: "inherit",
+                  fontSize: 15,
+                  color: "secondary.main",
                   letterSpacing: "0.01em",
-                  ...(notMobAndOpen && { paddingLeft: 1.5 }),
+                  fontVariationSettings: '"wght" 800',
+                  WebkitBackgroundClip: "text",
+                  backgroundClip: "text",
+                  // ...(notMobAndOpen && { paddingLeft: 1.5 }),
                 }}
               >
-                {translateTitle(route)}
+                {/* {translateTitle(route)} */}
+                Coki App
               </Typography>
             </Grid>
           </Grid>
@@ -261,7 +266,7 @@ export default function Drawer({ noTable }: DrawerProps) {
           flexGrow: 1,
           p: noTable ? 0 : { xs: 1.5, sm: 2 },
           overflow: "hidden",
-          backgroundColor: "background.default",
+          backgroundColor: "primary.contrastText",
           paddingBottom: isMobile ? 2 : 3,
         }}
       >
@@ -269,6 +274,7 @@ export default function Drawer({ noTable }: DrawerProps) {
         <Box sx={{ px: 3, pt: 3 }}>
           <Breadcrumbs
             aria-label="breadcrumb"
+            separator={<NavigateNextRounded fontSize="small" />}
             sx={{ mb: noTable ? 1 : 1.5, px: noTable ? 0 : 0.75 }}
           >
             {breadcrumbsForRender.map((crumb: IUIBreadcrumb, index: number) => {
@@ -278,8 +284,9 @@ export default function Drawer({ noTable }: DrawerProps) {
               return !isClickable ? (
                 <Typography
                   key={`${crumb.label}-${index}`}
-                  color="text.primary"
+                  color={isLast ? "primary.main" : "text.secondary"}
                   variant="subtitle1"
+                  fontWeight={isLast ? 600 : 700}
                 >
                   {crumb.label}
                 </Typography>
@@ -288,9 +295,10 @@ export default function Drawer({ noTable }: DrawerProps) {
                   key={`${crumb.label}-${index}`}
                   component={RouterLink}
                   underline="hover"
-                  color="inherit"
+                  color="text.secondary"
                   to={crumb.to as string}
                   variant="subtitle1"
+                  sx={{ fontWeight: 700 }}
                 >
                   {crumb.label}
                 </Link>
@@ -303,6 +311,7 @@ export default function Drawer({ noTable }: DrawerProps) {
             sx={{
               maxHeight: `calc(100vh - ${APPBAR_HEIGHT}px)`,
               overflowY: "auto",
+              backgroundColor: "primary.contrastText",
               p: { xs: 1.5, sm: 2 },
               height: "100%",
             }}
@@ -313,7 +322,7 @@ export default function Drawer({ noTable }: DrawerProps) {
           <Box
             sx={{
               height: isMobile ? "95%" : `calc(100% - 30px)`,
-              backgroundColor: "background.paper",
+              backgroundColor: "primary.contrastText",
               borderRadius: 1.5,
               border: "1px solid",
               borderColor: "divider",

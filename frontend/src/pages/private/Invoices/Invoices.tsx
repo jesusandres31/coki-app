@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { Button, Chip, ChipProps } from "@mui/material";
-import { OpenInNewRounded } from "@mui/icons-material";
+import { AddRounded, OpenInNewRounded } from "@mui/icons-material";
 import DataGrid from "src/components/common/DataGrid/DataGrid";
 import { getListArgsInitialState } from "src/constants";
 import {
@@ -178,7 +178,12 @@ export default function Invoices() {
           const { color, label } = translateInvoiceState(state);
 
           return (
-            <Chip size="small" variant="outlined" color={color} label={label} />
+            <Chip
+              size="small"
+              variant="outlined"
+              color={color}
+              label={label}
+            />
           );
         },
       },
@@ -253,7 +258,7 @@ export default function Invoices() {
       {
         id: "open",
         label: "Abrir factura",
-        icon: <OpenInNewRounded fontSize="small" color="secondary" />,
+        icon: <OpenInNewRounded fontSize="small" color="primary" />,
         onClick: (item) => handleGoTo(`${AppRoutes.Invoices}/${item.id}`),
       },
     ],
@@ -277,6 +282,7 @@ export default function Invoices() {
         <Button
           size="small"
           variant="contained"
+          startIcon={<AddRounded />}
           onClick={() => handleGoTo(AppRoutes.InvoicesNew)}
         >
           Crear factura

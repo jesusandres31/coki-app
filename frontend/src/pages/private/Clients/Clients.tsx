@@ -115,7 +115,7 @@ export default function Clients() {
       {
         id: "edit",
         label: "Editar",
-        icon: <EditRounded fontSize="small" color="secondary" />,
+        icon: <EditRounded fontSize="small" color="primary" />,
         onClick: (item) => setEditingClient(item as ClientsResponse),
       },
     ],
@@ -180,3 +180,4 @@ export default function Clients() {
     </>
   );
 }
+

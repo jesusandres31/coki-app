@@ -73,7 +73,7 @@ export const CustomIconButton = ({
   return (
     <Tooltip title={text}>
       <IconButton
-        sx={{ color: "text.secondary" }}
+        sx={{ color: "text.primary" }}
         size={isMobile ? "small" : "medium"}
         onClick={(e) => onClick(e)}
       >
@@ -82,3 +82,4 @@ export const CustomIconButton = ({
     </Tooltip>
   );
 };
+

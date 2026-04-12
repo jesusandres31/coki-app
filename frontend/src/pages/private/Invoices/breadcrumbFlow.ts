@@ -14,7 +14,10 @@ export const invoiceBreadcrumbFlow = {
   ],
   detail: (invoiceId: string, isEditMode = false): IUIBreadcrumb[] => [
     baseInvoiceCrumb,
-    { label: `Factura ${invoiceId}` },
+    {
+      label: `Factura ${invoiceId}`,
+      to: `${AppRoutes.Invoices}/${invoiceId}?mode=review`,
+    },
     ...(isEditMode ? [{ label: "Editar" }] : []),
   ],
 };

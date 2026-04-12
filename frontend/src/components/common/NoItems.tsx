@@ -9,10 +9,10 @@ const NoItems = ({ message = "No items found." }: NoItemsProps) => {
   return (
     <>
       <Grid sx={{ textAlign: "center" }}>
-        <SearchOffRounded fontSize="large" sx={{ color: "text.secondary" }} />
+        <SearchOffRounded fontSize="large" sx={{ color: "text.primary" }} />
       </Grid>
       <Grid sx={{ textAlign: "center" }}>
-        <Typography variant="subtitle1" color="text.secondary">
+        <Typography variant="subtitle1" color="text.primary">
           {message}
         </Typography>
       </Grid>
@@ -21,3 +21,4 @@ const NoItems = ({ message = "No items found." }: NoItemsProps) => {
 };
 
 export default NoItems;
+

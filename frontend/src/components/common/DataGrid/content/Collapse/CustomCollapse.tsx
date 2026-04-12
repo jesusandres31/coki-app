@@ -3,13 +3,11 @@ import { useUI } from "src/hooks";
 import {
   TableCell,
   TableHead,
-  useTheme,
   TableRow,
   TableBody,
   Table,
   Box,
   Collapse,
-  darken,
 } from "@mui/material";
 import { formatNulls, renderValue } from "src/utils/format";
 import NoItems from "../../../NoItems";
@@ -31,7 +29,6 @@ export default function CustomCollapse({
   row,
 }: CustomCollapseProps) {
   const { isMobile } = useUI();
-  const theme = useTheme();
 
   if (!detailColumns?.length) return null;
 
@@ -61,7 +58,7 @@ export default function CustomCollapse({
                   >
                     {/* <Typography
                       variant="subtitle2"
-                      color="text.secondary"
+                      color="text.primary"
                       sx={{
                         // fontStyle: "italic",
                         pl: 6,
@@ -95,9 +92,11 @@ export default function CustomCollapse({
                               ))}
                             <TableCell
                               padding="checkbox"
-                              sx={
-                                isMobile ? styles.stickyMobile : styles.sticky
-                              }
+                              sx={{
+                                ...(isMobile ? styles.stickyMobile : styles.sticky),
+                                backgroundColor: "#F4F6FB",
+                                zIndex: 2,
+                              }}
                             />
                           </TableRow>
                         </TableHead>
@@ -122,10 +121,7 @@ export default function CustomCollapse({
                                         key={`${column.id}-${i}`}
                                         align={column.align ?? "right"}
                                         sx={{
-                                          borderColor: darken(
-                                            theme.palette.background.default,
-                                            0.05,
-                                          ),
+                                          borderColor: "divider",
                                         }}
                                       >
                                         {renderValue(value)}
@@ -148,3 +144,4 @@ export default function CustomCollapse({
     </TableRow>
   );
 }
+

@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { useParams } from "react-router-dom";
+import { useParams, useSearchParams } from "react-router-dom";
 import dayjs, { Dayjs } from "dayjs";
 import { useFormik } from "formik";
 import {
@@ -218,7 +218,7 @@ const readableDisabledFieldSx = (theme: Theme) => ({
     borderRadius: 1,
   },
   "& .MuiFormLabel-root.Mui-disabled": {
-    color: theme.palette.text.secondary,
+    color: theme.palette.text.primary,
   },
 });
 
@@ -458,6 +458,14 @@ function ProductsTable({
                     color="error"
                     onClick={() => onRemoveRow?.(row.id)}
                     disabled={!canRemoveRow?.(row.id)}
+                    sx={{
+                      width: 30,
+                      height: 30,
+                      border: "1px solid",
+                      borderColor: "divider",
+                      borderRadius: 1.25,
+                      p: 0.5,
+                    }}
                   >
                     <DeleteRounded />
                   </IconButton>
@@ -478,10 +486,10 @@ function InvoiceTotalsSummary({
 }: InvoiceTotalsSummaryProps) {
   return (
     <Stack spacing={0.5} sx={{ alignItems: "flex-start" }}>
-      <Typography variant="body2" color="text.secondary">
+      <Typography variant="body2" color="text.primary">
         Subtotal: {formatMoney(subtotal)}
       </Typography>
-      <Typography variant="body2" color="text.secondary">
+      <Typography variant="body2" color="text.primary">
         Descuento factura: {formatPercent(discountPercent)}
       </Typography>
       <Typography variant="h6" fontWeight={700}>
@@ -493,18 +501,21 @@ function InvoiceTotalsSummary({
 
 export default function InvoiceFormPage() {
   const { invoiceId } = useParams();
+  const [searchParams, setSearchParams] = useSearchParams();
   const dispatch = useAppDispatch();
   const { handleGoTo } = useRouter();
 
   const isDetailRoute = Boolean(invoiceId);
+  const requestedDetailMode =
+    searchParams.get("mode") === "edit" ? "edit" : "review";
   const [mode, setMode] = useState<InvoicePageMode>(
-    isDetailRoute ? "review" : "new",
+    isDetailRoute ? requestedDetailMode : "new",
   );
   const [isPrinting, setIsPrinting] = useState(false);
 
   useEffect(() => {
-    setMode(isDetailRoute ? "review" : "new");
-  }, [isDetailRoute]);
+    setMode(isDetailRoute ? requestedDetailMode : "new");
+  }, [isDetailRoute, requestedDetailMode]);
 
   const isNewMode = mode === "new";
   const isEditMode = mode === "edit";
@@ -727,7 +738,7 @@ export default function InvoiceFormPage() {
             type: "success",
           }),
         );
-        setMode("review");
+        setSearchParams({ mode: "review" });
       } catch {
         // Error feedback is already handled by RTK middleware.
       }
@@ -1051,7 +1062,7 @@ export default function InvoiceFormPage() {
   };
 
   const handleCancelEdit = () => {
-    setMode("review");
+    setSearchParams({ mode: "review" });
   };
 
   const handleUpdateState = async (nextState: InvoiceState) => {
@@ -1178,6 +1189,7 @@ export default function InvoiceFormPage() {
                     <Button
                       size="small"
                       variant="contained"
+                      color="success"
                       startIcon={<SaveRounded />}
                       onClick={() => void editFormik.submitForm()}
                       loading={isUpdating}
@@ -1185,9 +1197,9 @@ export default function InvoiceFormPage() {
                       Guardar
                     </Button>
                     <Button
-                      color="secondary"
+                      color="error"
                       size="small"
-                      variant="outlined"
+                      variant="contained"
                       startIcon={<CancelRounded />}
                       onClick={handleCancelEdit}
                       disabled={isUpdating}
@@ -1199,7 +1211,7 @@ export default function InvoiceFormPage() {
                   <>
                     <Button
                       size="small"
-                      variant="outlined"
+                      variant="contained"
                       startIcon={<PrintRounded />}
                       onClick={() => void handlePrintInvoice()}
                       loading={isPrinting}
@@ -1209,18 +1221,23 @@ export default function InvoiceFormPage() {
                     </Button>
                     <Button
                       size="small"
-                      variant="outlined"
+                      variant="contained"
                       startIcon={<EditRounded />}
                       color="info"
-                      onClick={() => setMode("edit")}
+                      onClick={() => setSearchParams({ mode: "edit" })}
                     >
                       Editar
                     </Button>
                     {stateActionConfig && (
                       <Button
                         size="small"
-                        variant="outlined"
+                        variant="contained"
                         color={stateActionConfig.color}
+                        startIcon={
+                          stateActionConfig.nextState === "void" ? (
+                            <CancelRounded />
+                          ) : undefined
+                        }
                         onClick={() =>
                           void handleUpdateState(stateActionConfig.nextState)
                         }
@@ -1232,9 +1249,9 @@ export default function InvoiceFormPage() {
                   </>
                 ))}
               <Button
-                color="secondary"
+                color="primary"
                 size="small"
-                variant="outlined"
+                variant="contained"
                 startIcon={<ChevronLeftRounded />}
                 onClick={() => handleGoTo(AppRoutes.Invoices)}
               >
@@ -1346,8 +1363,8 @@ export default function InvoiceFormPage() {
                   </Typography>
                   <Button
                     size="small"
-                    variant="outlined"
-                    color="secondary"
+                    variant="contained"
+                    color="primary"
                     startIcon={<AddRounded />}
                     onClick={isEditable ? handleAddRow : undefined}
                     disabled={!isEditable || isProductsLoading}
@@ -1393,8 +1410,9 @@ export default function InvoiceFormPage() {
                     <Stack direction="row" spacing={1} sx={{ ml: "auto" }}>
                       <Button
                         size="small"
-                        variant="outlined"
-                        color="secondary"
+                        variant="contained"
+                        color="primary"
+                        startIcon={<SaveRounded />}
                         onClick={handleCreateDraft}
                         loading={isCreating}
                         disabled={!canCreate}
@@ -1405,6 +1423,7 @@ export default function InvoiceFormPage() {
                       <Button
                         size="small"
                         variant="contained"
+                        startIcon={<AddRounded />}
                         onClick={handleCreateInvoice}
                         loading={isCreating}
                         disabled={!canCreate}

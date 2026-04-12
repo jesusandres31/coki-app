@@ -45,8 +45,9 @@ export default function DeleteModal({
       </DialogContent>
       <DialogActions>
         <Button
-          variant="outlined"
-          color="secondary"
+          variant="text"
+          color="inherit"
+          sx={{ color: "text.secondary" }}
           onClick={handleClose}
           disabled={isDeleting}
         >
@@ -56,8 +57,9 @@ export default function DeleteModal({
           loading={isDeleting}
           onClick={handleDelete}
           autoFocus
-          /* color="secondary" */
-          variant="contained"
+          variant="text"
+          color="inherit"
+          sx={{ color: "text.secondary" }}
         >
           Eliminar
         </Button>
@@ -65,3 +67,4 @@ export default function DeleteModal({
     </Dialog>
   );
 }
+
