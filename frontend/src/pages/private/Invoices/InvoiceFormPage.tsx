@@ -8,6 +8,7 @@ import {
   ChevronLeftRounded,
   DeleteRounded,
   EditRounded,
+  OpenInNewRounded,
   PrintRounded,
   SaveRounded,
 } from "@mui/icons-material";
@@ -1236,6 +1237,8 @@ export default function InvoiceFormPage() {
                         startIcon={
                           stateActionConfig.nextState === "void" ? (
                             <CancelRounded />
+                          ) : stateActionConfig.nextState === "open" ? (
+                            <OpenInNewRounded />
                           ) : undefined
                         }
                         onClick={() =>

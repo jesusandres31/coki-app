@@ -429,7 +429,9 @@ migrate((db) => {
           }
         }
       ],
-      "indexes": [],
+      "indexes": [
+        "CREATE INDEX `idx_invoices_deleted_created` ON `invoices` (`deleted`, `created`)"
+      ],
       "listRule": "",
       "viewRule": "",
       "createRule": "",
@@ -805,7 +807,7 @@ migrate((db) => {
       "updateRule": null,
       "deleteRule": null,
       "options": {
-        "query": "SELECT\n  i.id,\n  i.date,\n  i.discount,\n  i.total,\n  s.name AS state,\n  JSON_OBJECT(\n    'id', c.id,\n    'name', c.name\n  ) AS client,\n  COALESCE(\n    JSON_GROUP_ARRAY(\n      JSON_OBJECT(\n        'id', ii.id,\n        'product_id', ii.product,\n        'product_name', p.name,\n        'unit_price', ii.unit_price,\n        'amount', ii.amount,\n        'discount', ii.discount,\n        'total', ii.total\n      )\n    ) FILTER (WHERE ii.id IS NOT NULL),\n    JSON('[]')\n  ) AS invoice_products,\n  i.created,\n  i.updated,\n  i.deleted\nFROM invoices i\nLEFT JOIN invoicestates s\n  ON s.id = i.state\nLEFT JOIN clients c\n  ON c.id = i.client\nLEFT JOIN invoices_products ii\n  ON ii.invoice = i.id\nLEFT JOIN products p\n  ON p.id = ii.product\nWHERE COALESCE(i.deleted, '') = ''\nGROUP BY\n  i.id,\n  i.date,\n  i.discount,\n  i.total,\n  s.name,\n  c.id,\n  c.name,\n  i.created,\n  i.updated,\n  i.deleted;\n"
+        "query": "SELECT\n  i.id,\n  i.date,\n  i.discount,\n  i.total,\n  s.name AS state,\n  JSON_OBJECT(\n    'id', c.id,\n    'name', c.name\n  ) AS client,\n  COALESCE((\n    SELECT JSON_GROUP_ARRAY(\n      JSON_OBJECT(\n        'id', ii.id,\n        'product_id', ii.product,\n        'product_name', p.name,\n        'unit_price', ii.unit_price,\n        'amount', ii.amount,\n        'discount', ii.discount,\n        'total', ii.total\n      )\n    )\n    FROM invoices_products ii\n    LEFT JOIN products p\n      ON p.id = ii.product\n    WHERE ii.invoice = i.id\n  ), JSON('[]')) AS invoice_products,\n  i.created,\n  i.updated,\n  i.deleted\nFROM invoices i\nLEFT JOIN invoicestates s\n  ON s.id = i.state\nLEFT JOIN clients c\n  ON c.id = i.client\nWHERE i.deleted = '';\n"
       }
     },
     {
