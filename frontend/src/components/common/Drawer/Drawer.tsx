@@ -218,7 +218,7 @@ export default function Drawer({ noTable }: DrawerProps) {
                 }}
               >
                 {/* {translateTitle(route)} */}
-                Coki App
+                🏷️ Coki App
               </Typography>
             </Grid>
           </Grid>
