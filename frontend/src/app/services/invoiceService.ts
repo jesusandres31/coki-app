@@ -47,6 +47,11 @@ export interface UpdateInvoiceReq {
   items?: CreateInvoiceItemReq[];
 }
 
+export interface GetInvoicesByDateRangeReq {
+  from: string;
+  to: string;
+}
+
 interface UpdateClientReq {
   id: string;
   data: Update<"clients">;
@@ -81,6 +86,23 @@ export const invoiceApi = mainApi.injectEndpoints({
             sort: pbSort(_arg.order, _arg.orderBy),
           },
         );
+
+        return { data: res };
+      },
+      providesTags: [invoicesViewTag],
+    }),
+    getInvoicesByDateRange: build.query<
+      VInvoicesResponse[],
+      GetInvoicesByDateRangeReq
+    >({
+      queryFn: async (_arg) => {
+        const from = _arg.from.replace(/\\/g, "\\\\").replace(/"/g, '\\"');
+        const to = _arg.to.replace(/\\/g, "\\\\").replace(/"/g, '\\"');
+        const filter = `deleted = "" && date >= "${from}" && date <= "${to}"`;
+        const res = await typedPb.collection("v_invoices").getFullList({
+          filter,
+          sort: "+date",
+        });
 
         return { data: res };
       },
@@ -307,6 +329,7 @@ export const {
   useGetClientsQuery,
   useGetClientsListQuery,
   useGetInvoiceViewByIdQuery,
+  useGetInvoicesByDateRangeQuery,
   useGetInvoiceStatesQuery,
   useGetInvoicesViewQuery,
   useGetMeasureUnitsQuery,

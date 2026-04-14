@@ -1,4 +1,5 @@
 import {
+  AssessmentRounded,
   DescriptionRounded,
   Inventory2Rounded,
   PeopleRounded,
@@ -19,6 +20,7 @@ export const DRAWER_SECTIONS: DrawerSection[] = [
         icon: <DescriptionRounded />,
         to: AppRoutes.Invoices,
       },
+
       {
         text: "Clientes",
         icon: <PeopleRounded />,
@@ -28,6 +30,11 @@ export const DRAWER_SECTIONS: DrawerSection[] = [
         text: "Productos",
         icon: <Inventory2Rounded />,
         to: AppRoutes.Products,
+      },
+      {
+        text: "Informes",
+        icon: <AssessmentRounded />,
+        to: AppRoutes.Reports,
       },
     ],
   },

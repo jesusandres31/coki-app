@@ -21,6 +21,7 @@ export const routeRoles: RouteRoles = {
   [AppRoutes.Invoices]: [SystemRole.ADMIN, SystemRole.REGULAR],
   [AppRoutes.InvoicesNew]: [SystemRole.ADMIN, SystemRole.REGULAR],
   [AppRoutes.InvoicesDetail]: [SystemRole.ADMIN, SystemRole.REGULAR],
+  [AppRoutes.Reports]: [SystemRole.ADMIN, SystemRole.REGULAR],
 };
 
 // utils
