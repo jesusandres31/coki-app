@@ -52,6 +52,7 @@ interface DataGridProps {
   onQueryChange?: (query: GetList) => void;
   toolbarElement?: ReactNode;
   rowActions?: DataGridRowAction[];
+  onCollapseChange?: (itemId: string, collapsed: boolean) => void;
 }
 
 export default function DataGrid({
@@ -67,6 +68,7 @@ export default function DataGrid({
   onQueryChange,
   toolbarElement,
   rowActions,
+  onCollapseChange,
 }: DataGridProps) {
   const [page, setPage] = useState(initialQuery?.page ?? 1);
   const [filter, setFilter] = useState(initialQuery?.filter ?? "");
@@ -122,7 +124,9 @@ export default function DataGrid({
   };
 
   const handleToggleCollapse = (id: string) => {
-    setCollapseItem((prev) => (prev === id ? "" : id));
+    const nextIsCollapsed = collapseItem !== id;
+    setCollapseItem(nextIsCollapsed ? id : "");
+    onCollapseChange?.(id, nextIsCollapsed);
   };
 
   const handleSort = (columnId: string) => {

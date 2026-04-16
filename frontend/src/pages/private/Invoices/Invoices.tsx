@@ -1,16 +1,21 @@
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { Button, Chip, ChipProps } from "@mui/material";
 import { AddRounded, OpenInNewRounded } from "@mui/icons-material";
 import DataGrid from "src/components/common/DataGrid/DataGrid";
 import { getListArgsInitialState } from "src/constants";
 import {
+  useGetClientsQuery,
   useGetInvoiceStatesQuery,
-  useGetInvoicesViewQuery,
+  useGetInvoicesListQuery,
   useGetMeasureUnitsQuery,
+  useLazyGetInvoiceProductsByInvoiceIdQuery,
   useGetProductsQuery,
 } from "src/app/services/invoiceService";
 import { Column, DataGridRowAction, DetailColumn, GetList } from "src/types";
-import { VInvoicesResponse } from "src/types/pocketbase-types";
+import {
+  InvoicesProductsResponse,
+  InvoicesResponse,
+} from "src/types/pocketbase-types";
 import { formatDate, formatMoney, formatPercent } from "src/utils/format";
 import { useRouter } from "src/hooks";
 import { AppRoutes } from "src/config";
@@ -29,53 +34,10 @@ const invoiceStateMeta: Record<
   open: { color: "success", label: "Confirmada" },
 };
 
-const parseJsonValue = <T,>(value: unknown): T | null => {
-  if (value == null) return null;
-  if (typeof value === "string") {
-    try {
-      return JSON.parse(value) as T;
-    } catch {
-      return null;
-    }
-  }
-  if (typeof value === "object") return value as T;
-  return null;
-};
-
-const getInvoiceStateValue = (
-  item: VInvoicesResponse,
-  stateNameById: Map<string, string>,
-) => {
-  const state = (item as VInvoicesResponse & { state?: unknown }).state;
-
-  if (typeof state === "string") {
-    const parsedState = parseJsonValue<{ id?: string; name?: string }>(state);
-    if (parsedState?.name) return String(parsedState.name).toLowerCase();
-    if (parsedState?.id && stateNameById.has(parsedState.id)) {
-      return String(stateNameById.get(parsedState.id)).toLowerCase();
-    }
-
-    if (stateNameById.has(state)) {
-      return String(stateNameById.get(state)).toLowerCase();
-    }
-
-    return state.toLowerCase();
-  }
-
-  if (state && typeof state === "object" && "name" in state) {
-    const stateName = (state as { name?: unknown }).name;
-    return typeof stateName === "string" ? stateName.toLowerCase() : "";
-  }
-
-  if (state && typeof state === "object" && "id" in state) {
-    const stateId = (state as { id?: unknown }).id;
-    if (typeof stateId === "string" && stateNameById.has(stateId)) {
-      return String(stateNameById.get(stateId)).toLowerCase();
-    }
-  }
-
-  return "";
-};
+interface InvoiceListRow extends InvoicesResponse {
+  invoice_products?: InvoicesProductsResponse[];
+  invoice_products_loading?: boolean;
+}
 
 const translateInvoiceState = (state: string) => {
   if (state in invoiceStateMeta) {
@@ -91,6 +53,12 @@ export default function Invoices() {
     ...getListArgsInitialState,
     orderBy: "created",
   }));
+  const [invoiceProductsByInvoiceId, setInvoiceProductsByInvoiceId] = useState<
+    Record<string, InvoicesProductsResponse[]>
+  >({});
+  const [invoiceProductsLoadingByInvoiceId, setInvoiceProductsLoadingByInvoiceId] =
+    useState<Record<string, boolean>>({});
+  const [triggerGetInvoiceProducts] = useLazyGetInvoiceProductsByInvoiceIdQuery();
 
   useEffect(() => {
     dispatch(setBreadcrumbs(invoiceBreadcrumbFlow.list()));
@@ -100,10 +68,16 @@ export default function Invoices() {
     };
   }, [dispatch]);
 
-  const { data, error, isFetching } = useGetInvoicesViewQuery(queryArgs);
+  const { data, error, isFetching } = useGetInvoicesListQuery(queryArgs);
+  const { data: clients = [] } = useGetClientsQuery();
   const { data: invoiceStates = [] } = useGetInvoiceStatesQuery();
   const { data: products = [] } = useGetProductsQuery();
   const { data: measureUnits = [] } = useGetMeasureUnitsQuery();
+
+  const clientNameById = useMemo(
+    () => new Map(clients.map((client) => [client.id, String(client.name || "-")])),
+    [clients],
+  );
 
   const stateNameById = useMemo(
     () =>
@@ -130,6 +104,62 @@ export default function Invoices() {
     [products, measureUnitNameById],
   );
 
+  const productNameById = useMemo(
+    () => new Map(products.map((product) => [product.id, String(product.name || "-")])),
+    [products],
+  );
+
+  const invoicesData = useMemo(() => {
+    if (!data) return undefined;
+
+    return {
+      ...data,
+      items: data.items.map((invoice) => ({
+        ...invoice,
+        invoice_products: invoiceProductsByInvoiceId[invoice.id],
+        invoice_products_loading: Boolean(
+          invoiceProductsLoadingByInvoiceId[invoice.id],
+        ),
+      })) as InvoiceListRow[],
+    };
+  }, [data, invoiceProductsByInvoiceId, invoiceProductsLoadingByInvoiceId]);
+
+  const handleCollapseChange = useCallback(
+    async (invoiceId: string, collapsed: boolean) => {
+      if (!collapsed) return;
+      if (invoiceProductsByInvoiceId[invoiceId]) return;
+      if (invoiceProductsLoadingByInvoiceId[invoiceId]) return;
+
+      setInvoiceProductsLoadingByInvoiceId((prev) => ({
+        ...prev,
+        [invoiceId]: true,
+      }));
+
+      try {
+        const items = await triggerGetInvoiceProducts(invoiceId).unwrap();
+        setInvoiceProductsByInvoiceId((prev) => ({
+          ...prev,
+          [invoiceId]: items,
+        }));
+      } catch {
+        setInvoiceProductsByInvoiceId((prev) => ({
+          ...prev,
+          [invoiceId]: [],
+        }));
+      } finally {
+        setInvoiceProductsLoadingByInvoiceId((prev) => ({
+          ...prev,
+          [invoiceId]: false,
+        }));
+      }
+    },
+    [
+      invoiceProductsByInvoiceId,
+      invoiceProductsLoadingByInvoiceId,
+      triggerGetInvoiceProducts,
+    ],
+  );
+
   const columns: Column = useMemo(
     () => [
       {
@@ -137,21 +167,15 @@ export default function Invoices() {
         label: "Fecha",
         align: "left",
         minWidth: 160,
-        render: (item: VInvoicesResponse) => formatDate(item.date),
+        render: (item: InvoiceListRow) => formatDate(item.date),
       },
       {
         id: "client",
         label: "Cliente",
         align: "left",
         minWidth: 220,
-        render: (item: VInvoicesResponse) => {
-          const client = item.client as { name?: string } | string | null;
-          if (typeof client === "string") return client;
-          if (client && typeof client === "object" && client.name) {
-            return client.name;
-          }
-          return "-";
-        },
+        render: (item: InvoiceListRow) =>
+          clientNameById.get(String(item.client || "")) || "-",
         disableSort: true,
       },
       {
@@ -159,22 +183,24 @@ export default function Invoices() {
         label: "Descuento",
         minWidth: 140,
         disableSort: true,
-        render: (item: VInvoicesResponse) => formatPercent(item.discount),
+        render: (item: InvoiceListRow) => formatPercent(item.discount),
       },
       {
         id: "total",
         label: "Total",
         minWidth: 140,
         disableSort: true,
-        render: (item: VInvoicesResponse) => formatMoney(item.total),
+        render: (item: InvoiceListRow) => formatMoney(item.total),
       },
       {
         id: "state",
         label: "Estado",
         minWidth: 160,
         disableSort: true,
-        render: (item: VInvoicesResponse) => {
-          const state = getInvoiceStateValue(item, stateNameById);
+        render: (item: InvoiceListRow) => {
+          const state = String(
+            stateNameById.get(String(item.state || "")) || item.state || "",
+          ).toLowerCase();
           const { color, label } = translateInvoiceState(state);
 
           return (
@@ -183,7 +209,7 @@ export default function Invoices() {
         },
       },
     ],
-    [stateNameById],
+    [clientNameById, stateNameById],
   );
 
   const detailColumns: DetailColumn = useMemo(
@@ -198,16 +224,8 @@ export default function Invoices() {
             align: "left",
             minWidth: 180,
             render: (item: any) => {
-              if (item?.product_name) return item.product_name;
-              const product = item?.product as
-                | { name?: string }
-                | string
-                | null;
-              if (typeof product === "string") return product;
-              if (product && typeof product === "object" && product.name) {
-                return product.name;
-              }
-              return "-";
+              const productId = String(item?.product || item?.product_id || "");
+              return productNameById.get(productId) || "-";
             },
           },
           {
@@ -221,7 +239,7 @@ export default function Invoices() {
             minWidth: 110,
             render: (item: any) =>
               productMeasureUnitByProductId.get(
-                String(item?.product_id || ""),
+                String(item?.product || item?.product_id || ""),
               ) || "-",
           },
           {
@@ -245,7 +263,7 @@ export default function Invoices() {
         ],
       },
     ],
-    [productMeasureUnitByProductId],
+    [productMeasureUnitByProductId, productNameById],
   );
 
   const rowActions: DataGridRowAction[] = useMemo(
@@ -262,7 +280,7 @@ export default function Invoices() {
 
   return (
     <DataGrid
-      data={data}
+      data={invoicesData}
       error={error}
       isFetching={isFetching}
       columns={columns}
@@ -272,6 +290,7 @@ export default function Invoices() {
       searchPlaceholder="Buscar factura"
       initialQuery={queryArgs}
       onQueryChange={setQueryArgs}
+      onCollapseChange={handleCollapseChange}
       rowActions={rowActions}
       toolbarElement={
         <Button

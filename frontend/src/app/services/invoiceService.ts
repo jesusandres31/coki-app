@@ -84,6 +84,21 @@ const getItemTotal = (item: CreateInvoiceItemReq) => {
 
 export const invoiceApi = mainApi.injectEndpoints({
   endpoints: (build) => ({
+    getInvoicesList: build.query<ListResult<InvoicesResponse>, GetList>({
+      queryFn: async (_arg) => {
+        const res = await typedPb.collection("invoices").getList(
+          _arg.page,
+          _arg.perPage,
+          {
+            filter: pbFilter(_arg.filter, ["date", "id"]),
+            sort: pbSort(_arg.order, _arg.orderBy),
+          },
+        );
+
+        return { data: res };
+      },
+      providesTags: [invoiceTag],
+    }),
     getInvoicesView: build.query<ListResult<VInvoicesResponse>, GetList>({
       queryFn: async (_arg) => {
         const searchFilter = pbFilter(_arg.filter, ["date", "client"]);
@@ -128,6 +143,16 @@ export const invoiceApi = mainApi.injectEndpoints({
         return { data: res };
       },
       providesTags: [invoicesViewTag],
+    }),
+    getInvoiceProductsByInvoiceId: build.query<InvoicesProductsResponse[], string>({
+      queryFn: async (_arg) => {
+        const res = await typedPb.collection("invoices_products").getFullList({
+          filter: `invoice = "${_arg}"`,
+          sort: "+created",
+        });
+        return { data: res };
+      },
+      providesTags: [invoiceProductsTag],
     }),
     getClients: build.query<ClientsResponse[], void>({
       queryFn: async () => {
@@ -371,7 +396,9 @@ export const {
   useGetClientByIdQuery,
   useGetClientsQuery,
   useGetClientsListQuery,
+  useGetInvoicesListQuery,
   useGetInvoiceViewByIdQuery,
+  useLazyGetInvoiceProductsByInvoiceIdQuery,
   useGetInvoicesByDateRangeQuery,
   useGetInvoiceStatesQuery,
   useGetInvoicesViewQuery,

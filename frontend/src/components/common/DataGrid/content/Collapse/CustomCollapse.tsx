@@ -7,6 +7,7 @@ import {
   Table,
   Box,
   Collapse,
+  Skeleton,
 } from "@mui/material";
 import { formatNulls, renderValue } from "src/utils/format";
 import NoItems from "../../../NoItems";
@@ -44,6 +45,12 @@ export default function CustomCollapse({
           {(detailColumns as IDetailColumn<DataItem, DataItem>[]).map(
             (detailCol, i) => {
               const detailRows = row[detailCol.id];
+              const hasDetailRows = Array.isArray(detailRows);
+              const detailRowsLoading = Boolean(
+                row[`${String(detailCol.id)}_loading` as keyof DataItem],
+              );
+              const shouldShowLoading =
+                detailRowsLoading || (collapsed && !hasDetailRows);
 
               return (
                 <Box key={`${detailCol.id}-${i}`} py={1} sx={{ pb: 5 }}>
@@ -64,13 +71,25 @@ export default function CustomCollapse({
                       {`${detailCol.title}:`}
                     </Typography> */}
                   </Box>
-                  {Array.isArray(detailRows) &&
+                  {shouldShowLoading ? (
+                    <Box
+                      sx={{
+                        py: 1.5,
+                        px: 1,
+                      }}
+                    >
+                      <Skeleton variant="rounded" height={30} sx={{ mb: 1 }} />
+                      <Skeleton variant="rounded" height={30} sx={{ mb: 1 }} />
+                      <Skeleton variant="rounded" height={30} sx={{ mb: 1 }} />
+                      <Skeleton variant="rounded" height={30} />
+                    </Box>
+                  ) : hasDetailRows &&
                   (detailRows[0] === null ||
                     (detailRows && detailRows.length === 0)) ? (
                     <CustomGrid>
                       <NoItems />
                     </CustomGrid>
-                  ) : Array.isArray(detailRows) &&
+                  ) : hasDetailRows &&
                     detailRows &&
                     detailRows.length > 0 ? (
                     <Box sx={{ width: "100%" }}>
