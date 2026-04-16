@@ -36,7 +36,7 @@ import {
   useGetProductsQuery,
 } from "src/app/services/invoiceService";
 import { useAppDispatch } from "src/app/store";
-import { Loading } from "src/components/common";
+import { TableLoadingSkeleton } from "src/components/common";
 import PageContainer from "src/components/common/PageContainer/PageContainer";
 import { resetBreadcrumbs, setBreadcrumbs, setSnackbar } from "src/slices/uiSlice";
 import { VInvoicesResponse } from "src/types/pocketbase-types";
@@ -567,16 +567,7 @@ export default function Reports() {
                 )}
 
                 {isFetchingSales ? (
-                  <Box
-                    sx={{
-                      minHeight: 120,
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                    }}
-                  >
-                    <Loading />
-                  </Box>
+                  <TableLoadingSkeleton columns={5} rows={7} />
                 ) : (
                   <Stack spacing={2}>
                     <Stack direction={{ xs: "column", md: "row" }} spacing={1.5}>
@@ -777,16 +768,7 @@ export default function Reports() {
                 )}
 
                 {isFetchingDelivery ? (
-                  <Box
-                    sx={{
-                      minHeight: 120,
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                    }}
-                  >
-                    <Loading />
-                  </Box>
+                  <TableLoadingSkeleton columns={3} rows={7} />
                 ) : (
                   <TableContainer
                     sx={{

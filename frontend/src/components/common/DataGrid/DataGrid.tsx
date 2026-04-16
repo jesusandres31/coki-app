@@ -8,7 +8,7 @@ import {
   GetList,
   Order,
 } from "src/types";
-import { Loading, ErrorMsg } from "src/components/common";
+import { ErrorMsg, TableLoadingSkeleton } from "src/components/common";
 import PageContainer from "../PageContainer/PageContainer";
 import NoItems from "../NoItems";
 import { CustomGrid } from "./content/utils";
@@ -271,9 +271,15 @@ export default function DataGrid({
           <ErrorMsg />
         </CustomGrid>
       ) : isFetching ? (
-        <CustomGrid>
-          <Loading />
-        </CustomGrid>
+        <TableLoadingSkeleton
+          columns={
+            columns.length +
+            1 + // checkbox column (or placeholder)
+            (rowActions?.length ? 1 : 0) +
+            (isCollapsible ? 1 : 0)
+          }
+          rows={Math.min(data?.perPage ?? initialQuery?.perPage ?? 20, 10)}
+        />
       ) : (
         <CustomGrid>
           <></>
