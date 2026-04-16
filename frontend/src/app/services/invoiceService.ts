@@ -1,4 +1,5 @@
 import { ListResult } from "pocketbase";
+import dayjs from "dayjs";
 import { pb } from "src/libs";
 import { GetList } from "src/types";
 import {
@@ -57,9 +58,17 @@ interface UpdateClientReq {
   data: Update<"clients">;
 }
 
+interface CreateClientReq {
+  data: Create<"clients">;
+}
+
 interface UpdateProductReq {
   id: string;
   data: Update<"products">;
+}
+
+interface CreateProductReq {
+  data: Create<"products">;
 }
 
 const normalizeDiscountPercent = (value: number) =>
@@ -96,12 +105,17 @@ export const invoiceApi = mainApi.injectEndpoints({
       GetInvoicesByDateRangeReq
     >({
       queryFn: async (_arg) => {
-        const from = _arg.from.replace(/\\/g, "\\\\").replace(/"/g, '\\"');
-        const to = _arg.to.replace(/\\/g, "\\\\").replace(/"/g, '\\"');
-        const filter = `deleted = "" && date >= "${from}" && date <= "${to}"`;
+        const normalizedFrom = dayjs(_arg.from).format("YYYY-MM-DD");
+        const normalizedTo = dayjs(_arg.to).format("YYYY-MM-DD");
+        const toExclusive = dayjs(normalizedTo).add(1, "day").format("YYYY-MM-DD");
+        const from = normalizedFrom.replace(/\\/g, "\\\\").replace(/"/g, '\\"');
+        const to = toExclusive.replace(/\\/g, "\\\\").replace(/"/g, '\\"');
+        // Use an exclusive upper bound to include the full "to" day even when `date` has time.
+        const filter = `deleted = "" && date >= "${from}" && date < "${to}"`;
         const res = await typedPb.collection("v_invoices").getFullList({
           filter,
           sort: "+date",
+          requestKey: null,
         });
 
         return { data: res };
@@ -148,6 +162,13 @@ export const invoiceApi = mainApi.injectEndpoints({
       },
       providesTags: [clientsTag],
     }),
+    getClientById: build.query<ClientsResponse, string>({
+      queryFn: async (_arg) => {
+        const res = await typedPb.collection("clients").getOne(_arg);
+        return { data: res };
+      },
+      providesTags: [clientsTag],
+    }),
     getProducts: build.query<ProductsResponse[], void>({
       queryFn: async () => {
         const res = await typedPb.collection("products").getFullList({
@@ -178,6 +199,13 @@ export const invoiceApi = mainApi.injectEndpoints({
             sort: pbSort(_arg.order, _arg.orderBy),
           },
         );
+        return { data: res };
+      },
+      providesTags: [productsTag],
+    }),
+    getProductById: build.query<ProductsResponse, string>({
+      queryFn: async (_arg) => {
+        const res = await typedPb.collection("products").getOne(_arg);
         return { data: res };
       },
       providesTags: [productsTag],
@@ -221,18 +249,18 @@ export const invoiceApi = mainApi.injectEndpoints({
 
         const invoice = await typedPb.collection("invoices").create(invoicePayload);
 
-        const invoiceProducts = await Promise.all(
-          invoiceProductsData.map((item) =>
-            typedPb.collection("invoices_products").create({
-              invoice: invoice.id,
-              product: item.product,
-              amount: item.amount,
-              unit_price: item.unitPrice,
-              discount: normalizeDiscountPercent(item.discount),
-              total: item.total,
-            }),
-          ),
-        );
+        const invoiceProducts: InvoicesProductsResponse[] = [];
+        for (const item of invoiceProductsData) {
+          const createdItem = await typedPb.collection("invoices_products").create({
+            invoice: invoice.id,
+            product: item.product,
+            amount: item.amount,
+            unit_price: item.unitPrice,
+            discount: normalizeDiscountPercent(item.discount),
+            total: item.total,
+          });
+          invoiceProducts.push(createdItem);
+        }
 
         return { data: { invoice, invoiceProducts } };
       },
@@ -269,18 +297,16 @@ export const invoiceApi = mainApi.injectEndpoints({
 
           subtotal = nextItems.reduce((acc, item) => acc + item.total, 0);
 
-          await Promise.all(
-            nextItems.map((item) =>
-              typedPb.collection("invoices_products").create({
-                invoice: _arg.id,
-                product: item.product,
-                amount: item.amount,
-                unit_price: item.unitPrice,
-                discount: normalizeDiscountPercent(item.discount),
-                total: item.total,
-              }),
-            ),
-          );
+          for (const item of nextItems) {
+            await typedPb.collection("invoices_products").create({
+              invoice: _arg.id,
+              product: item.product,
+              amount: item.amount,
+              unit_price: item.unitPrice,
+              discount: normalizeDiscountPercent(item.discount),
+              total: item.total,
+            });
+          }
         } else {
           const existingItems = await typedPb
             .collection("invoices_products")
@@ -312,6 +338,13 @@ export const invoiceApi = mainApi.injectEndpoints({
       },
       invalidatesTags: [clientsTag],
     }),
+    createClient: build.mutation<ClientsResponse, CreateClientReq>({
+      queryFn: async (_arg) => {
+        const res = await typedPb.collection("clients").create(_arg.data);
+        return { data: res };
+      },
+      invalidatesTags: [clientsTag],
+    }),
     updateProduct: build.mutation<ProductsResponse, UpdateProductReq>({
       queryFn: async (_arg) => {
         const res = await typedPb
@@ -321,11 +354,21 @@ export const invoiceApi = mainApi.injectEndpoints({
       },
       invalidatesTags: [productsTag],
     }),
+    createProduct: build.mutation<ProductsResponse, CreateProductReq>({
+      queryFn: async (_arg) => {
+        const res = await typedPb.collection("products").create(_arg.data);
+        return { data: res };
+      },
+      invalidatesTags: [productsTag],
+    }),
   }),
 });
 
 export const {
+  useCreateClientMutation,
   useCreateInvoiceMutation,
+  useCreateProductMutation,
+  useGetClientByIdQuery,
   useGetClientsQuery,
   useGetClientsListQuery,
   useGetInvoiceViewByIdQuery,
@@ -333,6 +376,7 @@ export const {
   useGetInvoiceStatesQuery,
   useGetInvoicesViewQuery,
   useGetMeasureUnitsQuery,
+  useGetProductByIdQuery,
   useGetProductsQuery,
   useGetProductsListQuery,
   useUpdateClientMutation,

@@ -4,6 +4,14 @@ import { Chip } from "@mui/material";
 
 // dates
 export const formatDate = (str: Date | string) => {
+  if (typeof str === "string") {
+    const dateOnlyMatch = str.trim().match(/^(\d{4})-(\d{2})-(\d{2})$/);
+    if (dateOnlyMatch) {
+      const [, year, month, day] = dateOnlyMatch;
+      return `${day}/${month}/${year.slice(2)}`;
+    }
+  }
+
   const date = new Date(str);
   const day = date.getDate().toString().padStart(2, "0");
   const month = (date.getMonth() + 1).toString().padStart(2, "0");

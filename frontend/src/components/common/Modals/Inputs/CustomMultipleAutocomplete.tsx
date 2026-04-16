@@ -118,6 +118,7 @@ export default function CustomMultipleAutocomplete({
         sx={{ width: { xs: "100%", sm: STYLE.width.textfield } }}
         limitTags={3}
         size="small"
+        disabled={input.disabled}
         open={open}
         onOpen={() => {
           setOpen(true);
@@ -155,9 +156,10 @@ export default function CustomMultipleAutocomplete({
             error={!!input.error}
             helperText={input.error ? input.error : " "}
             sx={{ width: { xs: "100%", sm: STYLE.width.textfield } }}
-            size="small"
-            variant={variant}
-            InputProps={{
+          size="small"
+          variant={variant}
+          disabled={input.disabled}
+          InputProps={{
               ...params.InputProps,
               endAdornment: (
                 <>

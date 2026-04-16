@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import dayjs, { Dayjs } from "dayjs";
 import {
   AddRounded,
+  CheckRounded,
   PrintRounded,
   RestartAltRounded,
   RemoveCircleOutlineRounded,
@@ -41,6 +42,7 @@ import { resetBreadcrumbs, setBreadcrumbs, setSnackbar } from "src/slices/uiSlic
 import { VInvoicesResponse } from "src/types/pocketbase-types";
 import { formatDate, formatMoney } from "src/utils/format";
 import { reportsBreadcrumbFlow } from "./breadcrumbFlow";
+import { openDeliveryPdfInViewer, openDeliveryPdfTab } from "./pdf";
 
 type ReportPeriod = "week" | "month" | "custom";
 
@@ -144,7 +146,13 @@ const getStateLabel = (invoice: VInvoicesResponse) => {
   return stateLabelByName[stateName] || stateName || "-";
 };
 
-const getInvoiceDateIso = (invoiceDate: string) => normalizeIsoDate(invoiceDate);
+const getInvoiceDateIso = (invoiceDate: string) => {
+  if (!invoiceDate) return "";
+  const raw = String(invoiceDate).trim();
+  const leadingDateMatch = raw.match(/^\d{4}-\d{2}-\d{2}/);
+  if (leadingDateMatch) return leadingDateMatch[0];
+  return normalizeIsoDate(raw);
+};
 
 const getClientName = (invoice: VInvoicesResponse) => {
   const clientValue = invoice.client;
@@ -170,17 +178,13 @@ const parsePickerDate = (value: string) => (value ? dayjs(value) : null);
 const formatQuantity = (amount: number) =>
   Number.isInteger(amount) ? String(amount) : amount.toFixed(2);
 
-const escapeHtml = (value: string) =>
-  value
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;")
-    .replace(/'/g, "&#39;");
-
 export default function Reports() {
   const dispatch = useAppDispatch();
   const [period, setPeriod] = useState<ReportPeriod>("week");
+  const [customFromDraft, setCustomFromDraft] = useState(
+    dayjs().subtract(6, "day").format("YYYY-MM-DD"),
+  );
+  const [customToDraft, setCustomToDraft] = useState(getTodayIso());
   const [customFrom, setCustomFrom] = useState(
     dayjs().subtract(6, "day").format("YYYY-MM-DD"),
   );
@@ -188,6 +192,7 @@ export default function Reports() {
   const [selectedDay, setSelectedDay] = useState<Dayjs | null>(dayjs());
   const [selectedDays, setSelectedDays] = useState<string[]>([getTodayIso()]);
   const [todayIso] = useState(getTodayIso);
+  const [isPrintingDelivery, setIsPrintingDelivery] = useState(false);
 
   useEffect(() => {
     dispatch(setBreadcrumbs(reportsBreadcrumbFlow.list()));
@@ -203,6 +208,25 @@ export default function Reports() {
 
     return getPresetRange(period);
   }, [customFrom, customTo, period]);
+
+  const handleApplyCustomDateRange = () => {
+    const resolved = resolveDateRange(customFromDraft, customToDraft);
+
+    if (!resolved) {
+      dispatch(
+        setSnackbar({
+          message: "Seleccioná un rango de fechas válido para buscar ventas.",
+          type: "error",
+        }),
+      );
+      return;
+    }
+
+    setCustomFrom(resolved.from);
+    setCustomTo(resolved.to);
+    setCustomFromDraft(resolved.from);
+    setCustomToDraft(resolved.to);
+  };
 
   const salesQueryArgs = useMemo(
     () => salesDateRange || { from: todayIso, to: todayIso },
@@ -252,6 +276,13 @@ export default function Reports() {
   );
 
   const productById = useMemo(() => new Map(products.map((p) => [p.id, p])), [products]);
+  const productByNormalizedName = useMemo(
+    () =>
+      new Map(
+        products.map((p) => [String(p.name || "").trim().toLowerCase(), p]),
+      ),
+    [products],
+  );
 
   const openSalesInvoices = useMemo(
     () => salesInvoicesRaw.filter((invoice) => getInvoiceStateValue(invoice) === "open"),
@@ -305,22 +336,26 @@ export default function Reports() {
 
         const productFromRowObject =
           row.product && typeof row.product === "object" ? row.product : null;
-        const productId = String(
+        const productIdFromRow = String(
           row.product_id ||
             (typeof row.product === "string" ? row.product : productFromRowObject?.id || ""),
         ).trim();
-        const productByIdEntry = productId ? productById.get(productId) : null;
-        const productName =
-          String(
-            row.product_name ||
-              productFromRowObject?.name ||
-              productByIdEntry?.name ||
-              "Producto sin nombre",
-          ).trim() || "Producto sin nombre";
+        const fallbackProductName =
+          String(row.product_name || productFromRowObject?.name || "").trim() ||
+          "Producto sin nombre";
+        const normalizedFallbackName = fallbackProductName.toLowerCase();
+        const canonicalProduct =
+          (productIdFromRow ? productById.get(productIdFromRow) : null) ||
+          productByNormalizedName.get(normalizedFallbackName) ||
+          null;
+        const canonicalProductId = String(canonicalProduct?.id || productIdFromRow || "").trim();
+        const productName = String(canonicalProduct?.name || fallbackProductName).trim();
 
         const measureUnitName =
-          measureUnitNameById.get(String(productByIdEntry?.measure_unit || "")) || "-";
-        const key = `${productId || productName.toLowerCase()}::${measureUnitName}`;
+          measureUnitNameById.get(String(canonicalProduct?.measure_unit || "")) || "-";
+        const key = canonicalProductId
+          ? `id::${canonicalProductId}`
+          : `name::${productName.toLowerCase()}`;
 
         const current = map.get(key);
         if (current) {
@@ -338,7 +373,7 @@ export default function Reports() {
     });
 
     return [...map.values()].sort((a, b) => a.productName.localeCompare(b.productName));
-  }, [deliveryInvoices, measureUnitNameById, productById]);
+  }, [deliveryInvoices, measureUnitNameById, productById, productByNormalizedName]);
 
   const totalProductsToDeliver = useMemo(
     () => deliveryProducts.reduce((acc, item) => acc + item.amount, 0),
@@ -373,7 +408,7 @@ export default function Reports() {
     setSelectedDays([]);
   };
 
-  const handlePrintDeliveryList = () => {
+  const handlePrintDeliveryList = async () => {
     if (deliveryProducts.length === 0) {
       dispatch(
         setSnackbar({
@@ -384,100 +419,48 @@ export default function Reports() {
       return;
     }
 
-    const popup = window.open("", "_blank", "noopener,noreferrer");
+    const popup = openDeliveryPdfTab();
 
     if (!popup) {
       dispatch(
         setSnackbar({
           message:
-            "No se pudo abrir la vista de impresión. Verificá el bloqueo de popups.",
+            "No se pudo abrir el PDF en una pestaña nueva. Verificá el bloqueo de popups.",
           type: "error",
         }),
       );
       return;
     }
 
-    const selectedDaysText = sortedSelectedDays
-      .map((date) => formatDate(date))
-      .join(", ");
-    const createdAt = dayjs().format("DD/MM/YYYY HH:mm");
-    const rowsHtml = deliveryProducts
-      .map(
-        (row) =>
-          `<tr>
-            <td>${escapeHtml(row.productName)}</td>
-            <td>${escapeHtml(row.measureUnitName)}</td>
-            <td style="text-align:right">${escapeHtml(formatQuantity(row.amount))}</td>
-          </tr>`,
-      )
-      .join("");
+    setIsPrintingDelivery(true);
 
-    popup.document.write(`<!doctype html>
-<html lang="es">
-  <head>
-    <meta charset="utf-8" />
-    <title>Lista de reparto</title>
-    <style>
-      body {
-        font-family: Arial, Helvetica, sans-serif;
-        padding: 24px;
-        color: #111827;
-      }
-      h1 {
-        margin: 0 0 8px 0;
-        font-size: 24px;
-      }
-      p {
-        margin: 2px 0;
-      }
-      table {
-        width: 100%;
-        border-collapse: collapse;
-        margin-top: 18px;
-      }
-      th, td {
-        border: 1px solid #d1d5db;
-        padding: 8px 10px;
-        font-size: 13px;
-      }
-      th {
-        text-align: left;
-        background: #f3f4f6;
-      }
-      tfoot td {
-        font-weight: 700;
-      }
-    </style>
-  </head>
-  <body>
-    <h1>Lista de reparto</h1>
-    <p><strong>Días:</strong> ${escapeHtml(selectedDaysText || "-")}</p>
-    <p><strong>Generado:</strong> ${escapeHtml(createdAt)}</p>
-    <table>
-      <thead>
-        <tr>
-          <th>Producto</th>
-          <th>Unidad</th>
-          <th style="text-align:right">Cantidad</th>
-        </tr>
-      </thead>
-      <tbody>
-        ${rowsHtml}
-      </tbody>
-      <tfoot>
-        <tr>
-          <td colspan="2">Total</td>
-          <td style="text-align:right">${escapeHtml(
-            formatQuantity(totalProductsToDeliver),
-          )}</td>
-        </tr>
-      </tfoot>
-    </table>
-  </body>
-</html>`);
-    popup.document.close();
-    popup.focus();
-    popup.print();
+    try {
+      await openDeliveryPdfInViewer(
+        {
+          selectedDaysText:
+            sortedSelectedDays.map((date) => formatDate(date)).join(", ") || "-",
+          generatedAt: dayjs().format("DD/MM/YYYY HH:mm"),
+          items: deliveryProducts.map((row, index) => ({
+            id: `${row.key}-${index}`,
+            productName: row.productName,
+            measureUnitName: row.measureUnitName,
+            amount: formatQuantity(row.amount),
+          })),
+          totalAmount: formatQuantity(totalProductsToDeliver),
+        },
+        popup,
+      );
+    } catch {
+      popup.close();
+      dispatch(
+        setSnackbar({
+          message: "No se pudo generar o abrir el PDF en la pestaña nueva.",
+          type: "error",
+        }),
+      );
+    } finally {
+      setIsPrintingDelivery(false);
+    }
   };
 
   return (
@@ -495,7 +478,7 @@ export default function Reports() {
             gap: 2,
           }}
         >
-          <Card variant="outlined">
+          <Card variant="outlined" sx={{ order: 2 }}>
             <CardContent sx={{ p: { xs: 2, md: 3 } }}>
               <Stack spacing={2}>
                 <Stack
@@ -526,8 +509,10 @@ export default function Reports() {
                   <Stack direction={{ xs: "column", sm: "row" }} spacing={1.5}>
                     <DatePicker
                       label="Desde"
-                      value={parsePickerDate(customFrom)}
-                      onChange={(value) => setCustomFrom(formatPickerDate(value))}
+                      value={parsePickerDate(customFromDraft)}
+                      onChange={(value) =>
+                        setCustomFromDraft(formatPickerDate(value))
+                      }
                       format="DD/MM/YYYY"
                       slotProps={{
                         field: { readOnly: true },
@@ -536,14 +521,29 @@ export default function Reports() {
                     />
                     <DatePicker
                       label="Hasta"
-                      value={parsePickerDate(customTo)}
-                      onChange={(value) => setCustomTo(formatPickerDate(value))}
+                      value={parsePickerDate(customToDraft)}
+                      onChange={(value) =>
+                        setCustomToDraft(formatPickerDate(value))
+                      }
                       format="DD/MM/YYYY"
                       slotProps={{
                         field: { readOnly: true },
                         textField: { size: "small", fullWidth: true },
                       }}
                     />
+                    <Button
+                      size="small"
+                      variant="contained"
+                      startIcon={<CheckRounded />}
+                      onClick={handleApplyCustomDateRange}
+                      disabled={isFetchingSales}
+                      sx={{
+                        minWidth: { xs: "100%", sm: 150 },
+                        alignSelf: { xs: "stretch", sm: "flex-end" },
+                      }}
+                    >
+                      Confirmar
+                    </Button>
                   </Stack>
                 )}
 
@@ -629,6 +629,8 @@ export default function Reports() {
                         border: "1px solid",
                         borderColor: "divider",
                         borderRadius: 1,
+                        maxHeight: 460,
+                        overflowY: "auto",
                       }}
                     >
                       <Table size="small" stickyHeader>
@@ -688,7 +690,7 @@ export default function Reports() {
             </CardContent>
           </Card>
 
-          <Card variant="outlined">
+          <Card variant="outlined" sx={{ order: 1 }}>
             <CardContent sx={{ p: { xs: 2, md: 3 } }}>
               <Stack spacing={2}>
                 <Stack
@@ -704,8 +706,10 @@ export default function Reports() {
                     size="small"
                     variant="contained"
                     startIcon={<PrintRounded />}
-                    onClick={handlePrintDeliveryList}
-                    disabled={deliveryProducts.length === 0}
+                    onClick={() => void handlePrintDeliveryList()}
+                    loading={isPrintingDelivery}
+                    loadingPosition="start"
+                    disabled={deliveryProducts.length === 0 || isPrintingDelivery}
                   >
                     Imprimir lista
                   </Button>
@@ -789,6 +793,8 @@ export default function Reports() {
                       border: "1px solid",
                       borderColor: "divider",
                       borderRadius: 1,
+                      maxHeight: 460,
+                      overflowY: "auto",
                     }}
                   >
                     <Table size="small">
@@ -836,4 +842,3 @@ export default function Reports() {
     </PageContainer>
   );
 }
-

@@ -20,7 +20,6 @@ export const DRAWER_SECTIONS: DrawerSection[] = [
         icon: <DescriptionRounded />,
         to: AppRoutes.Invoices,
       },
-
       {
         text: "Clientes",
         icon: <PeopleRounded />,

@@ -7,7 +7,6 @@ import {
   TableHead,
 } from "@mui/material";
 import { Column, DataItem, Order } from "src/types";
-import { useUI } from "src/hooks";
 
 interface CustomTableHeadProps {
   columns: Column;
@@ -36,16 +35,13 @@ export default function CustomTableHead({
   handleSortTable,
   styles,
 }: CustomTableHeadProps) {
-  const { isMobile } = useUI();
   const isAllSelected = items.length === selectedItems.length;
-  const actionsStickySx = isMobile
-    ? {
-        position: "sticky",
-        right: isCollapsible ? 48 : 0,
-        zIndex: 2,
-        backgroundColor: "#F4F6FB",
-      }
-    : undefined;
+  const actionsStickySx = {
+    position: "sticky",
+    right: isCollapsible ? 48 : 0,
+    zIndex: 2,
+    backgroundColor: "#F4F6FB",
+  };
 
   return (
     <TableHead>
@@ -119,7 +115,7 @@ export default function CustomTableHead({
           <TableCell
             padding="checkbox"
             sx={{
-              ...(isMobile ? styles.stickyMobile : styles.sticky),
+              ...styles.sticky,
               backgroundColor: "#F4F6FB",
               zIndex: 2,
             }}

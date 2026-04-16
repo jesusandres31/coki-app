@@ -138,6 +138,7 @@ export default function CreateOrUpdateModal({
         )}
         <Button
           loading={loading}
+          disabled={loading}
           onClick={hanleConfirm}
           type="submit"
           autoFocus

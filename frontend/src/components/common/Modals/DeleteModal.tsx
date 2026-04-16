@@ -55,6 +55,7 @@ export default function DeleteModal({
         </Button>
         <Button
           loading={isDeleting}
+          disabled={isDeleting}
           onClick={handleDelete}
           autoFocus
           variant="text"

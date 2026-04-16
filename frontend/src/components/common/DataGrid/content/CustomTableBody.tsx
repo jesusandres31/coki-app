@@ -6,7 +6,6 @@ import {
   IColumn,
   DataItem,
 } from "src/types";
-import { useUI } from "src/hooks";
 import {
   TableCell,
   Typography,
@@ -49,7 +48,6 @@ export default function CustomTableBody({
   handleToggleCollapse,
   styles,
 }: CustomTableBodyProps) {
-  const { isMobile } = useUI();
   const isCollapsible = Boolean(detailColumns);
   const hasRowActions = rowActions.length > 0;
   const tableIconButtonSx = {
@@ -60,14 +58,12 @@ export default function CustomTableBody({
     borderRadius: 1.25,
     p: 0.5,
   };
-  const actionsStickySx = isMobile
-    ? {
-        position: "sticky",
-        right: isCollapsible ? 48 : 0,
-        zIndex: 1,
-        backgroundColor: "background.paper",
-      }
-    : undefined;
+  const actionsStickySx = {
+    position: "sticky",
+    right: isCollapsible ? 48 : 0,
+    zIndex: 1,
+    backgroundColor: "background.paper",
+  };
 
   const isSelected = (selectedItems: string[], itemId: string) => {
     return selectedItems.some((selectedItem) => selectedItem === itemId);
@@ -174,7 +170,7 @@ export default function CustomTableBody({
                   align="right"
                   className="row-sticky-cell"
                   sx={{
-                    ...(isMobile ? styles.stickyMobile : styles.sticky),
+                    ...styles.sticky,
                     py: 0.25,
                   }}
                   onClick={() => handleToggleCollapse(row.id)}

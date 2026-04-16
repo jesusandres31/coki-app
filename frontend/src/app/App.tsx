@@ -29,8 +29,14 @@ const Reports = lazy(() =>
 const Clients = lazy(() =>
   import("src/pages").then((module) => ({ default: module.Clients })),
 );
+const ClientDetail = lazy(() =>
+  import("src/pages").then((module) => ({ default: module.ClientDetail })),
+);
 const Products = lazy(() =>
   import("src/pages").then((module) => ({ default: module.Products })),
+);
+const ProductDetail = lazy(() =>
+  import("src/pages").then((module) => ({ default: module.ProductDetail })),
 );
 
 const privateRoutes = [
@@ -59,8 +65,24 @@ const privateRoutes = [
     render: <Clients />,
   },
   {
+    route: AppRoutes.ClientsNew,
+    render: <ClientDetail />,
+  },
+  {
+    route: AppRoutes.ClientsDetail,
+    render: <ClientDetail />,
+  },
+  {
     route: AppRoutes.Products,
     render: <Products />,
+  },
+  {
+    route: AppRoutes.ProductsNew,
+    render: <ProductDetail />,
+  },
+  {
+    route: AppRoutes.ProductsDetail,
+    render: <ProductDetail />,
   },
 ];
 

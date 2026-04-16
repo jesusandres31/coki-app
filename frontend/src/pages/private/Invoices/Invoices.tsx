@@ -178,12 +178,7 @@ export default function Invoices() {
           const { color, label } = translateInvoiceState(state);
 
           return (
-            <Chip
-              size="small"
-              variant="outlined"
-              color={color}
-              label={label}
-            />
+            <Chip size="small" variant="outlined" color={color} label={label} />
           );
         },
       },

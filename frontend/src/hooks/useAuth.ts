@@ -7,6 +7,9 @@ import { SignInRequest, SignUpResponse } from "src/interfaces";
 import { pb } from "src/libs";
 import { RolesResponse, UsersResponse } from "src/types/pocketbase-types";
 
+const isPocketBaseId = (value: unknown): value is string =>
+  typeof value === "string" && /^[a-z0-9]{15}$/i.test(value);
+
 export const useAuth = () => {
   const navigate = useNavigate();
   const [signIn, { isLoading: isSigningIn }] = authApi.useSignInMutation();
@@ -26,33 +29,32 @@ export const useAuth = () => {
     };
 
     const loadRoleName = async () => {
-      if (!authUser?.role) {
-        debug("No role id on auth user");
+      if (!isLoggedIn || !authUser?.id) {
+        debug("No active auth user");
         if (!ignore) setRoleName("");
         return;
       }
 
-      const expandedName = authUser.expand?.role?.name;
+      const expandedName = authUser.expand?.role?.name || "";
       if (expandedName) {
         debug("Using expanded role from auth store", expandedName);
         if (!ignore) setRoleName(expandedName);
         return;
       }
 
-      try {
-        debug("Trying direct roles.getOne()", { roleId: authUser.role });
-        const role = await pb
-          .collection("roles")
-          .getOne<RolesResponse>(authUser.role);
-        debug("roles.getOne() success", role.name);
-        if (!ignore) setRoleName(role.name);
+      if (!isPocketBaseId(authUser.role)) {
+        debug("Role value is not a record id; using role text directly", {
+          role: authUser.role,
+        });
+        if (!ignore) setRoleName(String(authUser.role || ""));
         return;
-      } catch (error) {
-        debug("roles.getOne() failed", error);
       }
 
       try {
-        debug("Trying users.getOne({ expand: role })", { userId: authUser.id });
+        debug("Validating current user session with users.getOne()", {
+          userId: authUser.id,
+        });
+
         const userWithExpand = await pb
           .collection("users")
           .getOne<UsersResponse<{ role: RolesResponse }>>(authUser.id, {
@@ -64,8 +66,31 @@ export const useAuth = () => {
           if (!ignore) setRoleName(expandedRoleName);
           return;
         }
-      } catch (error) {
-        debug("users.getOne({ expand: role }) failed", error);
+
+        const roleId = userWithExpand.role;
+        if (!isPocketBaseId(roleId)) {
+          if (!ignore) setRoleName(String(roleId || ""));
+          return;
+        }
+
+        debug("Trying roles.getOne() with validated role id", { roleId });
+        const role = await pb.collection("roles").getOne<RolesResponse>(roleId);
+        if (!ignore) setRoleName(role.name);
+        return;
+      } catch (error: any) {
+        debug("Role resolution failed", error);
+
+        if (error?.status === 404) {
+          debug("Clearing stale auth session after 404", {
+            userId: authUser.id,
+          });
+          logout();
+          if (!ignore) {
+            setRoleName("");
+          }
+          navigate(AppRoutes.Login);
+          return;
+        }
       }
 
       debug("Role name could not be resolved");
@@ -77,7 +102,7 @@ export const useAuth = () => {
     return () => {
       ignore = true;
     };
-  }, [authUser?.role, authUser?.expand?.role?.name]);
+  }, [authUser?.id, authUser?.role, authUser?.expand?.role?.name, isLoggedIn, navigate]);
 
   const handleSignIn = async (data: SignInRequest) => {
     await signIn(data).unwrap();

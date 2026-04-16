@@ -24,6 +24,10 @@ const styles = {
   sticky: {
     position: "sticky",
     paddingBlock: 0,
+    right: 0,
+    padding: 0,
+    margin: 0,
+    backgroundColor: "background.paper",
   },
   stickyMobile: {
     position: "sticky",

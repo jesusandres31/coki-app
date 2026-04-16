@@ -100,6 +100,7 @@ export default function CustomAutocomplete({
   return (
     <Autocomplete
       sx={{ width: { xs: "100%", sm: STYLE.width.textfield } }}
+      disabled={input.disabled}
       open={open}
       onOpen={() => {
         setOpen(true);
@@ -139,6 +140,7 @@ export default function CustomAutocomplete({
           sx={{ width: { xs: "100%", sm: STYLE.width.textfield } }}
           size="small"
           variant={variant}
+          disabled={input.disabled}
           InputProps={{
             ...params.InputProps,
             endAdornment: (

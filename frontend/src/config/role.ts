@@ -22,6 +22,12 @@ export const routeRoles: RouteRoles = {
   [AppRoutes.InvoicesNew]: [SystemRole.ADMIN, SystemRole.REGULAR],
   [AppRoutes.InvoicesDetail]: [SystemRole.ADMIN, SystemRole.REGULAR],
   [AppRoutes.Reports]: [SystemRole.ADMIN, SystemRole.REGULAR],
+  [AppRoutes.Clients]: [SystemRole.ADMIN, SystemRole.REGULAR],
+  [AppRoutes.ClientsNew]: [SystemRole.ADMIN, SystemRole.REGULAR],
+  [AppRoutes.ClientsDetail]: [SystemRole.ADMIN, SystemRole.REGULAR],
+  [AppRoutes.Products]: [SystemRole.ADMIN, SystemRole.REGULAR],
+  [AppRoutes.ProductsNew]: [SystemRole.ADMIN, SystemRole.REGULAR],
+  [AppRoutes.ProductsDetail]: [SystemRole.ADMIN, SystemRole.REGULAR],
 };
 
 // utils

@@ -137,6 +137,7 @@ export default function SignIn() {
               color="primary"
               sx={{ mt: 2, mb: 1 }}
               loading={isSigningIn}
+              disabled={isSigningIn}
             >
               Ingresar
             </Button>

@@ -1,5 +1,4 @@
 import { DetailColumn, IColumn, IDetailColumn, DataItem } from "src/types";
-import { useUI } from "src/hooks";
 import {
   TableCell,
   TableHead,
@@ -28,8 +27,6 @@ export default function CustomCollapse({
   collapsed,
   row,
 }: CustomCollapseProps) {
-  const { isMobile } = useUI();
-
   if (!detailColumns?.length) return null;
 
   return (
@@ -93,7 +90,7 @@ export default function CustomCollapse({
                             <TableCell
                               padding="checkbox"
                               sx={{
-                                ...(isMobile ? styles.stickyMobile : styles.sticky),
+                                ...styles.sticky,
                                 backgroundColor: "#F4F6FB",
                                 zIndex: 2,
                               }}

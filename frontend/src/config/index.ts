@@ -34,7 +34,11 @@ export enum AppRoutes {
   InvoicesDetail = "/invoices/:invoiceId",
   Reports = "/reports",
   Clients = "/clients",
+  ClientsNew = "/clients/new",
+  ClientsDetail = "/clients/:clientId",
   Products = "/products",
+  ProductsNew = "/products/new",
+  ProductsDetail = "/products/:productId",
 }
 
 export const noLayoutRoutes = [AppRoutes.Profile];
