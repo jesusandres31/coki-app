@@ -18,7 +18,7 @@ npm install -g pnpm
 sudo nano /etc/nginx/conf.d/coki-app.duckdns.org.conf
 sudo nano /etc/nginx/conf.d/admin-coki-app.duckdns.org.conf
 
-sudo cp -r /home/ubuntu/coki-app/frontend/dist /var/www/coki-app/
+sudo cp -r /home/ubuntu/coki-app/frontend/dist /var/www/coki-app/dist
 
 sudo nginx -t
 sudo systemctl restart nginx
