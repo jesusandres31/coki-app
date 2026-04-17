@@ -48,6 +48,6 @@ sudo nano /lib/systemd/system/cokiapp.pocketbase.service
 chmod +x pocketbase-linux
 
 ```
-systemctl enable cokiapp.pocketbase.service
-systemctl start pocketbase
+sudo systemctl enable cokiapp.pocketbase.service
+sudo systemctl start cokiapp.pocketbase
 ```
