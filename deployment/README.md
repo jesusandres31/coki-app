@@ -18,7 +18,7 @@ npm install -g pnpm
 sudo nano /etc/nginx/conf.d/coki-app.duckdns.org.conf
 sudo nano /etc/nginx/conf.d/admin-coki-app.duckdns.org.conf
 
-sudo cp -r /home/ec2-user/coki-app/frontend/dist /var/www/coki-app/
+sudo cp -r /home/ubuntu/coki-app/frontend/dist /var/www/coki-app/
 
 sudo nginx -t
 sudo systemctl restart nginx
@@ -43,11 +43,11 @@ sudo certbot --nginx -d admin-coki-app.duckdns.org
 
 https://pocketbase.io/docs/going-to-production/
 
-sudo nano /lib/systemd/system/pocketbase.service
+sudo nano /lib/systemd/system/cokiapp.pocketbase.service
 
 chmod +x pocketbase-linux
 
 ```
-systemctl enable pocketbase.service
+systemctl enable cokiapp.pocketbase.service
 systemctl start pocketbase
 ```
