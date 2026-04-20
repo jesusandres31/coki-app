@@ -6,5 +6,5 @@ routerAdd(
   (c) => {
     return c.json(200, { message: "Hello world" });
   },
-  $apis.requireRecordAuth()
+  $apis.requireAuth()
 );

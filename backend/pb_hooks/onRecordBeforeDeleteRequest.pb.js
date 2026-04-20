@@ -1,4 +1,4 @@
-onRecordBeforeDeleteRequest((e) => {
+onRecordDeleteRequest((e) => {
   // https://github.com/pocketbase/pocketbase/discussions/2694
   const deletedCollectionName = 'x_deleted';
 
@@ -6,27 +6,24 @@ onRecordBeforeDeleteRequest((e) => {
   const excludedCollections = [deletedCollectionName];
 
   // Skip if the record is already deleted or in excluded collections
-  if (excludedCollections.includes(e.collection.name)) {
-    return;
+  if (excludedCollections.includes(e.collection?.name)) {
+    return e.next();
   }
 
   try {
-    const collection = $app
-      .dao()
-      .findCollectionByNameOrId(deletedCollectionName);
-
-    const admin = e.httpContext.get('admin');
-    const authRecord = e.httpContext.get('authRecord');
-    const userId = authRecord?.id || admin?.id;
+    const collection = e.app.findCollectionByNameOrId(deletedCollectionName);
+    const userId = e.auth?.id;
 
     const record = new Record(collection, {
-      collection: e.collection.name,
+      collection: e.collection?.name,
       record: e.record,
       deleted_by: userId,
     });
 
-    $app.dao().saveRecord(record);
+    e.app.save(record);
   } catch (err) {
     throw new BadRequestError(`Error creating deleted record: ${err}`);
   }
+
+  e.next();
 });

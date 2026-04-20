@@ -15,8 +15,8 @@ npm install -g pnpm
 ### nginx:
 
 ```
-sudo nano /etc/nginx/conf.d/coki-app.duckdns.org.conf
-sudo nano /etc/nginx/conf.d/admin-coki-app.duckdns.org.conf
+sudo nano /etc/nginx/conf.d/coki.ctes.dedyn.io.conf
+sudo nano /etc/nginx/conf.d/admin-coki.ctes.dedyn.io.conf
 
 sudo cp -r /home/ubuntu/coki-app/frontend/dist /var/www/coki-app/dist
 
@@ -35,8 +35,8 @@ sudo service nginx reload
 ### certbot:
 
 ```
-sudo certbot --nginx -d coki-app.duckdns.org
-sudo certbot --nginx -d admin-coki-app.duckdns.org
+sudo certbot --nginx -d coki.ctes.dedyn.io
+sudo certbot --nginx -d admin-coki.ctes.dedyn.io
 ```
 
 ### pocketbase
