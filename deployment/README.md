@@ -45,11 +45,12 @@ https://pocketbase.io/docs/going-to-production/
 
 sudo nano /lib/systemd/system/cokiapp.pocketbase.service
 
-chmod +x pocketbase-linux
+chmod +x pocketbase
 
 ```
 sudo systemctl enable cokiapp.pocketbase.service
 sudo systemctl start cokiapp.pocketbase
+sudo systemctl status cokiapp.pocketbase
 ```
 
 ---
