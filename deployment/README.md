@@ -20,6 +20,10 @@ sudo nano /etc/nginx/conf.d/admin-coki.ctes.dedyn.io.conf
 
 sudo cp -r /home/ubuntu/coki-app/frontend/dist /var/www/coki-app/dist
 
+sudo chown -R www-data:www-data /var/www/coki-app
+sudo find /var/www/coki-app -type d -exec chmod 755 {} \;
+sudo find /var/www/coki-app -type f -exec chmod 644 {} \;
+
 sudo nginx -t
 sudo systemctl restart nginx
 sudo systemctl status nginx
