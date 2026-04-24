@@ -1,8 +1,12 @@
 import {
   AssessmentRounded,
+  BarChartRounded,
+  CategoryRounded,
   DescriptionRounded,
   Inventory2Rounded,
+  LocalShippingRounded,
   PeopleRounded,
+  SettingsRounded,
 } from "@mui/icons-material";
 import { AppRoutes } from "src/config";
 import { DrawerSection } from "src/types";
@@ -33,7 +37,29 @@ export const DRAWER_SECTIONS: DrawerSection[] = [
       {
         text: "Informes",
         icon: <AssessmentRounded />,
-        to: AppRoutes.Reports,
+        nestedItems: [
+          {
+            text: "Lista de reparto",
+            icon: <LocalShippingRounded />,
+            to: AppRoutes.ReportsDistribution,
+          },
+          {
+            text: "Ventas por período",
+            icon: <BarChartRounded />,
+            to: AppRoutes.ReportsSales,
+          },
+        ],
+      },
+      {
+        text: "Configuración",
+        icon: <SettingsRounded />,
+        nestedItems: [
+          {
+            text: "Tipos de producto",
+            icon: <CategoryRounded />,
+            to: AppRoutes.ConfigProductTypes,
+          },
+        ],
       },
     ],
   },

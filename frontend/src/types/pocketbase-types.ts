@@ -5,18 +5,25 @@
 import type PocketBase from 'pocketbase'
 import type { RecordService } from 'pocketbase'
 
-export enum Collections {
-	Clients = "clients",
-	Invoices = "invoices",
-	InvoicesProducts = "invoices_products",
-	Invoicestates = "invoicestates",
-	Measureunits = "measureunits",
-	Products = "products",
-	Roles = "roles",
-	Users = "users",
-	VInvoices = "v_invoices",
-	XDeleted = "x_deleted",
-}
+export const Collections = {
+	Authorigins: "_authOrigins",
+	Externalauths: "_externalAuths",
+	Mfas: "_mfas",
+	Otps: "_otps",
+	Superusers: "_superusers",
+	Clients: "clients",
+	Invoices: "invoices",
+	InvoicesProducts: "invoices_products",
+	Invoicestates: "invoicestates",
+	Measureunits: "measureunits",
+	ProductTypes: "product_types",
+	Products: "products",
+	Roles: "roles",
+	Users: "users",
+	VInvoices: "v_invoices",
+	XDeleted: "x_deleted",
+} as const
+export type Collections = typeof Collections[keyof typeof Collections]
 
 // Alias types for improved usability
 export type IsoDateString = string
@@ -47,97 +54,196 @@ export type AuthSystemFields<T = unknown> = {
 
 // Record types for each collection
 
+export type AuthoriginsRecord = {
+	collectionRef: string
+	created: IsoAutoDateString
+	fingerprint: string
+	id: string
+	recordRef: string
+	updated: IsoAutoDateString
+}
+
+export type ExternalauthsRecord = {
+	collectionRef: string
+	created: IsoAutoDateString
+	id: string
+	provider: string
+	providerId: string
+	recordRef: string
+	updated: IsoAutoDateString
+}
+
+export type MfasRecord = {
+	collectionRef: string
+	created: IsoAutoDateString
+	id: string
+	method: string
+	recordRef: string
+	updated: IsoAutoDateString
+}
+
+export type OtpsRecord = {
+	collectionRef: string
+	created: IsoAutoDateString
+	id: string
+	password: string
+	recordRef: string
+	sentTo?: string
+	updated: IsoAutoDateString
+}
+
+export type SuperusersRecord = {
+	created: IsoAutoDateString
+	email: string
+	emailVisibility?: boolean
+	id: string
+	password: string
+	tokenKey: string
+	updated: IsoAutoDateString
+	verified?: boolean
+}
+
 export type ClientsRecord = {
 	address?: string
+	created: IsoAutoDateString
 	created_by?: RecordIdString
 	deleted?: IsoDateString
 	deleted_by?: RecordIdString
+	id: string
 	name: string
 	phone?: string
+	updated: IsoAutoDateString
 	updated_by?: RecordIdString
 }
 
 export type InvoicesRecord = {
 	client: RecordIdString
+	created: IsoAutoDateString
 	created_by?: RecordIdString
 	date: IsoDateString
 	deleted?: IsoDateString
 	deleted_by?: RecordIdString
 	discount?: number
+	id: string
 	state: RecordIdString
 	total?: number
+	updated: IsoAutoDateString
 	updated_by?: RecordIdString
 }
 
 export type InvoicesProductsRecord = {
 	amount?: number
+	created: IsoAutoDateString
 	created_by?: RecordIdString
 	deleted?: IsoDateString
 	deleted_by?: RecordIdString
 	discount?: number
+	id: string
 	invoice: RecordIdString
 	product: RecordIdString
 	total?: number
 	unit_price?: number
+	updated: IsoAutoDateString
 	updated_by?: RecordIdString
 }
 
 export type InvoicestatesRecord = {
+	created: IsoAutoDateString
+	id: string
 	name?: string
+	updated: IsoAutoDateString
 }
 
 export type MeasureunitsRecord = {
+	created: IsoAutoDateString
 	created_by?: RecordIdString
 	deleted?: IsoDateString
 	deleted_by?: RecordIdString
+	id: string
 	name?: string
+	updated: IsoAutoDateString
 	updated_by?: RecordIdString
 }
 
+export type ProductTypesRecord = {
+	created: IsoAutoDateString
+	id: string
+	name?: string
+	updated: IsoAutoDateString
+}
+
 export type ProductsRecord = {
+	created: IsoAutoDateString
 	created_by?: RecordIdString
 	deleted?: IsoDateString
 	deleted_by?: RecordIdString
+	id: string
 	measure_unit: RecordIdString
 	name: string
+	product_type: RecordIdString[]
 	unit_price?: number
+	updated: IsoAutoDateString
 	updated_by?: RecordIdString
 }
 
 export type RolesRecord = {
+	created: IsoAutoDateString
 	created_by?: RecordIdString
 	deleted?: IsoDateString
 	deleted_by?: RecordIdString
+	id: string
 	name: string
+	updated: IsoAutoDateString
 	updated_by?: RecordIdString
 }
 
 export type UsersRecord = {
+	created: IsoAutoDateString
+	email?: string
+	emailVisibility?: boolean
+	id: string
+	password: string
 	role: RecordIdString
+	tokenKey: string
+	updated: IsoAutoDateString
+	username: string
+	verified?: boolean
 }
 
 export type VInvoicesRecord<Tclient = unknown, Tinvoice_products = unknown> = {
 	client?: null | Tclient
+	created: IsoAutoDateString
 	date: IsoDateString
 	deleted?: IsoDateString
 	discount?: number
+	id: string
 	invoice_products?: null | Tinvoice_products
 	state?: string
 	total?: number
+	updated: IsoAutoDateString
 }
 
 export type XDeletedRecord<Trecord = unknown> = {
 	collection?: string
+	created: IsoAutoDateString
 	deleted_by?: RecordIdString
+	id: string
 	record?: null | Trecord
+	updated: IsoAutoDateString
 }
 
 // Response types include system fields and match responses from the PocketBase API
+export type AuthoriginsResponse<Texpand = unknown> = Required<AuthoriginsRecord> & BaseSystemFields<Texpand>
+export type ExternalauthsResponse<Texpand = unknown> = Required<ExternalauthsRecord> & BaseSystemFields<Texpand>
+export type MfasResponse<Texpand = unknown> = Required<MfasRecord> & BaseSystemFields<Texpand>
+export type OtpsResponse<Texpand = unknown> = Required<OtpsRecord> & BaseSystemFields<Texpand>
+export type SuperusersResponse<Texpand = unknown> = Required<SuperusersRecord> & AuthSystemFields<Texpand>
 export type ClientsResponse<Texpand = unknown> = Required<ClientsRecord> & BaseSystemFields<Texpand>
 export type InvoicesResponse<Texpand = unknown> = Required<InvoicesRecord> & BaseSystemFields<Texpand>
 export type InvoicesProductsResponse<Texpand = unknown> = Required<InvoicesProductsRecord> & BaseSystemFields<Texpand>
 export type InvoicestatesResponse<Texpand = unknown> = Required<InvoicestatesRecord> & BaseSystemFields<Texpand>
 export type MeasureunitsResponse<Texpand = unknown> = Required<MeasureunitsRecord> & BaseSystemFields<Texpand>
+export type ProductTypesResponse<Texpand = unknown> = Required<ProductTypesRecord> & BaseSystemFields<Texpand>
 export type ProductsResponse<Texpand = unknown> = Required<ProductsRecord> & BaseSystemFields<Texpand>
 export type RolesResponse<Texpand = unknown> = Required<RolesRecord> & BaseSystemFields<Texpand>
 export type UsersResponse<Texpand = unknown> = Required<UsersRecord> & AuthSystemFields<Texpand>
@@ -147,11 +253,17 @@ export type XDeletedResponse<Trecord = unknown, Texpand = unknown> = Required<XD
 // Types containing all Records and Responses, useful for creating typing helper functions
 
 export type CollectionRecords = {
+	_authOrigins: AuthoriginsRecord
+	_externalAuths: ExternalauthsRecord
+	_mfas: MfasRecord
+	_otps: OtpsRecord
+	_superusers: SuperusersRecord
 	clients: ClientsRecord
 	invoices: InvoicesRecord
 	invoices_products: InvoicesProductsRecord
 	invoicestates: InvoicestatesRecord
 	measureunits: MeasureunitsRecord
+	product_types: ProductTypesRecord
 	products: ProductsRecord
 	roles: RolesRecord
 	users: UsersRecord
@@ -160,11 +272,17 @@ export type CollectionRecords = {
 }
 
 export type CollectionResponses = {
+	_authOrigins: AuthoriginsResponse
+	_externalAuths: ExternalauthsResponse
+	_mfas: MfasResponse
+	_otps: OtpsResponse
+	_superusers: SuperusersResponse
 	clients: ClientsResponse
 	invoices: InvoicesResponse
 	invoices_products: InvoicesProductsResponse
 	invoicestates: InvoicestatesResponse
 	measureunits: MeasureunitsResponse
+	product_types: ProductTypesResponse
 	products: ProductsResponse
 	roles: RolesResponse
 	users: UsersResponse

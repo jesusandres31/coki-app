@@ -112,6 +112,7 @@ export default function ProductFormPage() {
             name: values.name.trim(),
             unit_price: Number(values.unit_price || 0),
             measure_unit: values.measure_unit,
+            product_type: [],
           },
         }).unwrap();
 

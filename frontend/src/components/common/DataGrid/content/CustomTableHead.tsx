@@ -5,6 +5,8 @@ import {
   Checkbox,
   TableSortLabel,
   TableHead,
+  useMediaQuery,
+  useTheme,
 } from "@mui/material";
 import { Column, DataItem, Order } from "src/types";
 
@@ -16,6 +18,7 @@ interface CustomTableHeadProps {
   orderBy: string;
   isCollapsible: boolean;
   hasRowActions?: boolean;
+  rowActionsCount?: number;
   hasCheckbox?: boolean;
   handleSelectAll: () => void;
   handleSortTable: (columnId: string) => void;
@@ -30,17 +33,29 @@ export default function CustomTableHead({
   orderBy,
   isCollapsible,
   hasRowActions = false,
+  rowActionsCount = 0,
   hasCheckbox = false,
   handleSelectAll,
   handleSortTable,
   styles,
 }: CustomTableHeadProps) {
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
   const isAllSelected = items.length === selectedItems.length;
+  const collapseColumnWidth = 48;
+  const actionsColumnWidth =
+    rowActionsCount > 0
+      ? rowActionsCount * 30 + (rowActionsCount - 1) * 4 + 16
+      : 56;
   const actionsStickySx = {
     position: "sticky",
-    right: isCollapsible ? 48 : 0,
-    zIndex: 2,
+    right: isCollapsible ? collapseColumnWidth : 0,
+    zIndex: 3,
     backgroundColor: "#F4F6FB",
+    width: actionsColumnWidth,
+    minWidth: actionsColumnWidth,
+    maxWidth: actionsColumnWidth,
+    boxSizing: "border-box",
   };
 
   return (
@@ -100,24 +115,27 @@ export default function CustomTableHead({
         })}
 
         {hasRowActions && (
-          <TableCell padding="checkbox" align="center" sx={actionsStickySx}>
-            <Typography
-              variant="body2"
-              fontWeight={700}
-              sx={{ mt: 0.3, display: { xs: "none", sm: "block" } }}
-            >
-              Accs.
+          <TableCell
+            padding="none"
+            align="center"
+            sx={{ ...actionsStickySx, px: 1 }}
+          >
+            <Typography variant="body2" fontWeight={700} sx={{ mt: 0.3 }}>
+              {isMobile ? "Accs." : "Acciones"}
             </Typography>
           </TableCell>
         )}
 
         {isCollapsible && (
           <TableCell
-            padding="checkbox"
+            padding="none"
             sx={{
-              ...styles.sticky,
+              ...(styles?.sticky ?? {}),
+              width: collapseColumnWidth,
+              minWidth: collapseColumnWidth,
+              maxWidth: collapseColumnWidth,
               backgroundColor: "#F4F6FB",
-              zIndex: 2,
+              zIndex: 4,
             }}
           />
         )}
@@ -125,4 +143,3 @@ export default function CustomTableHead({
     </TableHead>
   );
 }
-

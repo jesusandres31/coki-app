@@ -16,6 +16,13 @@ export default function CustomTablePagination({
   handleResetCollapseItems,
   isCollapsed = false,
 }: CustomTablePaginationProps) {
+  const totalItems = data?.totalItems ?? 0;
+  const perPage = data?.perPage ?? 0;
+  const totalPages =
+    data?.totalPages ??
+    (perPage > 0 ? Math.max(1, Math.ceil(totalItems / perPage)) : 0);
+  const currentPage = totalItems > 0 ? data?.page ?? 1 : 0;
+
   const handleChangePage = (
     e: React.MouseEvent<HTMLButtonElement, MouseEvent> | null,
     newPage: number
@@ -30,12 +37,12 @@ export default function CustomTablePagination({
       {!isCollapsed && <Divider />}
       <TablePagination
         component="div"
-        rowsPerPageOptions={[data?.perPage || 0]}
-        count={data?.totalItems || 0}
-        rowsPerPage={data?.perPage || 0}
+        rowsPerPageOptions={[perPage]}
+        count={totalItems}
+        rowsPerPage={perPage}
         page={
           // - 1 because pagination starts at 0 in MUI TablePagination.
-          !data?.totalItems || data?.totalItems <= 0 ? 0 : data?.page - 1
+          totalItems <= 0 ? 0 : currentPage - 1
         }
         onPageChange={handleChangePage}
         labelDisplayedRows={(info) => {
@@ -47,7 +54,7 @@ export default function CustomTablePagination({
             >
               {`Results ${info.from} - ${
                 info.to === -1 ? info.count : info.to
-              }, ${"of"} ${data?.totalItems} items`}
+              }, ${"of"} ${totalItems} items | Page ${currentPage} of ${totalPages}`}
             </Typography>
           );
         }}

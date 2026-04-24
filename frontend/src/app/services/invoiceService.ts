@@ -9,6 +9,7 @@ import {
   InvoicesProductsResponse,
   InvoicesResponse,
   MeasureunitsResponse,
+  ProductTypesResponse,
   ProductsResponse,
   TypedPocketBase,
   Update,
@@ -22,6 +23,7 @@ const invoicesViewTag = ApiTag.InvoicesView;
 const invoiceStatesTag = ApiTag.InvoiceStates;
 const clientsTag = ApiTag.Clients;
 const productsTag = ApiTag.Products;
+const productTypesTag = ApiTag.ProductTypes;
 const measureUnitsTag = ApiTag.MeasureUnits;
 const typedPb = pb as TypedPocketBase;
 const MAX_DISCOUNT_PERCENT = 100;
@@ -71,8 +73,32 @@ interface CreateProductReq {
   data: Create<"products">;
 }
 
+interface UpdateProductTypeReq {
+  id: string;
+  data: Update<"product_types">;
+}
+
+interface CreateProductTypeReq {
+  data: Create<"product_types">;
+}
+
 const normalizeDiscountPercent = (value: number) =>
   Math.min(MAX_DISCOUNT_PERCENT, Math.max(0, Number(value || 0)));
+
+const pbFilterNoDeleted = (
+  filter: string | undefined,
+  props: string[],
+): string | undefined => {
+  if (!filter) return undefined;
+  const safeFilter = filter
+    .replace(/\\/g, "\\\\")
+    .replace(/"/g, '\\"')
+    .trim();
+
+  if (!safeFilter) return undefined;
+
+  return props.map((prop) => `${prop} ~ "${safeFilter}"`).join(" || ");
+};
 
 const getItemTotal = (item: CreateInvoiceItemReq) => {
   const discountPercent = normalizeDiscountPercent(item.discount);
@@ -235,6 +261,27 @@ export const invoiceApi = mainApi.injectEndpoints({
       },
       providesTags: [productsTag],
     }),
+    getProductTypesList: build.query<ListResult<ProductTypesResponse>, GetList>({
+      queryFn: async (_arg) => {
+        const res = await typedPb.collection("product_types").getList(
+          _arg.page,
+          _arg.perPage,
+          {
+            filter: pbFilterNoDeleted(_arg.filter, ["name"]),
+            sort: pbSort(_arg.order, _arg.orderBy),
+          },
+        );
+        return { data: res };
+      },
+      providesTags: [productTypesTag],
+    }),
+    getProductTypeById: build.query<ProductTypesResponse, string>({
+      queryFn: async (_arg) => {
+        const res = await typedPb.collection("product_types").getOne(_arg);
+        return { data: res };
+      },
+      providesTags: [productTypesTag],
+    }),
     createInvoice: build.mutation<
       {
         invoice: InvoicesResponse;
@@ -386,6 +433,29 @@ export const invoiceApi = mainApi.injectEndpoints({
       },
       invalidatesTags: [productsTag],
     }),
+    updateProductType: build.mutation<ProductTypesResponse, UpdateProductTypeReq>({
+      queryFn: async (_arg) => {
+        const res = await typedPb
+          .collection("product_types")
+          .update(_arg.id, _arg.data);
+        return { data: res };
+      },
+      invalidatesTags: [productTypesTag],
+    }),
+    createProductType: build.mutation<ProductTypesResponse, CreateProductTypeReq>({
+      queryFn: async (_arg) => {
+        const res = await typedPb.collection("product_types").create(_arg.data);
+        return { data: res };
+      },
+      invalidatesTags: [productTypesTag],
+    }),
+    deleteProductType: build.mutation<void, string>({
+      queryFn: async (_arg) => {
+        await typedPb.collection("product_types").delete(_arg);
+        return { data: undefined };
+      },
+      invalidatesTags: [productTypesTag],
+    }),
   }),
 });
 
@@ -393,6 +463,8 @@ export const {
   useCreateClientMutation,
   useCreateInvoiceMutation,
   useCreateProductMutation,
+  useCreateProductTypeMutation,
+  useDeleteProductTypeMutation,
   useGetClientByIdQuery,
   useGetClientsQuery,
   useGetClientsListQuery,
@@ -404,9 +476,12 @@ export const {
   useGetInvoicesViewQuery,
   useGetMeasureUnitsQuery,
   useGetProductByIdQuery,
+  useGetProductTypeByIdQuery,
+  useGetProductTypesListQuery,
   useGetProductsQuery,
   useGetProductsListQuery,
   useUpdateClientMutation,
   useUpdateInvoiceMutation,
   useUpdateProductMutation,
+  useUpdateProductTypeMutation,
 } = invoiceApi;

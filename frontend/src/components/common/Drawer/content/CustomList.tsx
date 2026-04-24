@@ -72,7 +72,7 @@ export default function CustomList({
     items.forEach((item, index) => {
       if (item.nestedItems) {
         const hasNestedSelected = item.nestedItems.some(
-          (nestedItem) => route === nestedItem.to,
+          (nestedItem) => isSameOrChildRoute(nestedItem.to),
         );
         newOpenCollapses[item.to || `index-${index}`] = hasNestedSelected;
       }
@@ -207,6 +207,9 @@ export default function CustomList({
                         minWidth: 0,
                         mr: openDrawer ? 2 : "auto",
                         justifyContent: "center",
+                        "& .MuiSvgIcon-root": {
+                          fontSize: isNested ? 18 : 22,
+                        },
                       }}
                     >
                       {item.icon}

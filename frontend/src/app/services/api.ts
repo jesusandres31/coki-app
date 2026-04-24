@@ -10,6 +10,7 @@ export const ApiTag = {
   Users: "users",
   Clients: "clients",
   Products: "products",
+  ProductTypes: "product_types",
   MeasureUnits: "measureunits",
   Invoices: "invoices",
   InvoicesProducts: "invoices_products",

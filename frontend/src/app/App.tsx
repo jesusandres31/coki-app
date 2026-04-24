@@ -38,6 +38,12 @@ const Products = lazy(() =>
 const ProductDetail = lazy(() =>
   import("src/pages").then((module) => ({ default: module.ProductDetail })),
 );
+const ProductTypes = lazy(() =>
+  import("src/pages").then((module) => ({ default: module.ProductTypes })),
+);
+const ProductTypeDetail = lazy(() =>
+  import("src/pages").then((module) => ({ default: module.ProductTypeDetail })),
+);
 
 const privateRoutes = [
   {
@@ -58,6 +64,14 @@ const privateRoutes = [
   },
   {
     route: AppRoutes.Reports,
+    render: <Navigate to={AppRoutes.ReportsDistribution} replace />,
+  },
+  {
+    route: AppRoutes.ReportsDistribution,
+    render: <Reports />,
+  },
+  {
+    route: AppRoutes.ReportsSales,
     render: <Reports />,
   },
   {
@@ -83,6 +97,22 @@ const privateRoutes = [
   {
     route: AppRoutes.ProductsDetail,
     render: <ProductDetail />,
+  },
+  {
+    route: AppRoutes.Config,
+    render: <Navigate to={AppRoutes.ConfigProductTypes} replace />,
+  },
+  {
+    route: AppRoutes.ConfigProductTypes,
+    render: <ProductTypes />,
+  },
+  {
+    route: AppRoutes.ConfigProductTypesNew,
+    render: <ProductTypeDetail />,
+  },
+  {
+    route: AppRoutes.ConfigProductTypesDetail,
+    render: <ProductTypeDetail />,
   },
 ];
 

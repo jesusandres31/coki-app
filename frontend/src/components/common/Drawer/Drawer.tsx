@@ -35,7 +35,7 @@ import { translateTitle } from "./utils";
 
 const DRAWER_WIDTH = 220;
 
-const APPBAR_HEIGHT = 100;
+const APPBAR_HEIGHT = 110;
 
 const openedMixin = (theme: Theme): CSSObject => ({
   width: DRAWER_WIDTH,
@@ -268,6 +268,7 @@ export default function Drawer({ noTable }: DrawerProps) {
           overflow: "hidden",
           backgroundColor: "primary.contrastText",
           paddingBottom: isMobile ? 2 : 3,
+          paddingX: isMobile ? 1 : 3,
         }}
       >
         <Toolbar variant="dense" />
@@ -285,7 +286,7 @@ export default function Drawer({ noTable }: DrawerProps) {
                 <Typography
                   key={`${crumb.label}-${index}`}
                   color={isLast ? "primary.main" : "text.secondary"}
-                  variant="subtitle1"
+                  fontSize={17}
                   fontWeight={isLast ? 600 : 700}
                 >
                   {crumb.label}
@@ -297,7 +298,7 @@ export default function Drawer({ noTable }: DrawerProps) {
                   underline="hover"
                   color="text.secondary"
                   to={crumb.to as string}
-                  variant="subtitle1"
+                  fontSize={17}
                   sx={{ fontWeight: 700 }}
                 >
                   {crumb.label}

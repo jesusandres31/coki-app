@@ -30,6 +30,7 @@ import {
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 import { DatePicker } from "@mui/x-date-pickers/DatePicker";
 import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
+import { useLocation } from "react-router-dom";
 import {
   useGetInvoicesByDateRangeQuery,
   useGetMeasureUnitsQuery,
@@ -38,7 +39,12 @@ import {
 import { useAppDispatch } from "src/app/store";
 import { TableLoadingSkeleton } from "src/components/common";
 import PageContainer from "src/components/common/PageContainer/PageContainer";
-import { resetBreadcrumbs, setBreadcrumbs, setSnackbar } from "src/slices/uiSlice";
+import { AppRoutes } from "src/config";
+import {
+  resetBreadcrumbs,
+  setBreadcrumbs,
+  setSnackbar,
+} from "src/slices/uiSlice";
 import { VInvoicesResponse } from "src/types/pocketbase-types";
 import { formatDate, formatMoney } from "src/utils/format";
 import { reportsBreadcrumbFlow } from "./breadcrumbFlow";
@@ -110,7 +116,8 @@ const getTodayIso = () => dayjs().format("YYYY-MM-DD");
 
 const getPresetRange = (period: Exclude<ReportPeriod, "custom">): DateRange => {
   const to = dayjs();
-  const from = period === "week" ? to.subtract(6, "day") : to.subtract(29, "day");
+  const from =
+    period === "week" ? to.subtract(6, "day") : to.subtract(29, "day");
 
   return {
     from: from.format("YYYY-MM-DD"),
@@ -118,7 +125,9 @@ const getPresetRange = (period: Exclude<ReportPeriod, "custom">): DateRange => {
   };
 };
 
-const parseInvoiceProducts = (invoice: VInvoicesResponse): InvoiceProductRow[] => {
+const parseInvoiceProducts = (
+  invoice: VInvoicesResponse,
+): InvoiceProductRow[] => {
   const parsed = parseJsonValue<unknown>(invoice.invoice_products);
   if (!parsed) return [];
   return Array.isArray(parsed) ? (parsed as InvoiceProductRow[]) : [];
@@ -179,7 +188,15 @@ const formatQuantity = (amount: number) =>
   Number.isInteger(amount) ? String(amount) : amount.toFixed(2);
 
 export default function Reports() {
+  const { pathname } = useLocation();
   const dispatch = useAppDispatch();
+  const isDistributionRoute = pathname.startsWith(
+    AppRoutes.ReportsDistribution,
+  );
+  const isSalesRoute = pathname.startsWith(AppRoutes.ReportsSales);
+  const showDistribution =
+    isDistributionRoute || (!isDistributionRoute && !isSalesRoute);
+  const showSales = isSalesRoute || (!isDistributionRoute && !isSalesRoute);
   const [period, setPeriod] = useState<ReportPeriod>("week");
   const [customFromDraft, setCustomFromDraft] = useState(
     dayjs().subtract(6, "day").format("YYYY-MM-DD"),
@@ -238,7 +255,7 @@ export default function Reports() {
     error: salesError,
     isFetching: isFetchingSales,
   } = useGetInvoicesByDateRangeQuery(salesQueryArgs, {
-    skip: !salesDateRange,
+    skip: !salesDateRange || !showSales,
   });
 
   const sortedSelectedDays = useMemo(
@@ -264,28 +281,44 @@ export default function Reports() {
     error: deliveryError,
     isFetching: isFetchingDelivery,
   } = useGetInvoicesByDateRangeQuery(deliveryQueryArgs, {
-    skip: !deliveryDateRange,
+    skip: !deliveryDateRange || !showDistribution,
   });
 
-  const { data: products = [] } = useGetProductsQuery();
-  const { data: measureUnits = [] } = useGetMeasureUnitsQuery();
+  const { data: products = [] } = useGetProductsQuery(undefined, {
+    skip: !showDistribution,
+  });
+  const { data: measureUnits = [] } = useGetMeasureUnitsQuery(undefined, {
+    skip: !showDistribution,
+  });
 
   const measureUnitNameById = useMemo(
-    () => new Map(measureUnits.map((unit) => [unit.id, String(unit.name || "-")])),
+    () =>
+      new Map(measureUnits.map((unit) => [unit.id, String(unit.name || "-")])),
     [measureUnits],
   );
 
-  const productById = useMemo(() => new Map(products.map((p) => [p.id, p])), [products]);
+  const productById = useMemo(
+    () => new Map(products.map((p) => [p.id, p])),
+    [products],
+  );
   const productByNormalizedName = useMemo(
     () =>
       new Map(
-        products.map((p) => [String(p.name || "").trim().toLowerCase(), p]),
+        products.map((p) => [
+          String(p.name || "")
+            .trim()
+            .toLowerCase(),
+          p,
+        ]),
       ),
     [products],
   );
 
   const openSalesInvoices = useMemo(
-    () => salesInvoicesRaw.filter((invoice) => getInvoiceStateValue(invoice) === "open"),
+    () =>
+      salesInvoicesRaw.filter(
+        (invoice) => getInvoiceStateValue(invoice) === "open",
+      ),
     [salesInvoicesRaw],
   );
 
@@ -338,7 +371,9 @@ export default function Reports() {
           row.product && typeof row.product === "object" ? row.product : null;
         const productIdFromRow = String(
           row.product_id ||
-            (typeof row.product === "string" ? row.product : productFromRowObject?.id || ""),
+            (typeof row.product === "string"
+              ? row.product
+              : productFromRowObject?.id || ""),
         ).trim();
         const fallbackProductName =
           String(row.product_name || productFromRowObject?.name || "").trim() ||
@@ -348,11 +383,17 @@ export default function Reports() {
           (productIdFromRow ? productById.get(productIdFromRow) : null) ||
           productByNormalizedName.get(normalizedFallbackName) ||
           null;
-        const canonicalProductId = String(canonicalProduct?.id || productIdFromRow || "").trim();
-        const productName = String(canonicalProduct?.name || fallbackProductName).trim();
+        const canonicalProductId = String(
+          canonicalProduct?.id || productIdFromRow || "",
+        ).trim();
+        const productName = String(
+          canonicalProduct?.name || fallbackProductName,
+        ).trim();
 
         const measureUnitName =
-          measureUnitNameById.get(String(canonicalProduct?.measure_unit || "")) || "-";
+          measureUnitNameById.get(
+            String(canonicalProduct?.measure_unit || ""),
+          ) || "-";
         const key = canonicalProductId
           ? `id::${canonicalProductId}`
           : `name::${productName.toLowerCase()}`;
@@ -372,8 +413,15 @@ export default function Reports() {
       });
     });
 
-    return [...map.values()].sort((a, b) => a.productName.localeCompare(b.productName));
-  }, [deliveryInvoices, measureUnitNameById, productById, productByNormalizedName]);
+    return [...map.values()].sort((a, b) =>
+      a.productName.localeCompare(b.productName),
+    );
+  }, [
+    deliveryInvoices,
+    measureUnitNameById,
+    productById,
+    productByNormalizedName,
+  ]);
 
   const totalProductsToDeliver = useMemo(
     () => deliveryProducts.reduce((acc, item) => acc + item.amount, 0),
@@ -438,7 +486,8 @@ export default function Reports() {
       await openDeliveryPdfInViewer(
         {
           selectedDaysText:
-            sortedSelectedDays.map((date) => formatDate(date)).join(", ") || "-",
+            sortedSelectedDays.map((date) => formatDate(date)).join(", ") ||
+            "-",
           generatedAt: dayjs().format("DD/MM/YYYY HH:mm"),
           items: deliveryProducts.map((row, index) => ({
             id: `${row.key}-${index}`,
@@ -473,14 +522,28 @@ export default function Reports() {
             py: { xs: 2, md: 3 },
             px: { xs: 1, sm: 2 },
             width: "100%",
+            height: "100%",
+            minHeight: 0,
             display: "flex",
             flexDirection: "column",
             gap: 2,
+            overflow: "hidden",
           }}
         >
-          <Card variant="outlined" sx={{ order: 2 }}>
-            <CardContent sx={{ p: { xs: 2, md: 3 } }}>
-              <Stack spacing={2}>
+          {showSales && (
+            <Box
+              component="section"
+              sx={{
+                order: 2,
+                p: { xs: 2, md: 3 },
+                flex: 1,
+                minHeight: 0,
+                display: "flex",
+                flexDirection: "column",
+                overflow: "hidden",
+              }}
+            >
+              <Stack spacing={2} sx={{ height: "100%", minHeight: 0 }}>
                 <Stack
                   direction={{ xs: "column", md: "row" }}
                   justifyContent="space-between"
@@ -549,7 +612,8 @@ export default function Reports() {
 
                 {!salesDateRange && period === "custom" && (
                   <Alert severity="warning">
-                    Seleccioná un rango de fechas válido para calcular las ventas.
+                    Seleccioná un rango de fechas válido para calcular las
+                    ventas.
                   </Alert>
                 )}
 
@@ -562,15 +626,19 @@ export default function Reports() {
 
                 {salesError && (
                   <Alert severity="error">
-                    No se pudieron cargar las ventas para el período seleccionado.
+                    No se pudieron cargar las ventas para el período
+                    seleccionado.
                   </Alert>
                 )}
 
                 {isFetchingSales ? (
                   <TableLoadingSkeleton columns={5} rows={7} />
                 ) : (
-                  <Stack spacing={2}>
-                    <Stack direction={{ xs: "column", md: "row" }} spacing={1.5}>
+                  <Stack spacing={2} sx={{ flex: 1, minHeight: 0 }}>
+                    <Stack
+                      direction={{ xs: "column", md: "row" }}
+                      spacing={1.5}
+                    >
                       <Card variant="outlined" sx={{ flex: 1 }}>
                         <CardContent sx={{ p: 1.5 }}>
                           <Typography variant="caption" color="text.secondary">
@@ -620,8 +688,10 @@ export default function Reports() {
                         border: "1px solid",
                         borderColor: "divider",
                         borderRadius: 1,
-                        maxHeight: 460,
+                        flex: 1,
+                        minHeight: 0,
                         overflowY: "auto",
+                        overflowX: "auto",
                       }}
                     >
                       <Table size="small" stickyHeader>
@@ -637,12 +707,17 @@ export default function Reports() {
                         <TableBody>
                           {openSalesInvoices.length > 0 ? (
                             openSalesInvoices.map((invoice) => {
-                              const invoiceProducts = parseInvoiceProducts(invoice);
+                              const invoiceProducts =
+                                parseInvoiceProducts(invoice);
 
                               return (
                                 <TableRow key={invoice.id}>
-                                  <TableCell>{formatDate(invoice.date)}</TableCell>
-                                  <TableCell>{getClientName(invoice)}</TableCell>
+                                  <TableCell>
+                                    {formatDate(invoice.date)}
+                                  </TableCell>
+                                  <TableCell>
+                                    {getClientName(invoice)}
+                                  </TableCell>
                                   <TableCell>
                                     <Chip
                                       size="small"
@@ -654,7 +729,9 @@ export default function Reports() {
                                   <TableCell align="right">
                                     {formatQuantity(
                                       invoiceProducts.reduce(
-                                        (acc, item) => acc + Math.max(0, toNumber(item.amount)),
+                                        (acc, item) =>
+                                          acc +
+                                          Math.max(0, toNumber(item.amount)),
                                         0,
                                       ),
                                     )}
@@ -678,12 +755,23 @@ export default function Reports() {
                   </Stack>
                 )}
               </Stack>
-            </CardContent>
-          </Card>
+            </Box>
+          )}
 
-          <Card variant="outlined" sx={{ order: 1 }}>
-            <CardContent sx={{ p: { xs: 2, md: 3 } }}>
-              <Stack spacing={2}>
+          {showDistribution && (
+            <Box
+              component="section"
+              sx={{
+                order: 1,
+                p: { xs: 2, md: 3 },
+                flex: 1,
+                minHeight: 0,
+                display: "flex",
+                flexDirection: "column",
+                overflow: "hidden",
+              }}
+            >
+              <Stack spacing={2} sx={{ height: "100%", minHeight: 0 }}>
                 <Stack
                   direction={{ xs: "column", md: "row" }}
                   justifyContent="space-between"
@@ -700,7 +788,9 @@ export default function Reports() {
                     onClick={() => void handlePrintDeliveryList()}
                     loading={isPrintingDelivery}
                     loadingPosition="start"
-                    disabled={deliveryProducts.length === 0 || isPrintingDelivery}
+                    disabled={
+                      deliveryProducts.length === 0 || isPrintingDelivery
+                    }
                   >
                     Imprimir lista
                   </Button>
@@ -726,6 +816,7 @@ export default function Reports() {
                     variant="contained"
                     startIcon={<AddRounded />}
                     onClick={handleAddDay}
+                    sx={{ minWidth: 132, whiteSpace: "nowrap" }}
                   >
                     Agregar día
                   </Button>
@@ -754,16 +845,16 @@ export default function Reports() {
                     ))
                   ) : (
                     <Typography variant="body2" color="text.secondary">
-                      No hay días seleccionados. Agregá al menos uno para generar la
-                      lista.
+                      No hay días seleccionados. Agregá al menos uno para
+                      generar la lista.
                     </Typography>
                   )}
                 </Stack>
 
                 {deliveryError && (
                   <Alert severity="error">
-                    No se pudo cargar la lista de productos vendidos para los días
-                    seleccionados.
+                    No se pudo cargar la lista de productos vendidos para los
+                    días seleccionados.
                   </Alert>
                 )}
 
@@ -775,8 +866,10 @@ export default function Reports() {
                       border: "1px solid",
                       borderColor: "divider",
                       borderRadius: 1,
-                      maxHeight: 460,
+                      flex: 1,
+                      minHeight: 0,
                       overflowY: "auto",
+                      overflowX: "auto",
                     }}
                   >
                     <Table size="small">
@@ -784,7 +877,9 @@ export default function Reports() {
                         <TableRow>
                           <TableCell>Producto</TableCell>
                           <TableCell>Unidad</TableCell>
-                          <TableCell align="right">Cantidad a repartir</TableCell>
+                          <TableCell align="right">
+                            Cantidad a repartir
+                          </TableCell>
                         </TableRow>
                       </TableHead>
                       <TableBody>
@@ -801,7 +896,8 @@ export default function Reports() {
                         ) : (
                           <TableRow>
                             <TableCell colSpan={3} align="center">
-                              No hay productos vendidos para los días seleccionados.
+                              No hay productos vendidos para los días
+                              seleccionados.
                             </TableCell>
                           </TableRow>
                         )}
@@ -817,8 +913,8 @@ export default function Reports() {
                   </Box>
                 </Typography>
               </Stack>
-            </CardContent>
-          </Card>
+            </Box>
+          )}
         </Container>
       </LocalizationProvider>
     </PageContainer>

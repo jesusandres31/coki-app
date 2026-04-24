@@ -1,4 +1,5 @@
 import { alpha, createTheme } from "@mui/material";
+import type {} from "@mui/x-date-pickers/themeAugmentation";
 
 const app = {
   fgDefault: "#0b0f14",
@@ -16,7 +17,7 @@ const app = {
   info: "#0284C7",
 };
 
-const radius = 5;
+const radius = 4;
 const border = `1px solid ${app.borderDefault}`;
 const shadowSm = "0 1px 2px rgba(31, 35, 40, 0.08)";
 const shadowMd = "0 12px 24px rgba(31, 35, 40, 0.12)";
@@ -61,7 +62,7 @@ const theme = createTheme({
   },
 
   typography: {
-    fontSize: 12.5,
+    fontSize: 13,
     fontWeightRegular: 400,
     fontFamily: [
       '"Inter"',
@@ -244,12 +245,50 @@ const theme = createTheme({
             borderColor: alpha(app.fgDefault, 0.35),
           },
           "&.Mui-focused": {
-            boxShadow: `0 0 0 3px ${alpha(app.accent, 0.25)}`,
+            boxShadow: `0 0 0 3px ${alpha(app.accent, 0.35)}`,
           },
           "&.Mui-focused .MuiOutlinedInput-notchedOutline": {
-            borderColor: app.accent,
+            borderColor: alpha(app.accent, 0.35),
             borderWidth: 1,
           },
+        },
+      },
+    },
+    MuiPickersInputBase: {
+      styleOverrides: {
+        activeBar: {
+          backgroundColor: app.accent,
+        },
+      },
+    },
+    MuiPickersTextField: {
+      defaultProps: {
+        color: "info",
+      },
+    },
+    MuiPickersOutlinedInput: {
+      styleOverrides: {
+        root: {
+          borderRadius: radius + 3,
+          transition: "box-shadow 120ms ease, border-color 120ms ease",
+          "& .MuiPickersOutlinedInput-notchedOutline": {
+            borderColor: app.borderDefault,
+          },
+          "&:hover .MuiPickersOutlinedInput-notchedOutline": {
+            borderColor: alpha(app.fgDefault, 0.35),
+          },
+          "&.Mui-focused": {
+            boxShadow: `0 0 0 3px ${alpha(app.accent, 0.35)}`,
+          },
+          "&.Mui-focused .MuiPickersOutlinedInput-notchedOutline": {
+            borderColor: alpha(app.accent, 0.35),
+            borderWidth: 1,
+          },
+          "&.MuiPickersInputBase-focused .MuiPickersOutlinedInput-notchedOutline":
+            {
+              borderColor: alpha(app.accent, 0.35),
+              borderWidth: 1,
+            },
         },
       },
     },
@@ -266,7 +305,7 @@ const theme = createTheme({
             borderBottomColor: alpha(app.fgDefault, 0.35),
           },
           "&.Mui-focused": {
-            boxShadow: `0 0 0 3px ${alpha(app.accent, 0.25)}`,
+            boxShadow: `0 0 0 3px ${alpha(app.accent, 0.35)}`,
           },
           "&.Mui-focused:after": {
             borderBottomColor: app.accent,
@@ -286,7 +325,8 @@ const theme = createTheme({
             borderBottomColor: alpha(app.fgDefault, 0.35),
           },
           "&.Mui-focused:after": {
-            borderBottomColor: app.accent,
+            borderBottomColor: alpha(app.accent, 0.35),
+            borderBottomWidth: 1,
           },
         },
       },
