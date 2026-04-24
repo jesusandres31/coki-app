@@ -2,25 +2,25 @@ import { alpha, createTheme } from "@mui/material";
 import type {} from "@mui/x-date-pickers/themeAugmentation";
 
 const app = {
-  fgDefault: "#0b0f14",
-  fgMuted: "#4877ef",
-  fgSubtle: "#656D76",
+  fgDefault: "#111827",
+  fgMuted: "#425466",
+  fgSubtle: "#6B7280",
   canvasDefault: "#FFFFFF",
-  canvasChrome: "#F4F6FB",
-  canvasSubtle: "#F6F8FA",
+  canvasChrome: "#F8FAFC",
+  canvasSubtle: "#F9FAFB",
   canvasInset: "#F3F4F6",
-  borderDefault: "#E1E5EC",
-  accent: "#0969DA",
+  borderDefault: "#E5E7EB",
+  accent: "#4877ef",
   success: "#15803D",
   warning: "#B45309",
   danger: "#c20e0a",
-  info: "#0284C7",
+  info: "#4877ef",
 };
 
 const radius = 4;
 const border = `1px solid ${app.borderDefault}`;
-const shadowSm = "0 1px 2px rgba(31, 35, 40, 0.08)";
 const shadowMd = "0 12px 24px rgba(31, 35, 40, 0.12)";
+const shadowSm = "0 1px 2px rgba(31, 35, 40, 0.08)";
 
 const theme = createTheme({
   palette: {
@@ -43,13 +43,13 @@ const theme = createTheme({
       main: app.success,
     },
     action: {
-      hover: alpha(app.fgDefault, 0.06),
-      selected: alpha(app.accent, 0.12),
-      focus: alpha(app.accent, 0.2),
+      hover: alpha(app.fgDefault, 0.04),
+      selected: alpha(app.accent, 0.08),
+      focus: alpha(app.accent, 0.18),
     },
     text: {
       primary: app.fgDefault,
-      secondary: "#465281",
+      secondary: app.fgMuted,
     },
     background: {
       default: app.canvasDefault,
@@ -120,7 +120,7 @@ const theme = createTheme({
       },
       styleOverrides: {
         root: {
-          borderRadius: radius,
+          borderRadius: radius + 2,
           minHeight: 32,
           paddingInline: 12,
           fontWeight: 600,
@@ -148,7 +148,11 @@ const theme = createTheme({
           inset 0 1px 0 ${alpha("#fff", 0.15)},
           inset 0 -1px 0 ${alpha("#000", 0.2)}
         `,
+            // background: main,
+            // boxShadow: "none",
             "&:hover": {
+              // background: alpha(main, 0.9),
+              // boxShadow: "none",
               background: `linear-gradient(
             to bottom,
             ${alpha("#fff", 0.12)},
@@ -160,6 +164,7 @@ const theme = createTheme({
           `,
             },
             "&:active": {
+              // background: alpha(main, 0.84),
               background: `linear-gradient(
             to bottom,
             ${alpha("#000", 0.04)},
@@ -183,7 +188,7 @@ const theme = createTheme({
         text: {
           color: app.fgDefault,
           "&:hover": {
-            backgroundColor: alpha(app.fgDefault, 0.06),
+            backgroundColor: alpha(app.fgDefault, 0.04),
           },
         },
       },
@@ -235,7 +240,7 @@ const theme = createTheme({
     MuiOutlinedInput: {
       styleOverrides: {
         root: {
-          borderRadius: radius + 3,
+          borderRadius: radius + 2,
           transition: "box-shadow 120ms ease, border-color 120ms ease",
           "& .MuiOutlinedInput-notchedOutline": {
             borderColor: app.borderDefault,
@@ -244,10 +249,10 @@ const theme = createTheme({
             borderColor: alpha(app.fgDefault, 0.35),
           },
           "&.Mui-focused": {
-            boxShadow: `0 0 0 3px ${alpha(app.accent, 0.35)}`,
+            boxShadow: `0 0 0 2px ${alpha(app.accent, 0.35)}`,
           },
           "&.Mui-focused .MuiOutlinedInput-notchedOutline": {
-            borderColor: alpha(app.accent, 0.35),
+            borderColor: alpha(app.accent, 0.45),
             borderWidth: 1,
           },
         },
@@ -268,7 +273,7 @@ const theme = createTheme({
     MuiPickersOutlinedInput: {
       styleOverrides: {
         root: {
-          borderRadius: radius + 3,
+          borderRadius: radius + 2,
           transition: "box-shadow 120ms ease, border-color 120ms ease",
           "& .MuiPickersOutlinedInput-notchedOutline": {
             borderColor: app.borderDefault,
@@ -277,15 +282,15 @@ const theme = createTheme({
             borderColor: alpha(app.fgDefault, 0.35),
           },
           "&.Mui-focused": {
-            boxShadow: `0 0 0 3px ${alpha(app.accent, 0.35)}`,
+            boxShadow: `0 0 0 2px ${alpha(app.accent, 0.35)}`,
           },
           "&.Mui-focused .MuiPickersOutlinedInput-notchedOutline": {
-            borderColor: alpha(app.accent, 0.35),
+            borderColor: alpha(app.accent, 0.45),
             borderWidth: 1,
           },
           "&.MuiPickersInputBase-focused .MuiPickersOutlinedInput-notchedOutline":
             {
-              borderColor: alpha(app.accent, 0.35),
+              borderColor: alpha(app.accent, 0.45),
               borderWidth: 1,
             },
         },
@@ -294,8 +299,8 @@ const theme = createTheme({
     MuiFilledInput: {
       styleOverrides: {
         root: {
-          borderTopLeftRadius: radius + 3,
-          borderTopRightRadius: radius + 3,
+          borderTopLeftRadius: radius + 2,
+          borderTopRightRadius: radius + 2,
           transition: "box-shadow 120ms ease, border-color 120ms ease",
           "&:before": {
             borderBottomColor: app.borderDefault,
@@ -304,7 +309,7 @@ const theme = createTheme({
             borderBottomColor: alpha(app.fgDefault, 0.35),
           },
           "&.Mui-focused": {
-            boxShadow: `0 0 0 3px ${alpha(app.accent, 0.35)}`,
+            boxShadow: `0 0 0 2px ${alpha(app.accent, 0.35)}`,
           },
           "&.Mui-focused:after": {
             borderBottomColor: app.accent,
@@ -324,7 +329,7 @@ const theme = createTheme({
             borderBottomColor: alpha(app.fgDefault, 0.35),
           },
           "&.Mui-focused:after": {
-            borderBottomColor: alpha(app.accent, 0.35),
+            borderBottomColor: alpha(app.accent, 0.45),
             borderBottomWidth: 1,
           },
         },
@@ -368,9 +373,9 @@ const theme = createTheme({
         head: {
           color: app.fgDefault,
           backgroundColor: app.canvasChrome,
-          fontWeight: 700,
+          fontWeight: 650,
           fontSize: 12,
-          letterSpacing: "0.02em",
+          letterSpacing: "0.01em",
         },
       },
     },
@@ -378,7 +383,7 @@ const theme = createTheme({
       styleOverrides: {
         root: {
           "&:hover": {
-            backgroundColor: app.canvasChrome,
+            backgroundColor: alpha(app.fgDefault, 0.02),
           },
         },
       },

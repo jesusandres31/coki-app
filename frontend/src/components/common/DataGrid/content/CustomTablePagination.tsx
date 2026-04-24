@@ -62,6 +62,7 @@ export default function CustomTablePagination({
         sx={{
           backgroundColor: "background.paper",
           "& .MuiTablePagination-toolbar": {
+            minHeight: 44,
             px: { xs: 1, sm: 2 },
           },
         }}

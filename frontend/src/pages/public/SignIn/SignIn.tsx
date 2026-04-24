@@ -69,18 +69,18 @@ export default function SignIn() {
   };
 
   return (
-    <Container component="main" maxWidth="sm" sx={{ py: { xs: 6, md: 10 } }}>
+    <Container component="main" maxWidth="sm" sx={{ py: { xs: 5, md: 8 } }}>
       <CssBaseline />
-      <Card variant="outlined" sx={{ maxWidth: 460, mx: "auto" }}>
+      <Card variant="outlined" sx={{ maxWidth: 440, mx: "auto", borderRadius: 2 }}>
         <CardContent sx={{ p: { xs: 3, sm: 4 } }}>
           <Stack spacing={2} alignItems="center">
             <Avatar sx={{ bgcolor: "primary.main", width: 48, height: 48 }}>
               <LockRounded />
             </Avatar>
-            <Typography component="h1" variant="h5">
+            <Typography component="h1" variant="h5" fontWeight={600}>
               Iniciar sesión
             </Typography>
-            <Typography variant="body2" color="text.primary">
+            <Typography variant="body2" color="text.secondary">
               Ingresá con tu usuario para acceder al sistema.
             </Typography>
           </Stack>

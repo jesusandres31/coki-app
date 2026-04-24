@@ -85,8 +85,8 @@ export default function EntityFormContainer({
           direction={{ xs: "column", sm: "row" }}
           justifyContent="space-between"
           alignItems={{ xs: "stretch", sm: "center" }}
-          spacing={1.5}
-          mb={2}
+          spacing={1}
+          mb={1.5}
         >
           <Typography variant="h6" fontWeight={600} color="text.primary">
             {title}

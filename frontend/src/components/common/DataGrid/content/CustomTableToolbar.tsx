@@ -4,7 +4,6 @@ import {
   Toolbar,
   Typography,
   IconButton,
-  useTheme,
   FormControl,
   InputLabel,
   OutlinedInput,
@@ -28,7 +27,6 @@ export default function CustomTableToolbar({
   searchPlaceholder = "Search",
   toolbarElement,
 }: CustomTableToolbarProps) {
-  const theme = useTheme();
   const { isMobile } = useUI();
   const hasSelection = selectedCount > 0;
 
@@ -44,10 +42,8 @@ export default function CustomTableToolbar({
     <Toolbar
       sx={{
         flex: "0 0 auto",
-        p: 3,
-        backgroundColor: hasSelection
-          ? theme.palette.action.selected
-          : "background.paper",
+        p: { xs: 1.5, sm: 2 },
+        backgroundColor: hasSelection ? "action.selected" : "background.paper",
         borderBottom: "1px solid",
         borderColor: "divider",
       }}
@@ -107,8 +103,13 @@ export default function CustomTableToolbar({
                   }
                   endAdornment={
                     <InputAdornment position="end">
-                      <IconButton edge="end" onClick={handleClear}>
-                        <ClearRounded />
+                      <IconButton
+                        edge="end"
+                        onClick={handleClear}
+                        size="small"
+                        disabled={!filter}
+                      >
+                        <ClearRounded fontSize="small" />
                       </IconButton>
                     </InputAdornment>
                   }

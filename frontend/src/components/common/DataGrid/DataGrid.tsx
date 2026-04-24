@@ -20,24 +20,24 @@ import CustomTableToolbar from "./content/CustomTableToolbar";
 import { formatNulls } from "src/utils/format";
 import { SEARCH } from "src/constants";
 
-const styles = {
-  sticky: {
-    position: "sticky",
-    paddingBlock: 0,
-    right: 0,
-    padding: 0,
-    margin: 0,
-    backgroundColor: "background.paper",
-  },
-  stickyMobile: {
-    position: "sticky",
-    paddingBlock: 0,
-    right: 0,
-    padding: 0,
-    margin: 0,
-    backgroundColor: "background.paper",
-  },
-};
+  const styles = {
+    sticky: {
+      position: "sticky",
+      paddingBlock: 0,
+      right: 0,
+      padding: 0,
+      margin: 0,
+      backgroundColor: "inherit",
+    },
+    stickyMobile: {
+      position: "sticky",
+      paddingBlock: 0,
+      right: 0,
+      padding: 0,
+      margin: 0,
+      backgroundColor: "inherit",
+    },
+  };
 
 interface DataGridProps {
   data: DataGridData;

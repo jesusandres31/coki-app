@@ -1,5 +1,7 @@
 ## Scripts:
 
+ssh -i .\ssh-key-2026-04-14.key ubuntu@150.136.172.105
+
 ```
 sh deploy.sh
 ```

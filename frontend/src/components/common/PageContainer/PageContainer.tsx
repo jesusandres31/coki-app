@@ -25,6 +25,8 @@ export default function PageContainer({ children }: PageContainerProps) {
           flexDirection: "column",
           overflow: "auto",
           borderRadius: 1.5,
+          backgroundColor: "background.paper",
+          borderColor: "divider",
         }}
       >
         {children}

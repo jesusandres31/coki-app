@@ -62,7 +62,7 @@ export default function CustomTableBody({
     position: "sticky",
     right: isCollapsible ? 48 : 0,
     zIndex: 1,
-    backgroundColor: "background.paper",
+    backgroundColor: "inherit",
   };
 
   const isSelected = (selectedItems: string[], itemId: string) => {
@@ -80,9 +80,19 @@ export default function CustomTableBody({
             <TableRow
               selected={selected}
               sx={{
-                "& > *": { borderBottom: collapsed ? "0px" : "unset" },
-                "&:hover .row-sticky-cell": {
-                  backgroundColor: "#F4F6FB",
+                "& > th, & > td": {
+                  backgroundColor: "transparent",
+                  borderBottom: collapsed ? "0px" : "1px solid",
+                  borderColor: "divider",
+                },
+                "&:hover > th, &:hover > td": {
+                  backgroundColor: "action.hover",
+                },
+                "&.Mui-selected > th, &.Mui-selected > td": {
+                  backgroundColor: "action.selected",
+                },
+                "&.Mui-selected:hover > th, &.Mui-selected:hover > td": {
+                  backgroundColor: "action.selected",
                 },
               }}
             >
@@ -115,7 +125,10 @@ export default function CustomTableBody({
                     size="small"
                     key={`${column.id}-${i}`}
                     align={column.align ?? "right"}
-                    sx={{ cursor: isCollapsible ? "pointer" : "default", py: 0.5 }}
+                    sx={{
+                      cursor: isCollapsible ? "pointer" : "default",
+                      py: 0.5,
+                    }}
                     onClick={() =>
                       isCollapsible ? handleToggleCollapse(row.id) : undefined
                     }
@@ -143,7 +156,10 @@ export default function CustomTableBody({
                 <TableCell
                   align="center"
                   className="row-sticky-cell"
-                  sx={{ py: 0.25, ...actionsStickySx }}
+                  sx={{
+                    py: 0.25,
+                    ...actionsStickySx,
+                  }}
                 >
                   <Box
                     display="flex"
@@ -180,6 +196,7 @@ export default function CustomTableBody({
                       width: 30,
                       height: 30,
                       p: 0.5,
+                      pr: 1,
                       color: "primary.main",
                     }}
                   >
@@ -213,4 +230,3 @@ export default function CustomTableBody({
     </TableBody>
   );
 }
-

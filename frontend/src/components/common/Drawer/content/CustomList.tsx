@@ -167,13 +167,15 @@ export default function CustomList({
                   backgroundColor,
                 },
                 "&:hover": {
-                  backgroundColor: item.to ? backgroundColor : "transparent",
+                  backgroundColor: selected
+                    ? backgroundColor
+                    : theme.palette.action.hover,
                 },
                 "&.Mui-selected:hover": {
                   backgroundColor,
                 },
                 backgroundColor: selected ? backgroundColor : "transparent",
-                borderRadius: 1.5,
+                borderRadius: 1.25,
                 transition: "background-color 0.2s ease",
                 display: "block",
               }}
@@ -219,10 +221,10 @@ export default function CustomList({
                   primary={
                     <Typography
                       sx={{
-                        fontSize: isNested ? 12 : 13.5,
+                        fontSize: isNested ? 12.5 : 13,
                         opacity: openDrawer ? 1 : 0,
                       }}
-                      fontWeight={700}
+                      fontWeight={selected ? 600 : 500}
                       color={selected ? "text.primary" : mutedItemColor}
                     >
                       {item.text || translateTitle(removeForeslash(item.to))}

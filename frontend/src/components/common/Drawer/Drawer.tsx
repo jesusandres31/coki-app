@@ -208,9 +208,10 @@ export default function Drawer({ noTable }: DrawerProps) {
                 component="div"
                 sx={{
                   fontSize: 15,
-                  color: "secondary.main",
+                  // color: "secondary.main",
                   letterSpacing: "0.01em",
                   fontWeight: 800,
+                  color: "#4877ef",
                   // ...(notMobAndOpen && { paddingLeft: 1.5 }),
                 }}
               >
@@ -261,11 +262,11 @@ export default function Drawer({ noTable }: DrawerProps) {
         component="main"
         sx={{
           flexGrow: 1,
-          p: noTable ? 0 : { xs: 1.5, sm: 2 },
+          p: noTable ? 0 : { xs: 1.25, sm: 1.75 },
           overflow: "hidden",
-          backgroundColor: "primary.contrastText",
-          paddingBottom: isMobile ? 2 : 3,
-          paddingX: isMobile ? 1 : 3,
+          backgroundColor: "background.default",
+          paddingBottom: isMobile ? 1.5 : 2.5,
+          paddingX: isMobile ? 0.75 : 2.25,
         }}
       >
         <Toolbar variant="dense" />
@@ -273,7 +274,7 @@ export default function Drawer({ noTable }: DrawerProps) {
           <Breadcrumbs
             aria-label="breadcrumb"
             separator={<NavigateNextRounded fontSize="small" />}
-            sx={{ mb: noTable ? 1 : 1.5, px: noTable ? 0 : 0.75 }}
+            sx={{ mb: noTable ? 0.75 : 1.25, px: noTable ? 0 : 0.5 }}
           >
             {breadcrumbsForRender.map((crumb: IUIBreadcrumb, index: number) => {
               const isLast = index === breadcrumbsForRender.length - 1;
@@ -282,10 +283,9 @@ export default function Drawer({ noTable }: DrawerProps) {
               return !isClickable ? (
                 <Typography
                   key={`${crumb.label}-${index}`}
-                  color={isLast ? "primary.main" : "text.secondary"}
+                  color={isLast ? "text.primary" : "text.secondary"}
                   variant="subtitle1"
-                  // fontSize={17}
-                  fontWeight={isLast ? 600 : 700}
+                  fontWeight={isLast ? 600 : 500}
                 >
                   {crumb.label}
                 </Typography>
@@ -296,7 +296,7 @@ export default function Drawer({ noTable }: DrawerProps) {
                   underline="hover"
                   color="text.secondary"
                   to={crumb.to as string}
-                  sx={{ typography: "subtitle1", fontWeight: 700 }}
+                  sx={{ typography: "subtitle1", fontWeight: 500 }}
                 >
                   {crumb.label}
                 </Link>
@@ -309,7 +309,7 @@ export default function Drawer({ noTable }: DrawerProps) {
             sx={{
               maxHeight: `calc(100vh - ${APPBAR_HEIGHT}px)`,
               overflowY: "auto",
-              backgroundColor: "primary.contrastText",
+              backgroundColor: "background.default",
               p: { xs: 1.5, sm: 2 },
               height: "100%",
             }}
@@ -320,7 +320,7 @@ export default function Drawer({ noTable }: DrawerProps) {
           <Box
             sx={{
               height: isMobile ? "95%" : `calc(100% - 30px)`,
-              backgroundColor: "primary.contrastText",
+              backgroundColor: "background.paper",
               borderRadius: 1.5,
               border: "1px solid",
               borderColor: "divider",

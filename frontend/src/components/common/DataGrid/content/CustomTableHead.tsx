@@ -51,7 +51,7 @@ export default function CustomTableHead({
     position: "sticky",
     right: isCollapsible ? collapseColumnWidth : 0,
     zIndex: 3,
-    backgroundColor: "#F4F6FB",
+    backgroundColor: "#F8FAFC",
     width: actionsColumnWidth,
     minWidth: actionsColumnWidth,
     maxWidth: actionsColumnWidth,
@@ -134,7 +134,7 @@ export default function CustomTableHead({
               width: collapseColumnWidth,
               minWidth: collapseColumnWidth,
               maxWidth: collapseColumnWidth,
-              backgroundColor: "#F4F6FB",
+              backgroundColor: "#F8FAFC",
               zIndex: 4,
             }}
           />
