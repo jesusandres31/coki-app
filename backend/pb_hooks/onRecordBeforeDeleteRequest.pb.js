@@ -12,13 +12,18 @@ onRecordDeleteRequest((e) => {
 
   try {
     const collection = e.app.findCollectionByNameOrId(deletedCollectionName);
-    const userId = e.auth?.id;
+    const userId = e.auth?.isSuperuser?.() ? null : e.auth?.id;
 
-    const record = new Record(collection, {
+    const payload = {
       collection: e.collection?.name,
       record: e.record,
-      deleted_by: userId,
-    });
+    };
+
+    if (userId) {
+      payload.deleted_by = userId;
+    }
+
+    const record = new Record(collection, payload);
 
     e.app.save(record);
   } catch (err) {

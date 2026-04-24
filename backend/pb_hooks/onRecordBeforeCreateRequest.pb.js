@@ -1,7 +1,9 @@
 onRecordCreateRequest((e) => {
-  const userId = e.auth?.id;
+  const userId = e.auth?.isSuperuser?.() ? null : e.auth?.id;
 
   // handle create
-  e.record?.set('created_by', userId);
+  if (userId) {
+    e.record?.set('created_by', userId);
+  }
   e.next();
 });
