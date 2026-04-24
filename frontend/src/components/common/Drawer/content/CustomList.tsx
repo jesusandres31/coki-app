@@ -10,7 +10,6 @@ import {
   useTheme,
   ListSubheader,
   Collapse,
-  alpha,
 } from "@mui/material";
 import { ExpandLessRounded, ExpandMoreRounded } from "@mui/icons-material";
 import { useRouter } from "src/hooks";
@@ -34,8 +33,8 @@ export default function CustomList({
   const { openDrawer } = useUISelector((state) => state.ui);
   const dispatch = useAppDispatch();
   const theme = useTheme();
-  const backgroundColor = alpha(theme.palette.primary.main, 0.07);
-  const mutedItemColor = alpha(theme.palette.text.secondary, 0.82);
+  const backgroundColor = theme.palette.action.selected;
+  const mutedItemColor = theme.palette.text.secondary;
 
   const isSameOrChildRoute = (baseRoute?: string) => {
     if (!baseRoute) return false;

@@ -4,7 +4,6 @@ import {
   Toolbar,
   Typography,
   IconButton,
-  alpha,
   useTheme,
   FormControl,
   InputLabel,
@@ -47,7 +46,7 @@ export default function CustomTableToolbar({
         flex: "0 0 auto",
         p: 3,
         backgroundColor: hasSelection
-          ? alpha(theme.palette.primary.main, 0.12)
+          ? theme.palette.action.selected
           : "background.paper",
         borderBottom: "1px solid",
         borderColor: "divider",

@@ -168,7 +168,6 @@ export default function Drawer({ noTable }: DrawerProps) {
         position="fixed"
         open={notMobAndOpen}
         sx={{
-          backgroundColor: "#f4f6fb",
           color: "text.primary",
           borderBottom: "1px solid",
           borderColor: "divider",
@@ -211,14 +210,12 @@ export default function Drawer({ noTable }: DrawerProps) {
                   fontSize: 15,
                   color: "secondary.main",
                   letterSpacing: "0.01em",
-                  fontVariationSettings: '"wght" 800',
-                  WebkitBackgroundClip: "text",
-                  backgroundClip: "text",
+                  fontWeight: 800,
                   // ...(notMobAndOpen && { paddingLeft: 1.5 }),
                 }}
               >
                 {/* {translateTitle(route)} */}
-                🏷️ Coki App
+                Coki App
               </Typography>
             </Grid>
           </Grid>
@@ -286,7 +283,7 @@ export default function Drawer({ noTable }: DrawerProps) {
                 <Typography
                   key={`${crumb.label}-${index}`}
                   color={isLast ? "primary.main" : "text.secondary"}
-                  fontSize="subtitle1"
+                  variant="subtitle1"
                   // fontSize={17}
                   fontWeight={isLast ? 600 : 700}
                 >
@@ -299,9 +296,7 @@ export default function Drawer({ noTable }: DrawerProps) {
                   underline="hover"
                   color="text.secondary"
                   to={crumb.to as string}
-                  fontSize="subtitle1"
-                  // fontSize={17}
-                  sx={{ fontWeight: 700 }}
+                  sx={{ typography: "subtitle1", fontWeight: 700 }}
                 >
                   {crumb.label}
                 </Link>
