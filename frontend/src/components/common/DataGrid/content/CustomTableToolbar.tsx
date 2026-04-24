@@ -44,10 +44,8 @@ export default function CustomTableToolbar({
   return (
     <Toolbar
       sx={{
-        pl: { sm: 2 },
-        pr: { xs: 1, sm: 1 },
         flex: "0 0 auto",
-        py: { xs: 1, sm: 2 },
+        p: 3,
         backgroundColor: hasSelection
           ? alpha(theme.palette.primary.main, 0.12)
           : "background.paper",
