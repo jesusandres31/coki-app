@@ -286,7 +286,8 @@ export default function Drawer({ noTable }: DrawerProps) {
                 <Typography
                   key={`${crumb.label}-${index}`}
                   color={isLast ? "primary.main" : "text.secondary"}
-                  fontSize={17}
+                  fontSize="subtitle1"
+                  // fontSize={17}
                   fontWeight={isLast ? 600 : 700}
                 >
                   {crumb.label}
@@ -298,7 +299,8 @@ export default function Drawer({ noTable }: DrawerProps) {
                   underline="hover"
                   color="text.secondary"
                   to={crumb.to as string}
-                  fontSize={17}
+                  fontSize="subtitle1"
+                  // fontSize={17}
                   sx={{ fontWeight: 700 }}
                 >
                   {crumb.label}

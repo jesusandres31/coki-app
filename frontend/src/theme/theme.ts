@@ -123,7 +123,6 @@ const theme = createTheme({
           borderRadius: radius,
           minHeight: 32,
           paddingInline: 12,
-          textTransform: "capitalize",
           fontWeight: 600,
           lineHeight: 1.2,
         },
