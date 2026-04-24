@@ -21,11 +21,11 @@ export default function CustomTablePagination({
   const totalPages =
     data?.totalPages ??
     (perPage > 0 ? Math.max(1, Math.ceil(totalItems / perPage)) : 0);
-  const currentPage = totalItems > 0 ? data?.page ?? 1 : 0;
+  const currentPage = totalItems > 0 ? (data?.page ?? 1) : 0;
 
   const handleChangePage = (
     e: React.MouseEvent<HTMLButtonElement, MouseEvent> | null,
-    newPage: number
+    newPage: number,
   ) => {
     // because pagination starts at 0 in MUI TablePagination.
     handleSetPage(newPage + 1);
@@ -70,4 +70,3 @@ export default function CustomTablePagination({
     </Grid>
   );
 }
-
