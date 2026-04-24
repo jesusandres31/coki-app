@@ -20,9 +20,10 @@ npm install -g pnpm
 sudo nano /etc/nginx/conf.d/coki.ctes.dedyn.io.conf
 sudo nano /etc/nginx/conf.d/admin-coki.ctes.dedyn.io.conf
 
+sudo rm -rf /home/ubuntu/coki-app/frontend/dist
 sudo rm -rf /var/www/coki-app/dist/
 sudo cp -r /home/ubuntu/coki-app/frontend/dist /var/www/coki-app/dist
-ls /var/www/coki-app/dist/assets/
+sudo ls /var/www/coki-app/dist/assets/
 
 sudo chown -R www-data:www-data /var/www/coki-app
 sudo find /var/www/coki-app -type d -exec chmod 755 {} \;

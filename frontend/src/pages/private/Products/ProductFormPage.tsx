@@ -11,6 +11,7 @@ import {
   useCreateProductMutation,
   useGetMeasureUnitsQuery,
   useGetProductByIdQuery,
+  useGetProductTypesListQuery,
   useUpdateProductMutation,
 } from "src/app/services/invoiceService";
 import { useAppDispatch } from "src/app/store";
@@ -21,7 +22,7 @@ import { AppRoutes } from "src/config";
 import { useRouter } from "src/hooks";
 import { resetBreadcrumbs, setBreadcrumbs, setSnackbar } from "src/slices/uiSlice";
 import { Input } from "src/types";
-import { MeasureunitsResponse } from "src/types/pocketbase-types";
+import { MeasureunitsResponse, ProductTypesResponse } from "src/types/pocketbase-types";
 import { FORM_MSG, FORM_VLDN } from "src/utils/FormUtils";
 import { productsBreadcrumbFlow } from "./breadcrumbFlow";
 
@@ -31,6 +32,7 @@ interface ProductFormValues {
   name: string;
   unit_price: number;
   measure_unit: string;
+  product_type: string[];
 }
 
 const loadingCardSx = {
@@ -63,8 +65,18 @@ export default function ProductFormPage() {
   });
   const { data: measureUnits = [], isFetching: isMeasureUnitsFetching } =
     useGetMeasureUnitsQuery();
+  const {
+    data: productTypesResponse,
+    isFetching: isProductTypesFetching,
+  } = useGetProductTypesListQuery({
+    page: 1,
+    perPage: 500,
+    order: "asc",
+    orderBy: "name",
+  });
   const [createProduct, { isLoading: isCreating }] = useCreateProductMutation();
   const [updateProduct, { isLoading: isUpdating }] = useUpdateProductMutation();
+  const productTypes = productTypesResponse?.items || [];
 
   useEffect(() => {
     if (isNewMode) {
@@ -87,6 +99,9 @@ export default function ProductFormPage() {
       name: product?.name || "",
       unit_price: Number(product?.unit_price ?? 0),
       measure_unit: String(product?.measure_unit || ""),
+      product_type: Array.isArray(product?.product_type)
+        ? product.product_type
+        : [],
     },
     validationSchema: Yup.object({
       name: Yup.string()
@@ -102,6 +117,7 @@ export default function ProductFormPage() {
         )
         .required(FORM_MSG.required),
       measure_unit: Yup.string().required(FORM_MSG.required),
+      product_type: Yup.array().of(Yup.string()),
     }),
     validateOnChange: false,
     validateOnBlur: false,
@@ -112,7 +128,7 @@ export default function ProductFormPage() {
             name: values.name.trim(),
             unit_price: Number(values.unit_price || 0),
             measure_unit: values.measure_unit,
-            product_type: [],
+            product_type: values.product_type,
           },
         }).unwrap();
 
@@ -134,6 +150,7 @@ export default function ProductFormPage() {
           name: values.name.trim(),
           unit_price: Number(values.unit_price || 0),
           measure_unit: values.measure_unit,
+          product_type: values.product_type,
         },
       }).unwrap();
 
@@ -149,6 +166,9 @@ export default function ProductFormPage() {
 
   const selectedMeasureUnit =
     measureUnits.find((item) => item.id === formik.values.measure_unit) || null;
+  const selectedProductTypes = productTypes.filter((item) =>
+    formik.values.product_type.includes(item.id),
+  );
 
   const inputs: Input[] = [
     {
@@ -182,6 +202,19 @@ export default function ProductFormPage() {
       startValue: selectedMeasureUnit || undefined,
       getOptionLabel: (option) =>
         String((option as MeasureunitsResponse).name || ""),
+    },
+    {
+      required: false,
+      label: "Tipos de producto",
+      id: "product_type",
+      value: formik.values.product_type,
+      error: formik.errors.product_type,
+      options: productTypes,
+      loading: isProductTypesFetching,
+      multiple: true,
+      startValue: selectedProductTypes,
+      getOptionLabel: (option) =>
+        String((option as ProductTypesResponse).name || ""),
     },
   ];
 

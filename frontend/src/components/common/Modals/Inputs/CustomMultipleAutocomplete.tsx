@@ -14,7 +14,7 @@ import { useCallback, useEffect, useState } from "react";
 
 interface CustomMultipleAutocompleteProps {
   input: Input;
-  formik: FormikProps<DataItem>;
+  formik: FormikProps<any>;
   options: DataItem[];
   fetchItemsFunc?: FetchItemsFunc;
   loading?: boolean;
@@ -71,7 +71,7 @@ export default function CustomMultipleAutocomplete({
   };
 
   const handleInputChange = (
-    e: React.ChangeEvent<{}>,
+    _event: React.ChangeEvent<{}>,
     filter: string | null,
     reason: AutocompleteInputChangeReason
   ) => {
@@ -79,7 +79,7 @@ export default function CustomMultipleAutocomplete({
     if (reason === "reset") return;
     if (reason === "clear") {
       handleSetFilter("");
-      formik.setFieldValue(input.id, "");
+      formik.setFieldValue(input.id, []);
       setSelectedItems([]);
     }
     if (typeof filter === "string") {
@@ -88,26 +88,9 @@ export default function CustomMultipleAutocomplete({
     formik.setErrors({});
   };
 
-  const handleChange = (
-    e: React.ChangeEvent<{}>,
-    data: DataItem[],
-    reason: string,
-    details?: any | undefined
-  ) => {
-    if (reason === "select-option") {
-      // remove duplicates
-      const sentId = details.option.Id;
-      if (!!selectedItems.find((taxpayer) => taxpayer.id === sentId)) {
-        data = data.filter((row) => row.id !== sentId);
-      }
-    }
-    if (data) {
-      // update hook state
-      setSelectedItems(data);
-      // update formik state
-      const taxpayersUuid = data.map((row) => row.id);
-      formik.setFieldValue(input.id, taxpayersUuid);
-    }
+  const handleChange = (_event: React.ChangeEvent<{}>, data: DataItem[]) => {
+    setSelectedItems(data);
+    formik.setFieldValue(input.id, data.map((row) => row.id));
     formik.setErrors({});
   };
 
@@ -156,10 +139,10 @@ export default function CustomMultipleAutocomplete({
             error={!!input.error}
             helperText={input.error ? input.error : " "}
             sx={{ width: { xs: "100%", sm: STYLE.width.textfield } }}
-          size="small"
-          variant={variant}
-          disabled={input.disabled}
-          InputProps={{
+            size="small"
+            variant={variant}
+            disabled={input.disabled}
+            InputProps={{
               ...params.InputProps,
               endAdornment: (
                 <>

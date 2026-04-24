@@ -23,6 +23,7 @@ import { ReactNode } from "react";
 import { Input } from "src/types";
 import { handleSetFormikValue } from "src/utils/FormUtils";
 import CustomAutocomplete from "src/components/common/Modals/Inputs/CustomAutocomplete";
+import CustomMultipleAutocomplete from "src/components/common/Modals/Inputs/CustomMultipleAutocomplete";
 import PageContainer from "src/components/common/PageContainer/PageContainer";
 
 type EntityPageMode = "new" | "review" | "edit";
@@ -170,15 +171,26 @@ export default function EntityFormContainer({
                     return (
                       <Grid key={effectiveInput.id} size={{ xs: 12, md: 6 }}>
                         {effectiveInput.options ? (
-                          <CustomAutocomplete
-                            input={effectiveInput}
-                            formik={formik}
-                            fetchItemsFunc={effectiveInput.fetchItemsFunc}
-                            options={effectiveInput.options}
-                            loading={effectiveInput.loading}
-                            getOptionLabel={effectiveInput.getOptionLabel}
-                            triggerSideEffect={effectiveInput.triggerSideEffect}
-                          />
+                          effectiveInput.multiple ? (
+                            <CustomMultipleAutocomplete
+                              input={effectiveInput}
+                              formik={formik}
+                              fetchItemsFunc={effectiveInput.fetchItemsFunc}
+                              options={effectiveInput.options}
+                              loading={effectiveInput.loading}
+                              getOptionLabel={effectiveInput.getOptionLabel}
+                            />
+                          ) : (
+                            <CustomAutocomplete
+                              input={effectiveInput}
+                              formik={formik}
+                              fetchItemsFunc={effectiveInput.fetchItemsFunc}
+                              options={effectiveInput.options}
+                              loading={effectiveInput.loading}
+                              getOptionLabel={effectiveInput.getOptionLabel}
+                              triggerSideEffect={effectiveInput.triggerSideEffect}
+                            />
+                          )
                         ) : (
                           <TextField
                             required={effectiveInput.required}

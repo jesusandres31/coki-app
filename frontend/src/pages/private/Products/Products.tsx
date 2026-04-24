@@ -6,6 +6,7 @@ import DataGrid from "src/components/common/DataGrid/DataGrid";
 import { getListArgsInitialState } from "src/constants";
 import {
   useGetMeasureUnitsQuery,
+  useGetProductTypesListQuery,
   useGetProductsListQuery,
 } from "src/app/services/invoiceService";
 import { useAppDispatch } from "src/app/store";
@@ -35,11 +36,23 @@ export default function Products() {
 
   const { data, error, isFetching } = useGetProductsListQuery(queryArgs);
   const { data: measureUnits = [] } = useGetMeasureUnitsQuery();
+  const { data: productTypesList } = useGetProductTypesListQuery({
+    page: 1,
+    perPage: 500,
+    order: "asc",
+    orderBy: "name",
+  });
+  const productTypes = productTypesList?.items || [];
 
   const measureUnitById = useMemo(
     () =>
       new Map(measureUnits.map((item) => [item.id, String(item.name || "-")])),
     [measureUnits],
+  );
+  const productTypeNameById = useMemo(
+    () =>
+      new Map(productTypes.map((item) => [item.id, String(item.name || "-")])),
+    [productTypes],
   );
 
   const columns: Column = useMemo(
@@ -59,14 +72,30 @@ export default function Products() {
       {
         id: "measure_unit",
         label: "Unidad de medida",
-        align: "left",
+        // align: "left",
         minWidth: 200,
         disableSort: true,
         render: (item: ProductsResponse) =>
           measureUnitById.get(String(item.measure_unit || "")) || "-",
       },
+      {
+        id: "product_type",
+        label: "Tipos de producto",
+        // align: "left",
+        minWidth: 260,
+        disableSort: true,
+        render: (item: ProductsResponse) => {
+          const typeNames = (
+            Array.isArray(item.product_type) ? item.product_type : []
+          )
+            .map((typeId) => productTypeNameById.get(typeId))
+            .filter((name): name is string => Boolean(name && name !== "-"));
+
+          return typeNames.length > 0 ? typeNames.join(", ") : "-";
+        },
+      },
     ],
-    [measureUnitById],
+    [measureUnitById, productTypeNameById],
   );
 
   const rowActions: DataGridRowAction[] = useMemo(
