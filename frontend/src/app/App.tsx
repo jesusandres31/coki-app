@@ -75,6 +75,10 @@ const privateRoutes = [
     render: <Reports />,
   },
   {
+    route: AppRoutes.ReportsPriceList,
+    render: <Reports />,
+  },
+  {
     route: AppRoutes.Clients,
     render: <Clients />,
   },

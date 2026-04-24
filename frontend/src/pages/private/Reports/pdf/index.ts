@@ -1,3 +1,8 @@
 export { openDeliveryPdfInViewer, openDeliveryPdfTab } from "./deliveryPdfActions";
-export type { DeliveryListPdfItem, DeliveryListPdfModel } from "./model";
-
+export { openPriceListPdfInViewer, openPriceListPdfTab } from "./priceListPdfActions";
+export type {
+  DeliveryListPdfItem,
+  DeliveryListPdfModel,
+  PriceListPdfItem,
+  PriceListPdfModel,
+} from "./model";

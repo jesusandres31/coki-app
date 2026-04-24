@@ -5,6 +5,7 @@ import {
   DescriptionRounded,
   Inventory2Rounded,
   LocalShippingRounded,
+  PriceCheckRounded,
   PeopleRounded,
   SettingsRounded,
 } from "@mui/icons-material";
@@ -47,6 +48,11 @@ export const DRAWER_SECTIONS: DrawerSection[] = [
             text: "Ventas por período",
             icon: <BarChartRounded />,
             to: AppRoutes.ReportsSales,
+          },
+          {
+            text: "Lista de precios",
+            icon: <PriceCheckRounded />,
+            to: AppRoutes.ReportsPriceList,
           },
         ],
       },

@@ -8,14 +8,17 @@ import {
   RemoveCircleOutlineRounded,
 } from "@mui/icons-material";
 import {
+  Autocomplete,
   Alert,
   Box,
   Button,
   Card,
   CardContent,
+  Checkbox,
   Chip,
   Container,
   Divider,
+  FormControlLabel,
   Stack,
   Table,
   TableBody,
@@ -23,6 +26,7 @@ import {
   TableContainer,
   TableHead,
   TableRow,
+  TextField,
   ToggleButton,
   ToggleButtonGroup,
   Typography,
@@ -34,21 +38,32 @@ import { useLocation } from "react-router-dom";
 import {
   useGetInvoicesByDateRangeQuery,
   useGetMeasureUnitsQuery,
+  useGetProductTypesListQuery,
   useGetProductsQuery,
 } from "src/app/services/invoiceService";
 import { useAppDispatch } from "src/app/store";
 import { TableLoadingSkeleton } from "src/components/common";
 import PageContainer from "src/components/common/PageContainer/PageContainer";
+import { getListArgsInitialState } from "src/constants";
 import { AppRoutes } from "src/config";
 import {
   resetBreadcrumbs,
   setBreadcrumbs,
   setSnackbar,
 } from "src/slices/uiSlice";
-import { VInvoicesResponse } from "src/types/pocketbase-types";
+import { GetList } from "src/types";
+import {
+  ProductsResponse,
+  VInvoicesResponse,
+} from "src/types/pocketbase-types";
 import { formatDate, formatMoney } from "src/utils/format";
 import { reportsBreadcrumbFlow } from "./breadcrumbFlow";
-import { openDeliveryPdfInViewer, openDeliveryPdfTab } from "./pdf";
+import {
+  openDeliveryPdfInViewer,
+  openDeliveryPdfTab,
+  openPriceListPdfInViewer,
+  openPriceListPdfTab,
+} from "./pdf";
 
 type ReportPeriod = "week" | "month" | "custom";
 
@@ -69,6 +84,19 @@ interface DeliveryProductRow {
   productName: string;
   measureUnitName: string;
   amount: number;
+}
+
+interface NamedOption {
+  id: string;
+  name: string;
+}
+
+interface PriceListProductRow {
+  id: string;
+  productName: string;
+  productTypesText: string;
+  measureUnitName: string;
+  unitPrice: number;
 }
 
 const stateLabelByName: Record<string, string> = {
@@ -187,6 +215,11 @@ const parsePickerDate = (value: string) => (value ? dayjs(value) : null);
 const formatQuantity = (amount: number) =>
   Number.isInteger(amount) ? String(amount) : amount.toFixed(2);
 
+const getProductTypeIds = (product: ProductsResponse) =>
+  (Array.isArray(product.product_type) ? product.product_type : [])
+    .map((typeId) => String(typeId || "").trim())
+    .filter((typeId) => Boolean(typeId));
+
 export default function Reports() {
   const { pathname } = useLocation();
   const dispatch = useAppDispatch();
@@ -194,9 +227,14 @@ export default function Reports() {
     AppRoutes.ReportsDistribution,
   );
   const isSalesRoute = pathname.startsWith(AppRoutes.ReportsSales);
+  const isPriceListRoute = pathname.startsWith(AppRoutes.ReportsPriceList);
   const showDistribution =
-    isDistributionRoute || (!isDistributionRoute && !isSalesRoute);
-  const showSales = isSalesRoute || (!isDistributionRoute && !isSalesRoute);
+    isDistributionRoute ||
+    (!isDistributionRoute && !isSalesRoute && !isPriceListRoute);
+  const showSales =
+    isSalesRoute ||
+    (!isDistributionRoute && !isSalesRoute && !isPriceListRoute);
+  const showPriceList = isPriceListRoute;
   const [period, setPeriod] = useState<ReportPeriod>("week");
   const [customFromDraft, setCustomFromDraft] = useState(
     dayjs().subtract(6, "day").format("YYYY-MM-DD"),
@@ -210,6 +248,14 @@ export default function Reports() {
   const [selectedDays, setSelectedDays] = useState<string[]>([getTodayIso()]);
   const [todayIso] = useState(getTodayIso);
   const [isPrintingDelivery, setIsPrintingDelivery] = useState(false);
+  const [isPrintingPriceList, setIsPrintingPriceList] = useState(false);
+  const [includeAllPriceListProducts, setIncludeAllPriceListProducts] =
+    useState(true);
+  const [selectedPriceListTypeIds, setSelectedPriceListTypeIds] = useState<
+    string[]
+  >([]);
+  const [selectedPriceListProductIds, setSelectedPriceListProductIds] =
+    useState<string[]>([]);
 
   useEffect(() => {
     dispatch(setBreadcrumbs(reportsBreadcrumbFlow.list()));
@@ -284,12 +330,34 @@ export default function Reports() {
     skip: !deliveryDateRange || !showDistribution,
   });
 
+  const shouldLoadProductsCatalog = showDistribution || showPriceList;
+
   const { data: products = [] } = useGetProductsQuery(undefined, {
-    skip: !showDistribution,
+    skip: !shouldLoadProductsCatalog,
   });
   const { data: measureUnits = [] } = useGetMeasureUnitsQuery(undefined, {
-    skip: !showDistribution,
+    skip: !shouldLoadProductsCatalog,
   });
+
+  const productTypesQueryArgs = useMemo<GetList>(
+    () => ({
+      ...getListArgsInitialState,
+      page: 1,
+      perPage: 500,
+      order: "asc",
+      orderBy: "name",
+    }),
+    [],
+  );
+
+  const {
+    data: productTypesList,
+    error: priceListTypesError,
+    isFetching: isFetchingPriceListTypes,
+  } = useGetProductTypesListQuery(productTypesQueryArgs, {
+    skip: !showPriceList,
+  });
+  const productTypes = productTypesList?.items || [];
 
   const measureUnitNameById = useMemo(
     () =>
@@ -313,6 +381,129 @@ export default function Reports() {
       ),
     [products],
   );
+
+  const productTypeNameById = useMemo(
+    () => new Map(productTypes.map((type) => [type.id, type.name])),
+    [productTypes],
+  );
+
+  const productTypeOptions = useMemo<NamedOption[]>(
+    () =>
+      productTypes.map((type) => ({
+        id: type.id,
+        name: type.name,
+      })),
+    [productTypes],
+  );
+
+  const productOptions = useMemo<NamedOption[]>(
+    () =>
+      products.map((product) => ({
+        id: product.id,
+        name: String(product.name || "-"),
+      })),
+    [products],
+  );
+
+  const selectedPriceTypeSet = useMemo(
+    () => new Set(selectedPriceListTypeIds),
+    [selectedPriceListTypeIds],
+  );
+  const selectedPriceProductSet = useMemo(
+    () => new Set(selectedPriceListProductIds),
+    [selectedPriceListProductIds],
+  );
+
+  const selectedPriceTypeOptions = useMemo(
+    () =>
+      productTypeOptions.filter((option) =>
+        selectedPriceTypeSet.has(option.id),
+      ),
+    [productTypeOptions, selectedPriceTypeSet],
+  );
+  const selectedPriceProductOptions = useMemo(
+    () =>
+      productOptions.filter((option) => selectedPriceProductSet.has(option.id)),
+    [productOptions, selectedPriceProductSet],
+  );
+
+  const selectedPriceTypeNames = useMemo(
+    () =>
+      selectedPriceListTypeIds
+        .map((typeId) => productTypeNameById.get(typeId))
+        .filter((name): name is string => Boolean(name)),
+    [productTypeNameById, selectedPriceListTypeIds],
+  );
+
+  const selectedPriceProductNames = useMemo(
+    () =>
+      selectedPriceListProductIds
+        .map((productId) => productById.get(productId))
+        .filter((product): product is ProductsResponse => Boolean(product))
+        .map((product) => String(product.name || "-")),
+    [productById, selectedPriceListProductIds],
+  );
+
+  const priceListRows = useMemo<PriceListProductRow[]>(() => {
+    const filteredProducts = products.filter((product) => {
+      if (includeAllPriceListProducts) return true;
+      const matchesType =
+        selectedPriceTypeSet.size > 0 &&
+        getProductTypeIds(product).some((typeId) =>
+          selectedPriceTypeSet.has(typeId),
+        );
+      const matchesManual = selectedPriceProductSet.has(product.id);
+
+      return matchesType || matchesManual;
+    });
+
+    return filteredProducts
+      .map((product) => {
+        const typeNames = getProductTypeIds(product)
+          .map((typeId) => productTypeNameById.get(typeId))
+          .filter((name): name is string => Boolean(name && name.trim()));
+
+        return {
+          id: product.id,
+          productName: String(product.name || "-"),
+          productTypesText: typeNames.length > 0 ? typeNames.join(", ") : "-",
+          measureUnitName:
+            measureUnitNameById.get(String(product.measure_unit || "")) || "-",
+          unitPrice: Math.max(0, toNumber(product.unit_price)),
+        };
+      })
+      .sort((a, b) => a.productName.localeCompare(b.productName));
+  }, [
+    includeAllPriceListProducts,
+    measureUnitNameById,
+    productTypeNameById,
+    products,
+    selectedPriceProductSet,
+    selectedPriceTypeSet,
+  ]);
+
+  const priceListFilterSummary = useMemo(() => {
+    if (includeAllPriceListProducts) {
+      return "Lista completa de productos";
+    }
+
+    const clauses: string[] = [];
+
+    if (selectedPriceTypeNames.length > 0) {
+      clauses.push(`Tipos: ${selectedPriceTypeNames.join(", ")}`);
+    }
+    if (selectedPriceProductNames.length > 0) {
+      clauses.push(`Selección manual: ${selectedPriceProductNames.join(", ")}`);
+    }
+
+    return clauses.length > 0
+      ? clauses.join(" | ")
+      : "Sin filtros (lista vacía hasta seleccionar productos o tipos).";
+  }, [
+    includeAllPriceListProducts,
+    selectedPriceProductNames,
+    selectedPriceTypeNames,
+  ]);
 
   const openSalesInvoices = useMemo(
     () =>
@@ -454,6 +645,66 @@ export default function Reports() {
 
   const handleResetDays = () => {
     setSelectedDays([]);
+  };
+
+  const handleResetPriceListFilters = () => {
+    setIncludeAllPriceListProducts(true);
+    setSelectedPriceListTypeIds([]);
+    setSelectedPriceListProductIds([]);
+  };
+
+  const handlePrintPriceList = async () => {
+    if (priceListRows.length === 0) {
+      dispatch(
+        setSnackbar({
+          message:
+            "No hay productos para imprimir. Ajustá los filtros y volvé a intentar.",
+          type: "error",
+        }),
+      );
+      return;
+    }
+
+    const popup = openPriceListPdfTab();
+
+    if (!popup) {
+      dispatch(
+        setSnackbar({
+          message:
+            "No se pudo abrir el PDF en una pestaña nueva. Verificá el bloqueo de popups.",
+          type: "error",
+        }),
+      );
+      return;
+    }
+
+    setIsPrintingPriceList(true);
+
+    try {
+      await openPriceListPdfInViewer(
+        {
+          generatedAt: dayjs().format("DD/MM/YYYY HH:mm"),
+          items: priceListRows.map((row) => ({
+            id: row.id,
+            productName: row.productName,
+            measureUnitName: row.measureUnitName,
+            unitPrice: formatMoney(row.unitPrice),
+          })),
+          totalItems: priceListRows.length,
+        },
+        popup,
+      );
+    } catch {
+      popup.close();
+      dispatch(
+        setSnackbar({
+          message: "No se pudo generar o abrir el PDF en la pestaña nueva.",
+          type: "error",
+        }),
+      );
+    } finally {
+      setIsPrintingPriceList(false);
+    }
   };
 
   const handlePrintDeliveryList = async () => {
@@ -912,6 +1163,273 @@ export default function Reports() {
                     {formatQuantity(totalProductsToDeliver)}
                   </Box>
                 </Typography>
+              </Stack>
+            </Box>
+          )}
+
+          {showPriceList && (
+            <Box
+              component="section"
+              sx={{
+                order: 3,
+                p: { xs: 2, md: 3 },
+                flex: 1,
+                minHeight: 0,
+                display: "flex",
+                flexDirection: "column",
+                overflow: "hidden",
+              }}
+            >
+              <Stack spacing={2} sx={{ height: "100%", minHeight: 0 }}>
+                <Stack
+                  direction={{ xs: "column", md: "row" }}
+                  justifyContent="space-between"
+                  alignItems={{ xs: "flex-start", md: "center" }}
+                  spacing={1.5}
+                >
+                  <Box>
+                    <Typography variant="h6" fontWeight={600}>
+                      Lista de precios
+                    </Typography>
+                    <Typography variant="body2" color="text.secondary">
+                      Armá una lista personalizada para cada cliente y obtenela
+                      lista para imprimir y entregar.
+                    </Typography>
+                  </Box>
+                  <Button
+                    size="small"
+                    variant="contained"
+                    startIcon={<PrintRounded />}
+                    onClick={() => void handlePrintPriceList()}
+                    loading={isPrintingPriceList}
+                    loadingPosition="start"
+                    disabled={priceListRows.length === 0 || isPrintingPriceList}
+                  >
+                    Imprimir lista
+                  </Button>
+                </Stack>
+
+                <Stack
+                  direction={{ xs: "column", md: "row" }}
+                  spacing={1}
+                  alignItems={{ xs: "flex-start", md: "center" }}
+                  justifyContent="space-between"
+                >
+                  <FormControlLabel
+                    control={
+                      <Checkbox
+                        checked={includeAllPriceListProducts}
+                        onChange={(event) =>
+                          setIncludeAllPriceListProducts(event.target.checked)
+                        }
+                        size="small"
+                      />
+                    }
+                    label="Incluir todos los productos"
+                  />
+
+                  <Button
+                    size="small"
+                    variant="outlined"
+                    color="inherit"
+                    startIcon={<RestartAltRounded />}
+                    onClick={handleResetPriceListFilters}
+                    disabled={
+                      includeAllPriceListProducts &&
+                      selectedPriceListTypeIds.length === 0 &&
+                      selectedPriceListProductIds.length === 0
+                    }
+                  >
+                    Restablecer filtros
+                  </Button>
+                </Stack>
+
+                <Stack direction={{ xs: "column", md: "row" }} spacing={1.5}>
+                  <Autocomplete
+                    fullWidth
+                    multiple
+                    size="small"
+                    options={productTypeOptions}
+                    value={selectedPriceTypeOptions}
+                    onChange={(_event, value) => {
+                      setSelectedPriceListTypeIds(value.map((item) => item.id));
+                      if (value.length > 0) {
+                        setIncludeAllPriceListProducts(false);
+                      }
+                    }}
+                    loading={isFetchingPriceListTypes}
+                    isOptionEqualToValue={(option, value) =>
+                      option.id === value.id
+                    }
+                    getOptionLabel={(option) => option.name}
+                    noOptionsText="Sin tipos disponibles"
+                    renderInput={(params) => (
+                      <TextField
+                        {...params}
+                        label="Filtrar por tipos de producto"
+                        placeholder="Seleccionar tipos"
+                      />
+                    )}
+                  />
+                  <Autocomplete
+                    fullWidth
+                    multiple
+                    size="small"
+                    options={productOptions}
+                    value={selectedPriceProductOptions}
+                    renderTags={(value, getTagProps) => {
+                      const visibleItems = value.slice(0, 2);
+                      const hiddenCount = value.length - visibleItems.length;
+
+                      return [
+                        ...visibleItems.map((option, index) => (
+                          <Chip
+                            {...getTagProps({ index })}
+                            key={option.id}
+                            size="small"
+                            label={option.name}
+                          />
+                        )),
+                        ...(hiddenCount > 0
+                          ? [
+                              <Chip
+                                key="manual-products-hidden-count"
+                                size="small"
+                                label={`+${hiddenCount} más`}
+                              />,
+                            ]
+                          : []),
+                      ];
+                    }}
+                    onChange={(_event, value) => {
+                      setSelectedPriceListProductIds(
+                        value.map((item) => item.id),
+                      );
+                      if (value.length > 0) {
+                        setIncludeAllPriceListProducts(false);
+                      }
+                    }}
+                    isOptionEqualToValue={(option, value) =>
+                      option.id === value.id
+                    }
+                    getOptionLabel={(option) => option.name}
+                    noOptionsText="Sin productos disponibles"
+                    renderInput={(params) => (
+                      <TextField
+                        {...params}
+                        label="Agregar productos manuales"
+                        placeholder="Seleccionar productos"
+                      />
+                    )}
+                  />
+                </Stack>
+
+                <Box
+                  sx={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 0.5,
+                    minWidth: 0,
+                  }}
+                >
+                  <Typography
+                    variant="body2"
+                    color="text.secondary"
+                    sx={{ flexShrink: 0 }}
+                  >
+                    Filtro activo:
+                  </Typography>
+                  <Typography
+                    variant="body2"
+                    color="text.primary"
+                    fontWeight={700}
+                    title={priceListFilterSummary}
+                    sx={{
+                      minWidth: 0,
+                      overflow: "hidden",
+                      textOverflow: "ellipsis",
+                      whiteSpace: "nowrap",
+                    }}
+                  >
+                    {priceListFilterSummary}
+                  </Typography>
+                </Box>
+
+                {priceListTypesError && (
+                  <Alert severity="error">
+                    No se pudieron cargar los tipos de producto para aplicar
+                    filtros.
+                  </Alert>
+                )}
+
+                {!includeAllPriceListProducts &&
+                  selectedPriceListTypeIds.length === 0 &&
+                  selectedPriceListProductIds.length === 0 && (
+                    <Alert severity="info">
+                      Seleccioná al menos un tipo de producto o uno/más
+                      productos manuales para armar una lista personalizada.
+                    </Alert>
+                  )}
+
+                <TableContainer
+                  sx={{
+                    border: "1px solid",
+                    borderColor: "divider",
+                    borderRadius: 1,
+                    flex: 1,
+                    minHeight: 0,
+                    overflowY: "auto",
+                    overflowX: "auto",
+                  }}
+                >
+                  <Table size="small" stickyHeader>
+                    <TableHead>
+                      <TableRow>
+                        <TableCell>Producto</TableCell>
+                        <TableCell>Tipo</TableCell>
+                        <TableCell>Unidad</TableCell>
+                        <TableCell align="right">Precio</TableCell>
+                      </TableRow>
+                    </TableHead>
+                    <TableBody>
+                      {priceListRows.length > 0 ? (
+                        priceListRows.map((row) => (
+                          <TableRow key={row.id}>
+                            <TableCell>{row.productName}</TableCell>
+                            <TableCell>{row.productTypesText}</TableCell>
+                            <TableCell>{row.measureUnitName}</TableCell>
+                            <TableCell align="right">
+                              {formatMoney(row.unitPrice)}
+                            </TableCell>
+                          </TableRow>
+                        ))
+                      ) : (
+                        <TableRow>
+                          <TableCell colSpan={4} align="center">
+                            No hay productos para los filtros seleccionados.
+                          </TableCell>
+                        </TableRow>
+                      )}
+                    </TableBody>
+                  </Table>
+                </TableContainer>
+
+                <Stack
+                  direction={{ xs: "column", sm: "row" }}
+                  spacing={1}
+                  alignItems={{ xs: "flex-start", sm: "center" }}
+                  justifyContent="space-between"
+                >
+                  <Typography variant="body2" color="text.secondary">
+                    Productos en la lista:{" "}
+                    <Box component="span" fontWeight={700} color="text.primary">
+                      {priceListRows.length}
+                    </Box>
+                  </Typography>
+                  <Typography variant="body2" color="text.secondary">
+                    Formato preparado para impresión física.
+                  </Typography>
+                </Stack>
               </Stack>
             </Box>
           )}
