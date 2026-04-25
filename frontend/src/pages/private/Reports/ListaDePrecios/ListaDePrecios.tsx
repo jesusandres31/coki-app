@@ -394,10 +394,17 @@ export default function ListaDePrecios() {
         minHeight: 0,
         display: "flex",
         flexDirection: "column",
-        overflow: "hidden",
+        overflowY: { xs: "visible", sm: "auto" },
+        overflowX: "hidden",
+        "@media (max-height: 900px)": {
+          overflowY: "auto",
+        },
       }}
     >
-      <Stack spacing={2} sx={{ height: "100%", minHeight: 0 }}>
+      <Stack
+        spacing={2}
+        sx={{ height: { xs: "auto", sm: "100%" }, minHeight: 0 }}
+      >
         <Stack
           direction={{ xs: "column", md: "row" }}
           justifyContent="space-between"
@@ -651,12 +658,13 @@ export default function ListaDePrecios() {
             borderColor: "divider",
             borderRadius: 1,
             flex: 1,
-            minHeight: 0,
+            minHeight: { xs: 220, sm: 240, md: 280 },
+            maxHeight: { xs: 340, md: "none" },
             overflowY: "auto",
             overflowX: "auto",
           }}
         >
-          <Table size="small" stickyHeader>
+          <Table size="small" stickyHeader sx={{ minWidth: 760 }}>
             <TableHead>
               <TableRow>
                 <TableCell>Producto</TableCell>

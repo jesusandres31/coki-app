@@ -36,12 +36,16 @@ export default function Reports() {
             py: { xs: 2, md: 3 },
             px: { xs: 1, sm: 2 },
             width: "100%",
-            height: "100%",
+            height: { xs: "auto", md: "100%" },
             minHeight: 0,
             display: "flex",
             flexDirection: "column",
             gap: 2,
-            overflow: "hidden",
+            overflowY: { xs: "visible", sm: "auto" },
+            overflowX: "hidden",
+            "@media (max-height: 900px)": {
+              overflowY: "auto",
+            },
           }}
         >
           {isPriceListRoute ? (
