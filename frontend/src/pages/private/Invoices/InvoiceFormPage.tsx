@@ -320,14 +320,16 @@ function ProductsTable({
     <TableContainer
       sx={{
         flex: "1 1 auto",
-        minHeight: 0,
+        minHeight: { xs: 220, sm: 240, md: 280 },
+        maxHeight: { xs: 340, md: "none" },
         overflowY: "auto",
+        overflowX: "auto",
         border: "1px solid",
         borderColor: "divider",
         borderRadius: 1,
       }}
     >
-      <Table size="small" stickyHeader>
+      <Table size="small" stickyHeader sx={{ minWidth: editable ? 980 : 920 }}>
         <TableHead>
           <TableRow>
             <TableCell sx={{ width: "31%" }}>Producto</TableCell>
@@ -1270,22 +1272,27 @@ export default function InvoiceFormPage() {
         containerSx={{
           width: "100%",
           mx: "auto",
-          height: "100%",
           display: "flex",
           flexDirection: "column",
-          overflow: "hidden",
+          height: { xs: "auto", md: "100%" },
+          minHeight: 0,
         }}
         cardSx={{
           flex: "1 1 auto",
-          minHeight: 0,
-          overflow: "hidden",
-        }}
-        contentSx={{
-          height: "100%",
           display: "flex",
           flexDirection: "column",
           minHeight: 0,
-          overflow: "hidden",
+        }}
+        contentSx={{
+          flex: "1 1 auto",
+          display: "flex",
+          flexDirection: "column",
+          minHeight: 0,
+          overflowY: { xs: "visible", sm: "auto" },
+          overflowX: "hidden",
+          "@media (max-height: 900px)": {
+            overflowY: "auto",
+          },
         }}
       >
         <Stack spacing={2.5} sx={{ flex: "1 1 auto", minHeight: 0 }}>
@@ -1412,7 +1419,14 @@ export default function InvoiceFormPage() {
             />
 
             {isNewMode && (
-              <Stack direction="row" spacing={1} sx={{ ml: "auto" }}>
+              <Stack
+                direction={{ xs: "column", sm: "row" }}
+                spacing={1}
+                sx={{
+                  ml: { xs: 0, sm: "auto" },
+                  width: { xs: "100%", sm: "auto" },
+                }}
+              >
                 <Button
                   size="small"
                   variant="contained"
@@ -1421,6 +1435,7 @@ export default function InvoiceFormPage() {
                   onClick={handleCreateDraft}
                   loading={isCreating}
                   disabled={!canCreate || isCreating}
+                  sx={{ width: { xs: "100%", sm: "auto" } }}
                 >
                   Guardar borrador
                 </Button>
@@ -1433,6 +1448,7 @@ export default function InvoiceFormPage() {
                   onClick={handleCreateInvoice}
                   loading={isCreating}
                   disabled={!canCreate || isCreating}
+                  sx={{ width: { xs: "100%", sm: "auto" } }}
                 >
                   Crear factura
                 </Button>
