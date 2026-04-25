@@ -160,7 +160,7 @@ const getRowId = () =>
 const buildEmptyRow = (): InvoiceProductInput => ({
   id: getRowId(),
   product: "",
-  amount: 1,
+  amount: 0,
   unitPrice: 0,
   discount: 0,
 });
@@ -375,12 +375,14 @@ function ProductsTable({
                   size="small"
                   variant="standard"
                   type="number"
-                  value={row.amount}
+                  value={row.amount <= 0 ? "" : row.amount}
                   onChange={(e) =>
                     onRowChange?.(
                       row.id,
                       "amount",
-                      Math.max(1, Number(e.target.value || 1)),
+                      e.target.value === ""
+                        ? 0
+                        : Math.max(1, Number(e.target.value || 1)),
                     )
                   }
                   inputProps={{ min: 1, step: 1 }}
