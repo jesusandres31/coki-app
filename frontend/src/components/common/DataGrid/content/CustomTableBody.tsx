@@ -62,7 +62,7 @@ export default function CustomTableBody({
     position: "sticky",
     right: isCollapsible ? 48 : 0,
     zIndex: 1,
-    backgroundColor: "inherit",
+    backgroundColor: "background.paper",
   };
 
   const isSelected = (selectedItems: string[], itemId: string) => {
@@ -81,18 +81,25 @@ export default function CustomTableBody({
               selected={selected}
               sx={{
                 "& > th, & > td": {
-                  backgroundColor: "transparent",
+                  backgroundColor: "background.paper",
+                  backgroundImage: "none",
                   borderBottom: collapsed ? "0px" : "1px solid",
                   borderColor: "divider",
                 },
                 "&:hover > th, &:hover > td": {
-                  backgroundColor: "action.hover",
+                  backgroundColor: "background.paper",
+                  backgroundImage: (theme) =>
+                    `linear-gradient(${theme.palette.action.hover}, ${theme.palette.action.hover})`,
                 },
                 "&.Mui-selected > th, &.Mui-selected > td": {
-                  backgroundColor: "action.selected",
+                  backgroundColor: "background.paper",
+                  backgroundImage: (theme) =>
+                    `linear-gradient(${theme.palette.action.selected}, ${theme.palette.action.selected})`,
                 },
                 "&.Mui-selected:hover > th, &.Mui-selected:hover > td": {
-                  backgroundColor: "action.selected",
+                  backgroundColor: "background.paper",
+                  backgroundImage: (theme) =>
+                    `linear-gradient(${theme.palette.action.selected}, ${theme.palette.action.selected})`,
                 },
               }}
             >
@@ -188,6 +195,7 @@ export default function CustomTableBody({
                   sx={{
                     ...styles.sticky,
                     py: 0.25,
+                    pr: 2,
                   }}
                   onClick={() => handleToggleCollapse(row.id)}
                 >
