@@ -24,6 +24,7 @@ import {
 import CustomList from "./content/CustomList";
 import LoginButton from "./content/LoginButton";
 import { useRouter, useUI } from "src/hooks";
+import { version } from "src/config";
 import { DRAWER_SECTIONS } from "src/config/drawer";
 import {
   IUIBreadcrumb,
@@ -109,9 +110,17 @@ const CustomDrawer = styled(MuiDrawer, {
 const DrawerContent = () => {
   const theme = useTheme();
   const dispatch = useAppDispatch();
+  const { openDrawer } = useUISelector((state) => state.ui);
 
   return (
-    <Box sx={{ overflow: "hidden" }}>
+    <Box
+      sx={{
+        height: "100%",
+        display: "flex",
+        flexDirection: "column",
+        overflow: "hidden",
+      }}
+    >
       <DrawerHeader sx={{ marginBlock: -1 }}>
         <Box
           sx={{
@@ -131,7 +140,7 @@ const DrawerContent = () => {
           </IconButton>
         </Box>
       </DrawerHeader>
-      <Box sx={{ overflow: "auto", height: "100%" }}>
+      <Box sx={{ flex: "1 1 auto", minHeight: 0, overflow: "auto" }}>
         {DRAWER_SECTIONS.map((section, index) => (
           <React.Fragment key={`${index}-${section.title}`}>
             <Divider variant="middle" />
@@ -140,6 +149,34 @@ const DrawerContent = () => {
             </Box>
           </React.Fragment>
         ))}
+      </Box>
+      {/* <Divider variant="middle" /> */}
+      <Box
+        sx={{
+          px: 2,
+          py: 1,
+          minHeight: 32,
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "flex-start",
+        }}
+      >
+        <Typography
+          variant="caption"
+          color="text.disabled"
+          noWrap
+          title={`Version ${version}`}
+          sx={{
+            fontSize: 11,
+            letterSpacing: 0,
+            opacity: openDrawer ? 1 : 0,
+            transition: theme.transitions.create("opacity", {
+              duration: theme.transitions.duration.shorter,
+            }),
+          }}
+        >
+          version {version}
+        </Typography>
       </Box>
     </Box>
   );
