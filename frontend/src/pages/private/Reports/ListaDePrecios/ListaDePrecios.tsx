@@ -51,6 +51,15 @@ interface PriceListProductRow extends PriceListBaseRow {
   hasManualPrice: boolean;
 }
 
+const priceColumnSx = {
+  position: "sticky",
+  right: 0,
+  width: 156,
+  minWidth: 156,
+  maxWidth: 156,
+  boxSizing: "border-box",
+};
+
 export default function ListaDePrecios() {
   const dispatch = useAppDispatch();
   const [isPrintingPriceList, setIsPrintingPriceList] = useState(false);
@@ -670,7 +679,16 @@ export default function ListaDePrecios() {
                 <TableCell>Producto</TableCell>
                 <TableCell>Tipo</TableCell>
                 <TableCell>Unidad</TableCell>
-                <TableCell align="right">Precio</TableCell>
+                <TableCell
+                  align="right"
+                  sx={{
+                    ...priceColumnSx,
+                    zIndex: 3,
+                    backgroundColor: "#F8FAFC",
+                  }}
+                >
+                  Precio
+                </TableCell>
               </TableRow>
             </TableHead>
             <TableBody>
@@ -707,10 +725,9 @@ export default function ListaDePrecios() {
                           : "Click para editar el precio en esta sesión"
                       }
                       sx={{
+                        ...priceColumnSx,
                         py: 0.75,
-                        width: 156,
-                        minWidth: 156,
-                        maxWidth: 156,
+                        zIndex: 1,
                         backgroundColor: "action.hover",
                         cursor:
                           editingPriceProductId === row.id ? "text" : "pointer",
