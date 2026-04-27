@@ -66,3 +66,5 @@ sudo systemctl status cokiapp.pocketbase
 
 scp -i ".\ssh-key-2026-04-14.key" -r "C:\Users\jesus\projects\mine\coki-app\frontend\dist" ubuntu@150.136.172.105:/home/ubuntu/coki-app/frontend/
 scp -i ".\ssh-key-2026-04-14.key" -r "C:\Users\jesus\projects\mine\coki-app\backend\pb_data" ubuntu@150.136.172.105:/home/ubuntu/coki-app/backend/
+
+sudo bash /home/ubuntu/coki-app/deployment/scripts/frontend-deploy.sh
