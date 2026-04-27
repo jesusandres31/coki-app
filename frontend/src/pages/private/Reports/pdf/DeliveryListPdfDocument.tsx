@@ -1,5 +1,10 @@
 import { Document, Page, StyleSheet, Text, View } from "@react-pdf/renderer";
-import { PdfHeader, PdfMeta, pdfStyles } from "src/components/common/pdf";
+import {
+  buildDeliveryListPdfTitle,
+  PdfHeader,
+  PdfMeta,
+  pdfStyles,
+} from "src/components/common/pdf";
 import { DeliveryListPdfModel } from "./model";
 
 interface DeliveryListPdfDocumentProps {
@@ -28,8 +33,10 @@ const styles = StyleSheet.create({
 });
 
 export function DeliveryListPdfDocument({ report }: DeliveryListPdfDocumentProps) {
+  const documentDate = report.selectedDaysText || report.generatedAt.split(" ")[0];
+
   return (
-    <Document>
+    <Document title={buildDeliveryListPdfTitle(documentDate)}>
       <Page size="A4" style={pdfStyles.page}>
         <PdfHeader title="Lista de reparto" />
 

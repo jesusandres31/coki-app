@@ -1,5 +1,9 @@
 import { Document, Page, StyleSheet, Text, View } from "@react-pdf/renderer";
-import { PdfHeader, pdfStyles } from "src/components/common/pdf";
+import {
+  buildPriceListPdfTitle,
+  PdfHeader,
+  pdfStyles,
+} from "src/components/common/pdf";
 import { PriceListPdfModel } from "./model";
 
 interface PriceListPdfDocumentProps {
@@ -29,7 +33,7 @@ const styles = StyleSheet.create({
 
 export function PriceListPdfDocument({ report }: PriceListPdfDocumentProps) {
   return (
-    <Document>
+    <Document title={buildPriceListPdfTitle(report.generatedAt)}>
       <Page size="A4" style={pdfStyles.page}>
         <PdfHeader
           title="Juan Zini Distribuidor | Lista de precios"

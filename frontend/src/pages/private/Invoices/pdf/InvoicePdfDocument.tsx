@@ -1,5 +1,11 @@
 import { Document, Page, StyleSheet, Text, View } from "@react-pdf/renderer";
-import { PdfHeader, PdfMeta, pdfStyles } from "src/components/common/pdf";
+import {
+  buildInvoicePdfTitle,
+  getShortInvoiceId,
+  PdfHeader,
+  PdfMeta,
+  pdfStyles,
+} from "src/components/common/pdf";
 import { formatMoney, formatPercent } from "src/utils/format";
 import { InvoicePdfModel } from "./model";
 
@@ -56,13 +62,19 @@ export function InvoicePdfDocument({ invoice }: InvoicePdfDocumentProps) {
   const unitPriceCellStyle = hasItemDiscounts
     ? styles.unitPriceCell
     : styles.unitPriceCellWithoutDiscount;
+  const shortInvoiceId = getShortInvoiceId(invoice.invoiceId);
+  const documentTitle = buildInvoicePdfTitle({
+    clientName: invoice.clientName,
+    date: invoice.date,
+    invoiceId: invoice.invoiceId,
+  });
 
   return (
-    <Document>
+    <Document title={documentTitle}>
       <Page size="A4" style={pdfStyles.page}>
         <PdfHeader
           title="Juan Zini Distribuidor"
-          aside={`Factura ${invoice.invoiceId}`}
+          aside={`Factura "${shortInvoiceId}"`}
         />
 
         <PdfMeta
@@ -98,7 +110,9 @@ export function InvoicePdfDocument({ invoice }: InvoicePdfDocumentProps) {
               <Text style={[pdfStyles.cell, productCellStyle]}>
                 {item.productName}
               </Text>
-              <Text style={[pdfStyles.cell, styles.qtyCell]}>{item.amount}</Text>
+              <Text style={[pdfStyles.cell, styles.qtyCell]}>
+                {item.amount}
+              </Text>
               <Text style={[pdfStyles.cell, unitCellStyle]}>
                 {item.measureUnitName}
               </Text>
