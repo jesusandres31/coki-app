@@ -369,7 +369,7 @@ export default function ListaDePrecios() {
     try {
       await openPriceListPdfInViewer(
         {
-          generatedAt: dayjs().format("DD/MM/YYYY HH:mm"),
+          generatedAt: dayjs().format("DD/MM/YYYY"),
           items: priceListRows.map((row) => ({
             id: row.id,
             productName: row.productName,

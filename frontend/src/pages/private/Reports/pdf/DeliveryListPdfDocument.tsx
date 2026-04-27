@@ -1,4 +1,5 @@
 import { Document, Page, StyleSheet, Text, View } from "@react-pdf/renderer";
+import { PdfHeader, PdfMeta, pdfStyles } from "src/components/common/pdf";
 import { DeliveryListPdfModel } from "./model";
 
 interface DeliveryListPdfDocumentProps {
@@ -6,61 +7,6 @@ interface DeliveryListPdfDocumentProps {
 }
 
 const styles = StyleSheet.create({
-  page: {
-    paddingTop: 28,
-    paddingBottom: 28,
-    paddingHorizontal: 28,
-    fontSize: 9,
-    fontFamily: "Helvetica",
-    color: "#111827",
-  },
-  title: {
-    fontSize: 12,
-    fontWeight: 700,
-    marginBottom: 12,
-  },
-  metaContainer: {
-    marginBottom: 16,
-    borderWidth: 1,
-    borderColor: "#E5E7EB",
-    borderRadius: 3,
-    padding: 10,
-    gap: 4,
-  },
-  metaRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-  },
-  metaLabel: {
-    color: "#6B7280",
-  },
-  metaValue: {
-    fontWeight: 600,
-    maxWidth: "72%",
-    textAlign: "right",
-  },
-  table: {
-    borderWidth: 1,
-    borderColor: "#E5E7EB",
-    borderRadius: 3,
-    overflow: "hidden",
-  },
-  row: {
-    flexDirection: "row",
-    borderBottomWidth: 1,
-    borderBottomColor: "#E5E7EB",
-    alignItems: "center",
-  },
-  headerRow: {
-    backgroundColor: "#F3F4F6",
-  },
-  lastRow: {
-    borderBottomWidth: 0,
-  },
-  cell: {
-    paddingVertical: 7,
-    paddingHorizontal: 8,
-  },
   productCell: {
     width: "54%",
   },
@@ -84,25 +30,21 @@ const styles = StyleSheet.create({
 export function DeliveryListPdfDocument({ report }: DeliveryListPdfDocumentProps) {
   return (
     <Document>
-      <Page size="A4" style={styles.page}>
-        <Text style={styles.title}>Lista de reparto</Text>
+      <Page size="A4" style={pdfStyles.page}>
+        <PdfHeader title="Lista de reparto" />
 
-        <View style={styles.metaContainer}>
-          <View style={styles.metaRow}>
-            <Text style={styles.metaLabel}>Días</Text>
-            <Text style={styles.metaValue}>{report.selectedDaysText || "-"}</Text>
-          </View>
-          <View style={styles.metaRow}>
-            <Text style={styles.metaLabel}>Generado</Text>
-            <Text style={styles.metaValue}>{report.generatedAt}</Text>
-          </View>
-        </View>
+        <PdfMeta
+          rows={[
+            { label: "Días", value: report.selectedDaysText || "-" },
+            { label: "Generado", value: report.generatedAt },
+          ]}
+        />
 
-        <View style={styles.table}>
-          <View style={[styles.row, styles.headerRow]}>
-            <Text style={[styles.cell, styles.productCell]}>Producto</Text>
-            <Text style={[styles.cell, styles.unitCell]}>Unidad</Text>
-            <Text style={[styles.cell, styles.amountCell]}>Cantidad</Text>
+        <View style={pdfStyles.table}>
+          <View style={[pdfStyles.row, pdfStyles.headerRow]}>
+            <Text style={[pdfStyles.cell, styles.productCell]}>Producto</Text>
+            <Text style={[pdfStyles.cell, styles.unitCell]}>Unidad</Text>
+            <Text style={[pdfStyles.cell, styles.amountCell]}>Cantidad</Text>
           </View>
 
           {report.items.map((item, index) => (
@@ -110,13 +52,13 @@ export function DeliveryListPdfDocument({ report }: DeliveryListPdfDocumentProps
               key={item.id}
               style={
                 index === report.items.length - 1
-                  ? [styles.row, styles.lastRow]
-                  : styles.row
+                  ? [pdfStyles.row, pdfStyles.lastRow]
+                  : pdfStyles.row
               }
             >
-              <Text style={[styles.cell, styles.productCell]}>{item.productName}</Text>
-              <Text style={[styles.cell, styles.unitCell]}>{item.measureUnitName}</Text>
-              <Text style={[styles.cell, styles.amountCell]}>{item.amount}</Text>
+              <Text style={[pdfStyles.cell, styles.productCell]}>{item.productName}</Text>
+              <Text style={[pdfStyles.cell, styles.unitCell]}>{item.measureUnitName}</Text>
+              <Text style={[pdfStyles.cell, styles.amountCell]}>{item.amount}</Text>
             </View>
           ))}
         </View>
@@ -129,4 +71,3 @@ export function DeliveryListPdfDocument({ report }: DeliveryListPdfDocumentProps
     </Document>
   );
 }
-
