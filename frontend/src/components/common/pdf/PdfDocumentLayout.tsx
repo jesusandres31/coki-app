@@ -24,7 +24,7 @@ export const pdfStyles = StyleSheet.create({
     fontWeight: 700,
   },
   headerAside: {
-    width: 90,
+    width: 180,
     color: "#6B7280",
     fontSize: 8,
     textAlign: "right",
@@ -89,7 +89,7 @@ export const pdfStyles = StyleSheet.create({
     paddingTop: 6,
     marginTop: 2,
     fontWeight: 700,
-    fontSize: 10,
+    fontSize: 12,
   },
 });
 

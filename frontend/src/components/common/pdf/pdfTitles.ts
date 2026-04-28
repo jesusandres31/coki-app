@@ -11,10 +11,10 @@ export const buildInvoicePdfTitle = ({
   clientName: string;
   date: string;
   invoiceId: string;
-}) => `${clientName} ${date} | Factura "${getShortInvoiceId(invoiceId)}"`;
+}) => `${clientName} ${date} | Resumen de pedido "${getShortInvoiceId(invoiceId)}"`;
 
 export const buildPriceListPdfTitle = (date: string) =>
-  `Lista de precios ${date} | Juan Zini Distribuidor`;
+  `Lista de precios ${date}`;
 
 export const buildDeliveryListPdfTitle = (date: string) =>
   `Lista de reparto ${date}`;

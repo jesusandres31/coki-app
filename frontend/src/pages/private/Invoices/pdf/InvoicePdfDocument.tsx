@@ -73,8 +73,8 @@ export function InvoicePdfDocument({ invoice }: InvoicePdfDocumentProps) {
     <Document title={documentTitle}>
       <Page size="A4" style={pdfStyles.page}>
         <PdfHeader
-          title="Juan Zini Distribuidor"
-          aside={`Factura "${shortInvoiceId}"`}
+          title="Resumen de pedido"
+          aside={`ID: ${shortInvoiceId}\nDocumento no válido como factura`}
         />
 
         <PdfMeta

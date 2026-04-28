@@ -36,7 +36,7 @@ export function PriceListPdfDocument({ report }: PriceListPdfDocumentProps) {
     <Document title={buildPriceListPdfTitle(report.generatedAt)}>
       <Page size="A4" style={pdfStyles.page}>
         <PdfHeader
-          title="Juan Zini Distribuidor | Lista de precios"
+          title="Lista de precios"
           aside={report.generatedAt}
         />
 
