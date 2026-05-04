@@ -2,8 +2,10 @@ import {
   Autocomplete,
   AutocompleteInputChangeReason,
   CircularProgress,
+  SxProps,
   TextField,
   TextFieldVariants,
+  Theme,
   debounce,
 } from "@mui/material";
 import { FormikProps } from "formik";
@@ -21,6 +23,8 @@ interface CustomAutocompleteProps {
   getOptionLabel?: (option: DataItem) => string;
   variant?: TextFieldVariants;
   triggerSideEffect?: (data: DataItem) => void;
+  fullWidth?: boolean;
+  sx?: SxProps<Theme>;
 }
 
 export default function CustomAutocomplete({
@@ -32,6 +36,8 @@ export default function CustomAutocomplete({
   getOptionLabel,
   variant = "outlined",
   triggerSideEffect,
+  fullWidth = false,
+  sx,
 }: CustomAutocompleteProps) {
   const [open, setOpen] = useState(false);
   const [filter, setFilter] = useState("");
@@ -47,8 +53,8 @@ export default function CustomAutocomplete({
         order: uiInitialState.order,
         orderBy: uiInitialState.orderBy,
       }).unwrap();
-    } catch (err) {
-      throw err;
+    } catch {
+      // RTK Query middleware surfaces request errors; keep the input stable.
     }
   };
 
@@ -57,12 +63,12 @@ export default function CustomAutocomplete({
   }, [input.startValue]);
 
   useEffect(() => {
-    handleGetItems(filter);
+    void handleGetItems(filter);
   }, []);
 
   const debounceFetchItems = useCallback(
     debounce(async (filter: string) => {
-      handleGetItems(filter);
+      await handleGetItems(filter);
     }, 300),
     []
   );
@@ -99,7 +105,11 @@ export default function CustomAutocomplete({
 
   return (
     <Autocomplete
-      sx={{ width: { xs: "100%", sm: STYLE.width.textfield } }}
+      fullWidth={fullWidth}
+      sx={{
+        width: fullWidth ? "100%" : { xs: "100%", sm: STYLE.width.textfield },
+        ...sx,
+      }}
       disabled={input.disabled}
       open={open}
       onOpen={() => {
@@ -137,7 +147,11 @@ export default function CustomAutocomplete({
           autoComplete="off"
           error={!!input.error}
           helperText={input.error ? input.error : " "}
-          sx={{ width: { xs: "100%", sm: STYLE.width.textfield } }}
+          sx={{
+            width: fullWidth
+              ? "100%"
+              : { xs: "100%", sm: STYLE.width.textfield },
+          }}
           size="small"
           variant={variant}
           disabled={input.disabled}

@@ -1,7 +1,6 @@
 import {
   CssBaseline,
   TextField,
-  Box,
   Container,
   Typography,
   Avatar,
@@ -22,7 +21,7 @@ import { FORM_MSG, FORM_VLDN } from "src/utils/FormUtils";
 export default function SignIn() {
   const { handleSignIn, isSigningIn } = useAuth();
 
-  const formik = useFormik({
+  const formik = useFormik<SignInRequest>({
     initialValues: {
       email: "",
       password: "",
@@ -50,14 +49,10 @@ export default function SignIn() {
           FORM_MSG.maxLength(FORM_VLDN.SHORT_STRING.max)
         ),
     }),
-    onSubmit: async (data: SignInRequest) => {
-      try {
-        await handleSignIn(data);
-        formik.setValues(formik.initialValues);
-        handleResetError();
-      } catch (err) {
-        throw err;
-      }
+    onSubmit: async (data) => {
+      await handleSignIn(data);
+      formik.setValues(formik.initialValues);
+      handleResetError();
     },
     validateOnChange: false,
     validateOnBlur: false,
@@ -71,7 +66,7 @@ export default function SignIn() {
   return (
     <Container component="main" maxWidth="sm" sx={{ py: { xs: 5, md: 8 } }}>
       <CssBaseline />
-      <Card variant="outlined" sx={{ maxWidth: 440, mx: "auto", borderRadius: 2 }}>
+      <Card variant="outlined" sx={{ maxWidth: 440, mx: "auto" }}>
         <CardContent sx={{ p: { xs: 3, sm: 4 } }}>
           <Stack spacing={2} alignItems="center">
             <Avatar sx={{ bgcolor: "primary.main", width: 48, height: 48 }}>
@@ -85,9 +80,14 @@ export default function SignIn() {
             </Typography>
           </Stack>
 
-          <Box component="form" onSubmit={formik.handleSubmit} noValidate sx={{ mt: 2 }}>
+          <Stack
+            component="form"
+            onSubmit={formik.handleSubmit}
+            noValidate
+            spacing={1.25}
+            sx={{ mt: 2.5 }}
+          >
             <TextField
-              margin="normal"
               required
               fullWidth
               id="email"
@@ -109,7 +109,6 @@ export default function SignIn() {
               }}
             />
             <TextField
-              margin="normal"
               required
               fullWidth
               id="password"
@@ -135,13 +134,13 @@ export default function SignIn() {
               fullWidth
               variant="contained"
               color="primary"
-              sx={{ mt: 2, mb: 1 }}
+              sx={{ mt: 0.75 }}
               loading={isSigningIn}
               disabled={isSigningIn}
             >
               Ingresar
             </Button>
-          </Box>
+          </Stack>
         </CardContent>
       </Card>
     </Container>

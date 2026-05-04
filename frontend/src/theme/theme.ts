@@ -232,6 +232,16 @@ const theme = createTheme({
         size: "small",
       },
     },
+    MuiFormHelperText: {
+      styleOverrides: {
+        root: {
+          minHeight: 18,
+          marginTop: 4,
+          marginLeft: 0,
+          marginRight: 0,
+        },
+      },
+    },
     MuiIconButton: {
       defaultProps: {
         color: "primary",
@@ -254,6 +264,12 @@ const theme = createTheme({
           "&.Mui-focused .MuiOutlinedInput-notchedOutline": {
             borderColor: alpha(app.accent, 0.45),
             borderWidth: 1,
+          },
+          "&.Mui-disabled": {
+            backgroundColor: app.canvasInset,
+          },
+          "& .MuiInputBase-input.Mui-disabled": {
+            WebkitTextFillColor: app.fgDefault,
           },
         },
       },
@@ -315,6 +331,12 @@ const theme = createTheme({
             borderBottomColor: app.accent,
             borderBottomWidth: 1,
           },
+          "&.Mui-disabled": {
+            backgroundColor: app.canvasInset,
+          },
+          "& .MuiInputBase-input.Mui-disabled": {
+            WebkitTextFillColor: app.fgDefault,
+          },
         },
       },
     },
@@ -332,6 +354,9 @@ const theme = createTheme({
             borderBottomColor: alpha(app.accent, 0.45),
             borderBottomWidth: 1,
           },
+          "& .MuiInputBase-input.Mui-disabled": {
+            WebkitTextFillColor: app.fgDefault,
+          },
         },
       },
     },
@@ -341,6 +366,9 @@ const theme = createTheme({
           color: app.fgDefault,
           "&.Mui-focused": {
             color: app.accent,
+          },
+          "&.Mui-disabled": {
+            color: app.fgMuted,
           },
         },
       },

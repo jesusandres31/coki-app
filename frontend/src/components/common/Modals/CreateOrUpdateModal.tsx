@@ -5,15 +5,14 @@ import {
   Dialog,
   Button,
   Grid,
+  Stack,
   TextField,
   TextFieldVariants,
 } from "@mui/material";
 import { Input } from "src/types";
 import { handleSetFormikValue } from "src/utils/FormUtils";
-import { STYLE } from "src/constants";
 import { FormikProps } from "formik";
 import CustomAutocomplete from "./Inputs/CustomAutocomplete";
-import { useUI } from "src/hooks";
 
 interface CreateOrUpdateModalProps {
   open: boolean;
@@ -44,10 +43,8 @@ export default function CreateOrUpdateModal({
   noCancelBtn = false,
   variant = "outlined",
 }: CreateOrUpdateModalProps) {
-  const { isMobile } = useUI();
   const maxWidth = inputs.length > 6 ? "md" : "sm";
-  const columns = inputs.length > 6 ? { sm: 12 } : { sm: 8 };
-  const direction = isMobile || inputs.length <= 3 ? "column" : "row";
+  const fieldSize = inputs.length > 6 ? { xs: 12, sm: 6 } : { xs: 12 };
 
   return (
     <Dialog
@@ -60,30 +57,19 @@ export default function CreateOrUpdateModal({
       <DialogTitle>
         {title ? title : `${isUpdate ? "Actualizar" : "Crear nuevo"} ${label}`}
       </DialogTitle>
-      <DialogContent>
+      <DialogContent sx={{ pt: 2.5 }}>
         <Grid
           container
-          spacing={2}
-          columns={columns}
-          direction={direction}
-          justifyContent="center"
-          alignItems="center"
-          sx={{
-            pt: 3,
-            mb: -1.5,
-          }}
+          spacing={1.5}
+          alignItems="flex-start"
+          sx={{ pt: 0.5 }}
         >
-          {inputs.map((input) => (
-            <Grid
-              key={input.id}
-              size={{ xs: 2, sm: 4, md: 6 }}
-              sx={{
-                display: "flex",
-                justifyContent: "center",
-              }}
-            >
-              {!input.hide ? (
-                input.options ? (
+          {inputs.map((input) => {
+            if (input.hide) return null;
+
+            return (
+              <Grid key={input.id} size={fieldSize}>
+                {input.options ? (
                   <CustomAutocomplete
                     input={input}
                     formik={formik}
@@ -93,17 +79,18 @@ export default function CreateOrUpdateModal({
                     getOptionLabel={input.getOptionLabel}
                     variant={variant}
                     triggerSideEffect={input.triggerSideEffect}
+                    fullWidth
                   />
                 ) : (
                   <TextField
                     required={input.required}
+                    fullWidth
                     label={input.label}
                     id={input.id}
                     name={input.id}
                     value={input.value}
                     multiline={input.multiline}
                     type={input.type ?? "text"}
-                    placeholder={""}
                     onChange={(e) => handleSetFormikValue(e, formik, input)}
                     autoComplete={input.autoComplete ?? "off"}
                     error={!!input.error}
@@ -115,39 +102,44 @@ export default function CreateOrUpdateModal({
                       min: input.min,
                     }}
                     InputProps={input.InputProps}
-                    sx={{ width: { xs: "100%", sm: STYLE.width.textfield } }}
                     disabled={input.disabled}
                   />
-                )
-              ) : null}
-            </Grid>
-          ))}
+                )}
+              </Grid>
+            );
+          })}
         </Grid>
       </DialogContent>
-      <DialogActions>
-        {!noCancelBtn && (
-          <Button
-            variant="text"
-            color="inherit"
-            sx={{ color: "text.secondary" }}
-            onClick={handleClose}
-            disabled={loading}
-          >
-            Cancelar
-          </Button>
-        )}
-        <Button
-          loading={loading}
-          disabled={loading}
-          onClick={hanleConfirm}
-          type="submit"
-          autoFocus
-          variant="text"
-          color="inherit"
-          sx={{ color: "text.secondary" }}
+      <DialogActions sx={{ px: 3, pb: 2.5, pt: 1 }}>
+        <Stack
+          direction={{ xs: "column-reverse", sm: "row" }}
+          spacing={1}
+          sx={{ width: "100%", justifyContent: "flex-end" }}
         >
-          {confBtnLabel ? confBtnLabel : isUpdate ? "Actualizar" : "Crear"}
-        </Button>
+          {!noCancelBtn && (
+            <Button
+              variant="text"
+              color="inherit"
+              sx={{ color: "text.secondary", width: { xs: "100%", sm: "auto" } }}
+              onClick={handleClose}
+              disabled={loading}
+            >
+              Cancelar
+            </Button>
+          )}
+          <Button
+            loading={loading}
+            disabled={loading}
+            onClick={hanleConfirm}
+            type="submit"
+            autoFocus
+            variant="contained"
+            color="primary"
+            sx={{ width: { xs: "100%", sm: "auto" } }}
+          >
+            {confBtnLabel ? confBtnLabel : isUpdate ? "Actualizar" : "Crear"}
+          </Button>
+        </Stack>
       </DialogActions>
     </Dialog>
   );

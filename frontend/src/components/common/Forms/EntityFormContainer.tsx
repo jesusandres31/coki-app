@@ -101,6 +101,7 @@ export default function EntityFormContainer({
                 startIcon={<EditRounded />}
                 color="info"
                 onClick={onEdit}
+                sx={{ width: { xs: "100%", sm: "auto" } }}
               >
                 Editar
               </Button>
@@ -115,7 +116,8 @@ export default function EntityFormContainer({
                   startIcon={<SaveRounded />}
                   onClick={onSubmit}
                   loading={loading}
-                  disabled={submitDisabled}
+                  disabled={submitDisabled || loading}
+                  sx={{ width: { xs: "100%", sm: "auto" } }}
                 >
                   {submitLabel || "Guardar"}
                 </Button>
@@ -126,6 +128,7 @@ export default function EntityFormContainer({
                   startIcon={<CancelRounded />}
                   onClick={onCancelEdit}
                   disabled={loading}
+                  sx={{ width: { xs: "100%", sm: "auto" } }}
                 >
                   Cancelar edición
                 </Button>
@@ -140,6 +143,8 @@ export default function EntityFormContainer({
               variant="contained"
               startIcon={<ChevronLeftRounded />}
               onClick={onBack}
+              disabled={loading}
+              sx={{ width: { xs: "100%", sm: "auto" } }}
             >
               Atrás
             </Button>
@@ -179,6 +184,7 @@ export default function EntityFormContainer({
                               options={effectiveInput.options}
                               loading={effectiveInput.loading}
                               getOptionLabel={effectiveInput.getOptionLabel}
+                              fullWidth
                             />
                           ) : (
                             <CustomAutocomplete
@@ -189,6 +195,7 @@ export default function EntityFormContainer({
                               loading={effectiveInput.loading}
                               getOptionLabel={effectiveInput.getOptionLabel}
                               triggerSideEffect={effectiveInput.triggerSideEffect}
+                              fullWidth
                             />
                           )
                         ) : (
@@ -235,7 +242,8 @@ export default function EntityFormContainer({
                       startIcon={<AddRounded />}
                       onClick={onSubmit}
                       loading={loading}
-                      disabled={submitDisabled}
+                      disabled={submitDisabled || loading}
+                      sx={{ width: { xs: "100%", sm: "auto" } }}
                     >
                       {submitLabel || "Crear"}
                     </Button>
