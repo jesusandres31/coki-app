@@ -61,18 +61,36 @@ const theme = createTheme({
     borderRadius: radius,
   },
 
+  cssVariables: true,
+
+  // typography: {
+  //   fontSize: 13,
+  //   fontWeightRegular: 400,
+  //   fontFamily: [
+  //     '"Inter"',
+  //     '"Segoe UI"',
+  //     "Helvetica",
+  //     "Arial",
+  //     "sans-serif",
+  //     '"Apple Color Emoji"',
+  //     '"Segoe UI Emoji"',
+  //   ].join(","),
+  // },
   typography: {
     fontSize: 13,
-    fontWeightRegular: 400,
-    fontFamily: [
-      '"Inter"',
-      '"Segoe UI"',
-      "Helvetica",
-      "Arial",
-      "sans-serif",
-      '"Apple Color Emoji"',
-      '"Segoe UI Emoji"',
-    ].join(","),
+
+    fontFamily: '"Roboto", "Helvetica", "Arial", sans-serif',
+    subtitle1: {
+      fontWeight: 600,
+    },
+    subtitle2: {
+      fontWeight: 600,
+    },
+    button: {
+      textTransform: "none",
+      letterSpacing: 0,
+      fontWeight: 600,
+    },
   },
   components: {
     MuiCssBaseline: {

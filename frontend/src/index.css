@@ -1,6 +1,6 @@
 body {
   margin: 0;
-  font-family: "Inter", "Segoe UI", sans-serif;
+  font-family: "Roboto", "Helvetica", "Arial", sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
@@ -8,13 +8,6 @@ body {
 code {
   font-family: "Inter", source-code-pro, Menlo, Monaco, Consolas, "Courier New",
     monospace;
-}
-
-@font-face {
-  font-family: "Inter";
-  font-style: normal;
-  font-weight: 400;
-  src: url("./assets/fonts/Inter/Inter-VariableFont_slnt_wght.ttf");
 }
 
 /**
