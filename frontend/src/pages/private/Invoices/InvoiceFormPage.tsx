@@ -32,6 +32,8 @@ import {
   DialogContent,
   DialogContentText,
   DialogTitle,
+  FormControlLabel,
+  Switch,
   TextField,
   Typography,
 } from "@mui/material";
@@ -132,6 +134,7 @@ interface ProductTableRowData {
 interface ProductsTableProps {
   rows: ProductTableRowData[];
   editable: boolean;
+  inputsDisabled?: boolean;
   productOptions: NamedOption[];
   showCatalogPriceHint?: boolean;
   onRowChange?: (
@@ -352,16 +355,26 @@ function DebouncedAutocomplete({
 function ProductsTable({
   rows,
   editable,
+  inputsDisabled = false,
   productOptions,
   showCatalogPriceHint = false,
   onRowChange,
   onRemoveRow,
   canRemoveRow,
 }: ProductsTableProps) {
+  const controlsDisabled = !editable || inputsDisabled;
   const bodyCellSx = {
     py: 0.75,
-    pb: editable && showCatalogPriceHint ? 2.75 : 0.75,
     verticalAlign: "middle",
+  };
+  const editableBodyCellSx = {
+    ...bodyCellSx,
+    verticalAlign: editable && showCatalogPriceHint ? "top" : "middle",
+    pb: editable && showCatalogPriceHint ? 2.75 : bodyCellSx.py,
+  };
+  const priceCellSx = {
+    ...editableBodyCellSx,
+    pb: bodyCellSx.py,
   };
 
   return (
@@ -406,22 +419,24 @@ function ProductsTable({
                   ...invoiceProductsActionColumnSx,
                   zIndex: 4,
                   backgroundColor: "#F8FAFC",
-                  borderLeft: "1px solid #E5E7EB",
                 }}
-              />
+              >
+                Acc.
+              </TableCell>
             )}
           </TableRow>
         </TableHead>
         <TableBody>
           {rows.map((row) => (
             <TableRow key={row.id}>
-              <TableCell sx={bodyCellSx}>
+              <TableCell sx={editableBodyCellSx}>
                 {editable ? (
                   <DebouncedAutocomplete
                     options={productOptions}
                     valueId={row.productId}
                     placeholder="Seleccionar producto"
                     variant="standard"
+                    disabled={inputsDisabled}
                     onChange={(value) =>
                       onRowChange?.(row.id, "product", value)
                     }
@@ -438,7 +453,7 @@ function ProductsTable({
                 )}
               </TableCell>
 
-              <TableCell sx={bodyCellSx}>
+              <TableCell sx={editableBodyCellSx}>
                 <TextField
                   fullWidth
                   size="small"
@@ -455,12 +470,12 @@ function ProductsTable({
                     )
                   }
                   inputProps={{ min: 1, step: 1 }}
-                  disabled={!editable}
+                  disabled={controlsDisabled}
                   sx={readableDisabledFieldSx}
                 />
               </TableCell>
 
-              <TableCell sx={bodyCellSx}>
+              <TableCell sx={editableBodyCellSx}>
                 <TextField
                   fullWidth
                   size="small"
@@ -471,8 +486,8 @@ function ProductsTable({
                 />
               </TableCell>
 
-              <TableCell sx={bodyCellSx}>
-                <Box sx={{ position: "relative" }}>
+              <TableCell sx={priceCellSx}>
+                <Box>
                   <TextField
                     fullWidth
                     size="small"
@@ -487,30 +502,29 @@ function ProductsTable({
                       )
                     }
                     inputProps={{ min: 0, step: "0.01" }}
-                    disabled={!editable}
+                    disabled={controlsDisabled}
                     sx={readableDisabledFieldSx}
                   />
                   {editable && showCatalogPriceHint && row.productId && (
                     <Typography
                       variant="caption"
                       color="text.secondary"
-                      noWrap
                       sx={{
-                        position: "absolute",
-                        top: "100%",
-                        left: 0,
+                        display: "block",
                         mt: 0.25,
-                        maxWidth: "100%",
+                        whiteSpace: "normal",
+                        overflow: "visible",
+                        textOverflow: "clip",
                         pointerEvents: "none",
                       }}
                     >
-                      {`Precio actual: ${formatMoney(row.catalogUnitPrice ?? 0)}`}
+                      {`Precio Gral.: ${formatMoney(row.catalogUnitPrice ?? 0)}`}
                     </Typography>
                   )}
                 </Box>
               </TableCell>
 
-              <TableCell sx={bodyCellSx}>
+              <TableCell sx={editableBodyCellSx}>
                 <TextField
                   fullWidth
                   size="small"
@@ -525,7 +539,7 @@ function ProductsTable({
                     )
                   }
                   inputProps={{ min: 0, max: 100, step: "0.01" }}
-                  disabled={!editable}
+                  disabled={controlsDisabled}
                   sx={readableDisabledFieldSx}
                 />
               </TableCell>
@@ -534,7 +548,7 @@ function ProductsTable({
                 align="right"
                 sx={{
                   ...invoiceProductsTotalColumnSx,
-                  ...bodyCellSx,
+                  ...editableBodyCellSx,
                 }}
               >
                 <Typography variant="body2" fontWeight={600}>
@@ -547,17 +561,16 @@ function ProductsTable({
                   align="center"
                   sx={{
                     ...invoiceProductsActionColumnSx,
-                    ...bodyCellSx,
+                    ...editableBodyCellSx,
                     zIndex: 2,
-                    backgroundColor: "background.paper",
-                    borderLeft: "1px solid #E5E7EB",
+                    backgroundColor: "transparent",
                   }}
                 >
                   <IconButton
                     size="small"
                     color="error"
                     onClick={() => onRemoveRow?.(row.id)}
-                    disabled={!canRemoveRow?.(row.id)}
+                    disabled={inputsDisabled || !canRemoveRow?.(row.id)}
                     sx={{
                       width: 30,
                       height: 30,
@@ -639,6 +652,8 @@ export default function InvoiceFormPage() {
   );
   const [isPrinting, setIsPrinting] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [retrieveLastPriceEnabled, setRetrieveLastPriceEnabled] =
+    useState(false);
 
   useEffect(() => {
     setMode(isDetailRoute ? requestedDetailMode : "new");
@@ -689,6 +704,12 @@ export default function InvoiceFormPage() {
   const [deleteInvoice, { isLoading: isDeleting }] = useDeleteInvoiceMutation();
   const [triggerGetLastProductPriceForClient] =
     useLazyGetLastProductPriceForClientQuery();
+
+  useEffect(() => {
+    if (!isNewMode && !isEditMode) return;
+
+    setRetrieveLastPriceEnabled(Boolean(appConfig?.retrieve_last_price));
+  }, [appConfig?.retrieve_last_price, invoiceId, isEditMode, isNewMode]);
 
   const clientOptions = useMemo<NamedOption[]>(
     () =>
@@ -1183,7 +1204,9 @@ export default function InvoiceFormPage() {
     (typeof invoice?.client === "string" ? invoice.client : "-");
   const selectedInvoiceClientId =
     activeFormik.values.client || parsedClient?.id || "";
-  const retrieveLastPriceEnabled = Boolean(appConfig?.retrieve_last_price);
+  const hasInvoiceDate = Boolean(normalizeIsoDate(activeFormik.values.date));
+  const canEditProducts =
+    isEditable && Boolean(selectedInvoiceClientId) && hasInvoiceDate;
   const pageTitle = isNewMode ? (
     "Crear factura"
   ) : (
@@ -1254,7 +1277,37 @@ export default function InvoiceFormPage() {
       </>
     ) : undefined;
 
+  const retrieveLastPriceToggle = isEditable ? (
+    <FormControlLabel
+      control={
+        <Switch
+          size="small"
+          checked={retrieveLastPriceEnabled}
+          onChange={(_, checked) => setRetrieveLastPriceEnabled(checked)}
+          inputProps={{
+            "aria-label":
+              "Recuperar último precio de productos por cliente en esta factura",
+          }}
+        />
+      }
+      label="Recuperar último precio"
+      labelPlacement="start"
+      sx={{
+        m: 0,
+        px: { xs: 0, sm: 0.5 },
+        minHeight: 30,
+        "& .MuiFormControlLabel-label": {
+          fontSize: 13,
+          lineHeight: 1.2,
+          whiteSpace: "nowrap",
+        },
+      }}
+    />
+  ) : undefined;
+
   const handleAddRow = () => {
+    if (!canEditProducts) return;
+
     activeFormik.setFieldValue("rows", [
       ...activeFormik.values.rows,
       buildEmptyRow(),
@@ -1262,7 +1315,9 @@ export default function InvoiceFormPage() {
   };
 
   const handleRemoveRow = (id: string) => {
+    if (!canEditProducts) return;
     if (activeFormik.values.rows.length <= 1) return;
+
     activeFormik.setFieldValue(
       "rows",
       activeFormik.values.rows.filter((row) => row.id !== id),
@@ -1274,6 +1329,8 @@ export default function InvoiceFormPage() {
     field: keyof Omit<InvoiceProductInput, "id">,
     value: string | number,
   ) => {
+    if (!canEditProducts) return;
+
     if (field === "product") {
       const productId = String(value);
       const selected = productById.get(productId);
@@ -1488,6 +1545,8 @@ export default function InvoiceFormPage() {
           submitDisabled={isUpdating}
           submitLabel="Guardar"
           headerActions={reviewHeaderActions}
+          editLeadingActions={isEditMode ? retrieveLastPriceToggle : undefined}
+          backAdjacentActions={isNewMode ? retrieveLastPriceToggle : undefined}
           showDefaultNewSubmit={false}
           maxWidth="xl"
           containerSx={{
@@ -1578,9 +1637,9 @@ export default function InvoiceFormPage() {
                   variant="contained"
                   color="primary"
                   startIcon={<AddRounded />}
-                  onClick={isEditable ? handleAddRow : undefined}
-                  disabled={!isEditable || isProductsLoading}
-                  tabIndex={isEditable ? 0 : -1}
+                  onClick={canEditProducts ? handleAddRow : undefined}
+                  disabled={!canEditProducts || isProductsLoading}
+                  tabIndex={canEditProducts ? 0 : -1}
                   aria-hidden={!isEditable}
                   sx={{
                     width: "100%",
@@ -1604,6 +1663,7 @@ export default function InvoiceFormPage() {
                 <ProductsTable
                   rows={tableRows}
                   editable={isEditable}
+                  inputsDisabled={!canEditProducts}
                   productOptions={productOptions}
                   showCatalogPriceHint={retrieveLastPriceEnabled}
                   onRowChange={handleRowChange}
@@ -1763,9 +1823,9 @@ export default function InvoiceFormPage() {
                   variant="contained"
                   color="primary"
                   startIcon={<AddRounded />}
-                  onClick={isEditable ? handleAddRow : undefined}
-                  disabled={!isEditable || isProductsLoading}
-                  tabIndex={isEditable ? 0 : -1}
+                  onClick={canEditProducts ? handleAddRow : undefined}
+                  disabled={!canEditProducts || isProductsLoading}
+                  tabIndex={canEditProducts ? 0 : -1}
                   aria-hidden={!isEditable}
                   sx={{
                     visibility: isEditable ? "visible" : "hidden",
@@ -1779,6 +1839,7 @@ export default function InvoiceFormPage() {
               <ProductsTable
                 rows={tableRows}
                 editable={isEditable}
+                inputsDisabled={!canEditProducts}
                 productOptions={productOptions}
                 showCatalogPriceHint={retrieveLastPriceEnabled}
                 onRowChange={handleRowChange}

@@ -8,7 +8,7 @@ export const STYLE = {
 };
 
 export const SEARCH = {
-  debounceMs: 1500,
+  debounceMs: 500,
 };
 
 // pagination

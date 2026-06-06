@@ -17,6 +17,8 @@ export const Collections = {
 	InvoicesProducts: "invoices_products",
 	Invoicestates: "invoicestates",
 	Measureunits: "measureunits",
+	PaymentAccountMovementTypes: "payment_account_movement_types",
+	PaymentAccountMovements: "payment_account_movements",
 	ProductTypes: "product_types",
 	Products: "products",
 	Roles: "roles",
@@ -106,6 +108,7 @@ export type SuperusersRecord = {
 
 export type ClientsRecord = {
 	address?: string
+	balance?: number
 	created: IsoAutoDateString
 	created_by?: RecordIdString
 	deleted?: IsoDateString
@@ -172,6 +175,23 @@ export type MeasureunitsRecord = {
 	name?: string
 	updated: IsoAutoDateString
 	updated_by?: RecordIdString
+}
+
+export type PaymentAccountMovementTypesRecord = {
+	created: IsoAutoDateString
+	id: string
+	name?: string
+	updated: IsoAutoDateString
+}
+
+export type PaymentAccountMovementsRecord = {
+	amount?: number
+	client?: RecordIdString
+	created: IsoAutoDateString
+	description?: string
+	id: string
+	type?: RecordIdString
+	updated: IsoAutoDateString
 }
 
 export type ProductTypesRecord = {
@@ -254,6 +274,8 @@ export type InvoicesResponse<Texpand = unknown> = Required<InvoicesRecord> & Bas
 export type InvoicesProductsResponse<Texpand = unknown> = Required<InvoicesProductsRecord> & BaseSystemFields<Texpand>
 export type InvoicestatesResponse<Texpand = unknown> = Required<InvoicestatesRecord> & BaseSystemFields<Texpand>
 export type MeasureunitsResponse<Texpand = unknown> = Required<MeasureunitsRecord> & BaseSystemFields<Texpand>
+export type PaymentAccountMovementTypesResponse<Texpand = unknown> = Required<PaymentAccountMovementTypesRecord> & BaseSystemFields<Texpand>
+export type PaymentAccountMovementsResponse<Texpand = unknown> = Required<PaymentAccountMovementsRecord> & BaseSystemFields<Texpand>
 export type ProductTypesResponse<Texpand = unknown> = Required<ProductTypesRecord> & BaseSystemFields<Texpand>
 export type ProductsResponse<Texpand = unknown> = Required<ProductsRecord> & BaseSystemFields<Texpand>
 export type RolesResponse<Texpand = unknown> = Required<RolesRecord> & BaseSystemFields<Texpand>
@@ -275,6 +297,8 @@ export type CollectionRecords = {
 	invoices_products: InvoicesProductsRecord
 	invoicestates: InvoicestatesRecord
 	measureunits: MeasureunitsRecord
+	payment_account_movement_types: PaymentAccountMovementTypesRecord
+	payment_account_movements: PaymentAccountMovementsRecord
 	product_types: ProductTypesRecord
 	products: ProductsRecord
 	roles: RolesRecord
@@ -295,6 +319,8 @@ export type CollectionResponses = {
 	invoices_products: InvoicesProductsResponse
 	invoicestates: InvoicestatesResponse
 	measureunits: MeasureunitsResponse
+	payment_account_movement_types: PaymentAccountMovementTypesResponse
+	payment_account_movements: PaymentAccountMovementsResponse
 	product_types: ProductTypesResponse
 	products: ProductsResponse
 	roles: RolesResponse

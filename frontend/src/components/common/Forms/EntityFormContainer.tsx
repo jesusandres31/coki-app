@@ -41,6 +41,8 @@ interface EntityFormContainerProps {
   submitDisabled?: boolean;
   submitLabel?: string;
   headerActions?: ReactNode;
+  editLeadingActions?: ReactNode;
+  backAdjacentActions?: ReactNode;
   showDefaultNewSubmit?: boolean;
   maxWidth?: "xs" | "sm" | "md" | "lg" | "xl";
   containerSx?: SxProps<Theme>;
@@ -62,6 +64,8 @@ export default function EntityFormContainer({
   submitDisabled = false,
   submitLabel,
   headerActions,
+  editLeadingActions,
+  backAdjacentActions,
   showDefaultNewSubmit = true,
   maxWidth = "lg",
   containerSx,
@@ -113,6 +117,7 @@ export default function EntityFormContainer({
 
             {isEdit ? (
               <>
+                {editLeadingActions}
                 <Button
                   size="small"
                   variant="contained"
@@ -140,6 +145,7 @@ export default function EntityFormContainer({
             ) : null}
 
             {headerActions}
+            {backAdjacentActions}
 
             <Button
               color="primary"
