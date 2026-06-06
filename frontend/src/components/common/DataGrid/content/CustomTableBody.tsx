@@ -66,7 +66,8 @@ export default function CustomTableBody({
     position: "sticky",
     right: isCollapsible ? 48 : 0,
     zIndex: 1,
-    backgroundColor: "background.paper",
+    backgroundColor: "transparent",
+    backgroundImage: "none",
     width: actionsColumnWidth,
     minWidth: actionsColumnWidth,
     maxWidth: actionsColumnWidth,
@@ -94,20 +95,36 @@ export default function CustomTableBody({
                   borderBottom: collapsed ? "0px" : "1px solid",
                   borderColor: "divider",
                 },
+                "& > .row-sticky-cell": {
+                  backgroundColor: "transparent",
+                  backgroundImage: "none",
+                },
                 "&:hover > th, &:hover > td": {
                   backgroundColor: "background.paper",
                   backgroundImage: (theme) =>
                     `linear-gradient(${theme.palette.action.hover}, ${theme.palette.action.hover})`,
+                },
+                "&:hover > .row-sticky-cell": {
+                  backgroundColor: "transparent",
+                  backgroundImage: "none",
                 },
                 "&.Mui-selected > th, &.Mui-selected > td": {
                   backgroundColor: "background.paper",
                   backgroundImage: (theme) =>
                     `linear-gradient(${theme.palette.action.selected}, ${theme.palette.action.selected})`,
                 },
+                "&.Mui-selected > .row-sticky-cell": {
+                  backgroundColor: "transparent",
+                  backgroundImage: "none",
+                },
                 "&.Mui-selected:hover > th, &.Mui-selected:hover > td": {
                   backgroundColor: "background.paper",
                   backgroundImage: (theme) =>
                     `linear-gradient(${theme.palette.action.selected}, ${theme.palette.action.selected})`,
+                },
+                "&.Mui-selected:hover > .row-sticky-cell": {
+                  backgroundColor: "transparent",
+                  backgroundImage: "none",
                 },
               }}
             >

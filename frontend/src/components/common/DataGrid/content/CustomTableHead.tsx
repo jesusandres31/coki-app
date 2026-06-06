@@ -52,6 +52,7 @@ export default function CustomTableHead({
     right: isCollapsible ? collapseColumnWidth : 0,
     zIndex: 3,
     backgroundColor: "#F8FAFC",
+    backgroundImage: "none",
     width: actionsColumnWidth,
     minWidth: actionsColumnWidth,
     maxWidth: actionsColumnWidth,
@@ -138,6 +139,7 @@ export default function CustomTableHead({
               minWidth: collapseColumnWidth,
               maxWidth: collapseColumnWidth,
               backgroundColor: "#F8FAFC",
+              backgroundImage: "none",
               zIndex: 4,
             }}
           />

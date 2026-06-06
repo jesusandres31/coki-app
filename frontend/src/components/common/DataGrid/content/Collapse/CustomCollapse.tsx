@@ -110,7 +110,8 @@ export default function CustomCollapse({
                               padding="checkbox"
                               sx={{
                                 ...styles.sticky,
-                                backgroundColor: "#F4F6FB",
+                                backgroundColor: "transparent",
+                                backgroundImage: "none",
                                 zIndex: 2,
                               }}
                             />

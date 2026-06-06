@@ -35,6 +35,9 @@ import {
   DialogContentText,
   DialogTitle,
   FormControlLabel,
+  InputAdornment,
+  Radio,
+  RadioGroup,
   Switch,
   TextField,
   Typography,
@@ -77,6 +80,7 @@ import {
 
 type InvoicePageMode = "new" | "review" | "edit";
 type InvoiceState = "draft" | "open" | "void";
+type InvoicePaymentMode = "none" | "full" | "partial";
 
 const invoiceStateMeta: Record<
   InvoiceState,
@@ -159,12 +163,26 @@ interface InvoiceTotalsSummaryProps {
   subtotal: number;
   discountPercent: number;
   total: number;
+  disabled?: boolean;
+  onDiscountChange?: (discount: number) => void;
+}
+
+interface ClientBalanceSummaryProps {
+  currentBalance: number;
+  invoiceTotal: number;
+  paymentMode: InvoicePaymentMode;
+  partialPaymentAmount: number;
+  disabled?: boolean;
+  onPaymentModeChange: (mode: InvoicePaymentMode) => void;
+  onPartialPaymentAmountChange: (amount: number) => void;
 }
 
 interface InvoiceFormValues {
   client: string;
   date: string;
   discount: number;
+  paymentMode: InvoicePaymentMode;
+  partialPaymentAmount: number;
   rows: InvoiceProductInput[];
 }
 
@@ -186,7 +204,7 @@ const productTableEditableFields: ProductTableEditableField[] = [
 ];
 
 const invoiceProductsActionColumnWidth = 56;
-const invoiceProductsTotalColumnWidth = 100;
+const invoiceProductsTotalColumnWidth = 50;
 
 const invoiceProductsTotalColumnSx = {
   width: invoiceProductsTotalColumnWidth,
@@ -202,6 +220,18 @@ const invoiceProductsActionColumnSx = {
   minWidth: invoiceProductsActionColumnWidth,
   maxWidth: invoiceProductsActionColumnWidth,
   boxSizing: "border-box",
+};
+const productRowHelperTextMinHeight = 18;
+const productRowHelperTextSx = {
+  minHeight: productRowHelperTextMinHeight,
+  whiteSpace: "nowrap",
+  overflow: "hidden",
+  textOverflow: "ellipsis",
+  lineHeight: `${productRowHelperTextMinHeight}px`,
+  mt: 0.25,
+};
+const productRowHelperTextProps = {
+  sx: productRowHelperTextSx,
 };
 
 const getLocalDate = () => {
@@ -302,10 +332,36 @@ const validateInvoiceForm = (values: InvoiceFormValues) => {
   return errors;
 };
 
+const getPaymentPayload = (values: InvoiceFormValues, invoiceTotal: number) => {
+  if (values.paymentMode === "full") {
+    return { paidNow: true, paidAmount: invoiceTotal };
+  }
+
+  if (values.paymentMode === "partial") {
+    return {
+      paidNow: false,
+      paidAmount: Math.max(0, Number(values.partialPaymentAmount || 0)),
+    };
+  }
+
+  return { paidNow: false, paidAmount: 0 };
+};
+
+const getPaymentValidationMessage = (
+  values: InvoiceFormValues,
+  invoiceTotal: number,
+) => {
+  if (values.paymentMode !== "partial") return "";
+
+  const paymentAmount = Number(values.partialPaymentAmount || 0);
+
+  if (paymentAmount <= 0) return "Ingresá el importe entregado por el cliente.";
+
+  return "";
+};
+
 const getInvoiceRowErrors = (errors: FormikErrors<InvoiceFormValues>) =>
-  Array.isArray(errors.rows)
-    ? (errors.rows as InvoiceProductRowErrors[])
-    : [];
+  Array.isArray(errors.rows) ? (errors.rows as InvoiceProductRowErrors[]) : [];
 
 const readableDisabledFieldSx = (theme: Theme) => ({
   "& .MuiInputBase-input.Mui-disabled": {
@@ -433,17 +489,9 @@ function DebouncedAutocomplete({
           inputRef={inputRef}
           onKeyDown={onKeyDown}
           error={error}
-          helperText={helperText}
+          helperText={helperTextNoWrap ? helperText || " " : helperText}
           FormHelperTextProps={
-            helperTextNoWrap
-              ? {
-                  sx: {
-                    whiteSpace: "nowrap",
-                    overflow: "hidden",
-                    textOverflow: "ellipsis",
-                  },
-                }
-              : undefined
+            helperTextNoWrap ? productRowHelperTextProps : undefined
           }
         />
       )}
@@ -472,30 +520,32 @@ function ProductsTable({
   };
   const editableBodyCellSx = {
     ...bodyCellSx,
-    verticalAlign: editable && showCatalogPriceHint ? "top" : "middle",
-    pb: editable && showCatalogPriceHint ? 2.75 : bodyCellSx.py,
+    verticalAlign: editable ? "top" : "middle",
   };
   const priceCellSx = {
     ...editableBodyCellSx,
-    pb: bodyCellSx.py,
   };
   const totalCellSx = {
     ...invoiceProductsTotalColumnSx,
     ...editableBodyCellSx,
   };
   const totalValueSx = {
-    minHeight: 32,
+    height: 32,
     display: "flex",
     alignItems: "center",
     justifyContent: "flex-end",
   };
-  const singleLineHelperTextProps = {
-    sx: {
-      whiteSpace: "nowrap",
-      overflow: "hidden",
-      textOverflow: "ellipsis",
-    },
+  const rowActionButtonSx = {
+    height: 32,
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
   };
+  const rowHelperSpacerSx = {
+    minHeight: productRowHelperTextMinHeight,
+    mt: 0.25,
+  };
+  const singleLineHelperTextProps = productRowHelperTextProps;
   const getFieldKey = (rowId: string, field: ProductTableEditableField) =>
     `${rowId}:${field}`;
   const setFieldRef =
@@ -638,9 +688,9 @@ function ProductsTable({
           <TableRow>
             <TableCell sx={{ width: "31%" }}>Producto</TableCell>
             <TableCell sx={{ width: "12%" }}>Cantidad</TableCell>
-            <TableCell sx={{ width: "12%" }}>Unidad</TableCell>
+            <TableCell sx={{ width: "8%" }}>Unidad</TableCell>
             <TableCell sx={{ width: "14%" }}>Precio unit.</TableCell>
-            <TableCell sx={{ width: "14%" }}>Descuento (%)</TableCell>
+            <TableCell sx={{ width: "8%" }}>Descuento (%)</TableCell>
             <TableCell
               align="right"
               sx={{
@@ -669,181 +719,181 @@ function ProductsTable({
             const rowError = rowErrors[rowIndex] || {};
 
             return (
-            <TableRow key={row.id}>
-              <TableCell sx={editableBodyCellSx}>
-                {editable ? (
-                  <DebouncedAutocomplete
-                    options={productOptions}
-                    valueId={row.productId}
-                    placeholder="Seleccionar producto"
-                    variant="standard"
-                    disabled={inputsDisabled}
-                    inputRef={setFieldRef(row.id, "product")}
-                    onKeyDown={handleFieldKeyDown(rowIndex, "product")}
-                    error={Boolean(rowError.product)}
-                    helperText={rowError.product}
-                    helperTextNoWrap
-                    onChange={(value) => {
-                      onRowChange?.(row.id, "product", value);
-                      requestAnimationFrame(() => focusField(rowIndex, 1));
-                    }}
-                  />
-                ) : (
-                  <TextField
-                    fullWidth
-                    size="small"
-                    variant="standard"
-                    value={row.productName}
-                    disabled
-                    sx={readableDisabledFieldSx}
-                  />
-                )}
-              </TableCell>
+              <TableRow key={row.id}>
+                <TableCell sx={editableBodyCellSx}>
+                  {editable ? (
+                    <DebouncedAutocomplete
+                      options={productOptions}
+                      valueId={row.productId}
+                      placeholder="Seleccionar producto"
+                      variant="standard"
+                      disabled={inputsDisabled}
+                      inputRef={setFieldRef(row.id, "product")}
+                      onKeyDown={handleFieldKeyDown(rowIndex, "product")}
+                      error={Boolean(rowError.product)}
+                      helperText={rowError.product}
+                      helperTextNoWrap
+                      onChange={(value) => {
+                        onRowChange?.(row.id, "product", value);
+                        requestAnimationFrame(() => focusField(rowIndex, 1));
+                      }}
+                    />
+                  ) : (
+                    <TextField
+                      fullWidth
+                      size="small"
+                      variant="standard"
+                      value={row.productName}
+                      disabled
+                      sx={readableDisabledFieldSx}
+                    />
+                  )}
+                </TableCell>
 
-              <TableCell sx={editableBodyCellSx}>
-                <TextField
-                  fullWidth
-                  size="small"
-                  variant="standard"
-                  type="number"
-                  value={row.amount <= 0 ? "" : row.amount}
-                  onChange={(e) =>
-                    onRowChange?.(
-                      row.id,
-                      "amount",
-                      e.target.value === ""
-                        ? 0
-                        : Math.max(1, Number(e.target.value || 1)),
-                    )
-                  }
-                  inputProps={{ min: 1, step: 1 }}
-                  inputRef={setFieldRef(row.id, "amount")}
-                  onKeyDown={handleFieldKeyDown(rowIndex, "amount")}
-                  disabled={controlsDisabled}
-                  error={Boolean(rowError.amount)}
-                  helperText={rowError.amount}
-                  FormHelperTextProps={singleLineHelperTextProps}
-                  sx={readableDisabledFieldSx}
-                />
-              </TableCell>
-
-              <TableCell sx={editableBodyCellSx}>
-                <TextField
-                  fullWidth
-                  size="small"
-                  variant="standard"
-                  value={row.measureUnitName}
-                  disabled
-                  sx={readableDisabledFieldSx}
-                />
-              </TableCell>
-
-              <TableCell sx={priceCellSx}>
-                <Box>
+                <TableCell sx={editableBodyCellSx}>
                   <TextField
                     fullWidth
                     size="small"
                     variant="standard"
                     type="number"
-                    value={row.unitPrice}
+                    value={row.amount <= 0 ? "" : row.amount}
                     onChange={(e) =>
                       onRowChange?.(
                         row.id,
-                        "unitPrice",
-                        Math.max(0, Number(e.target.value || 0)),
+                        "amount",
+                        e.target.value === ""
+                          ? 0
+                          : Math.max(1, Number(e.target.value || 1)),
                       )
                     }
-                    inputProps={{ min: 0, step: "0.01" }}
-                    inputRef={setFieldRef(row.id, "unitPrice")}
-                    onKeyDown={handleFieldKeyDown(rowIndex, "unitPrice")}
+                    inputProps={{ min: 1, step: 1 }}
+                    inputRef={setFieldRef(row.id, "amount")}
+                    onKeyDown={handleFieldKeyDown(rowIndex, "amount")}
                     disabled={controlsDisabled}
-                    error={Boolean(rowError.unitPrice)}
-                    helperText={rowError.unitPrice}
+                    error={Boolean(rowError.amount)}
+                    helperText={rowError.amount || " "}
                     FormHelperTextProps={singleLineHelperTextProps}
                     sx={readableDisabledFieldSx}
                   />
-                  {editable && showCatalogPriceHint && row.productId && (
-                    <Typography
-                      variant="caption"
-                      color="text.secondary"
-                      sx={{
-                        display: "block",
-                        mt: 0.25,
-                        whiteSpace: "normal",
-                        overflow: "visible",
-                        textOverflow: "clip",
-                        pointerEvents: "none",
-                      }}
-                    >
-                      {`Precio Gral.: ${formatMoney(row.catalogUnitPrice ?? 0)}`}
-                    </Typography>
-                  )}
-                </Box>
-              </TableCell>
+                </TableCell>
 
-              <TableCell sx={editableBodyCellSx}>
-                <TextField
-                  fullWidth
-                  size="small"
-                  variant="standard"
-                  type="number"
-                  value={row.discount}
-                  onChange={(e) =>
-                    onRowChange?.(
-                      row.id,
-                      "discount",
-                      clampDiscount(Number(e.target.value || 0)),
-                    )
-                  }
-                  inputProps={{ min: 0, max: 100, step: "0.01" }}
-                  inputRef={setFieldRef(row.id, "discount")}
-                  onKeyDown={handleFieldKeyDown(rowIndex, "discount")}
-                  disabled={controlsDisabled}
-                  error={Boolean(rowError.discount)}
-                  helperText={rowError.discount}
-                  FormHelperTextProps={singleLineHelperTextProps}
-                  sx={readableDisabledFieldSx}
-                />
-              </TableCell>
-
-              <TableCell
-                align="right"
-                sx={totalCellSx}
-              >
-                <Typography variant="body2" fontWeight={600} sx={totalValueSx}>
-                  {formatMoney(row.total)}
-                </Typography>
-              </TableCell>
-
-              {editable && (
-                <TableCell
-                  align="center"
-                  sx={{
-                    ...invoiceProductsActionColumnSx,
-                    ...editableBodyCellSx,
-                    zIndex: 2,
-                    backgroundColor: "transparent",
-                  }}
-                >
-                  <IconButton
+                <TableCell sx={editableBodyCellSx}>
+                  <TextField
+                    fullWidth
                     size="small"
-                    color="error"
-                    onClick={() => onRemoveRow?.(row.id)}
-                    disabled={inputsDisabled || !canRemoveRow?.(row.id)}
+                    variant="standard"
+                    value={row.measureUnitName}
+                    disabled
+                    helperText=" "
+                    FormHelperTextProps={singleLineHelperTextProps}
+                    sx={readableDisabledFieldSx}
+                  />
+                </TableCell>
+
+                <TableCell sx={priceCellSx}>
+                  <Box>
+                    <TextField
+                      fullWidth
+                      size="small"
+                      variant="standard"
+                      type="number"
+                      value={row.unitPrice}
+                      onChange={(e) =>
+                        onRowChange?.(
+                          row.id,
+                          "unitPrice",
+                          Math.max(0, Number(e.target.value || 0)),
+                        )
+                      }
+                      inputProps={{ min: 0, step: "0.01" }}
+                      inputRef={setFieldRef(row.id, "unitPrice")}
+                      onKeyDown={handleFieldKeyDown(rowIndex, "unitPrice")}
+                      disabled={controlsDisabled}
+                      error={Boolean(rowError.unitPrice)}
+                      helperText={
+                        rowError.unitPrice ||
+                        (editable && showCatalogPriceHint && row.productId
+                          ? `Precio Gral.: ${formatMoney(row.catalogUnitPrice ?? 0)}`
+                          : " ")
+                      }
+                      FormHelperTextProps={singleLineHelperTextProps}
+                      sx={readableDisabledFieldSx}
+                    />
+                  </Box>
+                </TableCell>
+
+                <TableCell sx={editableBodyCellSx}>
+                  <TextField
+                    fullWidth
+                    size="small"
+                    variant="standard"
+                    type="number"
+                    value={row.discount}
+                    onChange={(e) =>
+                      onRowChange?.(
+                        row.id,
+                        "discount",
+                        clampDiscount(Number(e.target.value || 0)),
+                      )
+                    }
+                    inputProps={{ min: 0, max: 100, step: "0.01" }}
+                    inputRef={setFieldRef(row.id, "discount")}
+                    onKeyDown={handleFieldKeyDown(rowIndex, "discount")}
+                    disabled={controlsDisabled}
+                    error={Boolean(rowError.discount)}
+                    helperText={rowError.discount || " "}
+                    FormHelperTextProps={singleLineHelperTextProps}
+                    sx={readableDisabledFieldSx}
+                  />
+                </TableCell>
+
+                <TableCell align="right" sx={totalCellSx}>
+                  <Box>
+                    <Typography
+                      variant="body2"
+                      fontWeight={600}
+                      sx={totalValueSx}
+                    >
+                      {formatMoney(row.total)}
+                    </Typography>
+                    <Box sx={rowHelperSpacerSx} />
+                  </Box>
+                </TableCell>
+
+                {editable && (
+                  <TableCell
+                    align="center"
                     sx={{
-                      width: 30,
-                      height: 30,
-                      border: "1px solid",
-                      borderColor: "divider",
-                      borderRadius: 1.25,
-                      p: 0.5,
+                      ...invoiceProductsActionColumnSx,
+                      ...editableBodyCellSx,
+                      zIndex: 2,
+                      backgroundColor: "transparent",
                     }}
                   >
-                    <DeleteRounded />
-                  </IconButton>
-                </TableCell>
-              )}
-            </TableRow>
+                    <Box>
+                      <Box sx={rowActionButtonSx}>
+                        <IconButton
+                          size="small"
+                          color="error"
+                          onClick={() => onRemoveRow?.(row.id)}
+                          disabled={inputsDisabled || !canRemoveRow?.(row.id)}
+                          sx={{
+                            width: 30,
+                            height: 30,
+                            border: "1px solid",
+                            borderColor: "divider",
+                            borderRadius: 1.25,
+                            p: 0.5,
+                          }}
+                        >
+                          <DeleteRounded />
+                        </IconButton>
+                      </Box>
+                      <Box sx={rowHelperSpacerSx} />
+                    </Box>
+                  </TableCell>
+                )}
+              </TableRow>
             );
           })}
         </TableBody>
@@ -856,30 +906,49 @@ function InvoiceTotalsSummary({
   subtotal,
   discountPercent,
   total,
+  disabled = false,
+  onDiscountChange,
 }: InvoiceTotalsSummaryProps) {
-  const totalRows = [
-    { label: "Subtotal", value: formatMoney(subtotal) },
-    { label: "Descuento factura", value: formatPercent(discountPercent) },
-  ];
-
   return (
     <Stack spacing={1.25} sx={{ width: "100%" }}>
-      {totalRows.map((row) => (
-        <Stack
-          key={row.label}
-          direction="row"
-          justifyContent="space-between"
-          alignItems="center"
-          spacing={1}
-        >
-          <Typography variant="body2" color="text.secondary">
-            {row.label}
-          </Typography>
-          <Typography variant="body2" color="text.primary" fontWeight={600}>
-            {row.value}
-          </Typography>
-        </Stack>
-      ))}
+      <Stack
+        direction="row"
+        justifyContent="space-between"
+        alignItems="center"
+        spacing={1}
+      >
+        <Typography variant="body2" color="text.secondary">
+          Subtotal
+        </Typography>
+        <Typography variant="body2" color="text.primary" fontWeight={600}>
+          {formatMoney(subtotal)}
+        </Typography>
+      </Stack>
+      <Stack
+        direction="row"
+        justifyContent="stretch"
+        alignItems="flex-start"
+        spacing={1}
+      >
+        <TextField
+          variant="standard"
+          fullWidth
+          label="Descuento factura (%)"
+          type="number"
+          value={discountPercent}
+          onChange={(event) =>
+            onDiscountChange?.(clampDiscount(Number(event.target.value || 0)))
+          }
+          disabled={disabled}
+          inputProps={{ min: 0, max: 100, step: "0.01" }}
+          sx={{
+            "& input": {
+              textAlign: "right",
+              fontWeight: 600,
+            },
+          }}
+        />
+      </Stack>
       <Divider />
       <Stack
         direction="row"
@@ -894,6 +963,118 @@ function InvoiceTotalsSummary({
           {formatMoney(total)}
         </Typography>
       </Stack>
+    </Stack>
+  );
+}
+
+function ClientBalanceSummary({
+  currentBalance,
+  invoiceTotal,
+  paymentMode,
+  partialPaymentAmount,
+  disabled = false,
+  onPaymentModeChange,
+  onPartialPaymentAmountChange,
+}: ClientBalanceSummaryProps) {
+  const normalizedPartialPaymentAmount = Math.max(0, partialPaymentAmount);
+  const paidAmount =
+    paymentMode === "full"
+      ? invoiceTotal
+      : paymentMode === "partial"
+        ? normalizedPartialPaymentAmount
+        : 0;
+  const resultingBalance = currentBalance + invoiceTotal - paidAmount;
+
+  return (
+    <Stack
+      spacing={1.5}
+      sx={{
+        width: "100%",
+        borderTop: "1px solid #E5E7EB",
+        pt: 1.5,
+      }}
+    >
+      <Stack spacing={1}>
+        {[
+          { label: "Saldo actual", value: formatMoney(currentBalance) },
+          { label: "Total factura", value: formatMoney(invoiceTotal) },
+          { label: "Pago aplicado", value: formatMoney(paidAmount) },
+        ].map((row) => (
+          <Stack
+            key={row.label}
+            direction="row"
+            justifyContent="space-between"
+            alignItems="center"
+            spacing={1}
+          >
+            <Typography variant="body2" color="text.secondary">
+              {row.label}
+            </Typography>
+            <Typography variant="body2" color="text.primary" fontWeight={600}>
+              {row.value}
+            </Typography>
+          </Stack>
+        ))}
+        <Divider />
+        <Stack
+          direction="row"
+          justifyContent="space-between"
+          alignItems="baseline"
+          spacing={1}
+        >
+          <Typography variant="subtitle2" color="text.primary">
+            Saldo resultante
+          </Typography>
+          <Typography variant="subtitle1" color="text.primary" fontWeight={700}>
+            {formatMoney(resultingBalance)}
+          </Typography>
+        </Stack>
+      </Stack>
+
+      <RadioGroup
+        value={paymentMode}
+        onChange={(event) =>
+          onPaymentModeChange(event.target.value as InvoicePaymentMode)
+        }
+        sx={{ gap: 0.25 }}
+      >
+        <FormControlLabel
+          value="none"
+          control={<Radio size="small" />}
+          label="No paga ahora"
+          disabled={disabled}
+        />
+        <FormControlLabel
+          value="full"
+          control={<Radio size="small" />}
+          label="Paga la totalidad"
+          disabled={disabled || invoiceTotal <= 0}
+        />
+        <FormControlLabel
+          value="partial"
+          control={<Radio size="small" />}
+          label="Entrega una parte"
+          disabled={disabled || invoiceTotal <= 0}
+        />
+      </RadioGroup>
+
+      {paymentMode === "partial" && (
+        <TextField
+          size="small"
+          fullWidth
+          label="Importe entregado"
+          type="number"
+          value={partialPaymentAmount || ""}
+          onChange={(event) =>
+            onPartialPaymentAmountChange(Number(event.target.value || 0))
+          }
+          inputProps={{ min: 0, step: "0.01" }}
+          InputProps={{
+            startAdornment: <InputAdornment position="start">$</InputAdornment>,
+          }}
+          disabled={disabled}
+        />
+      )}
     </Stack>
   );
 }
@@ -981,6 +1162,10 @@ export default function InvoiceFormPage() {
       })),
     [clients],
   );
+  const clientById = useMemo(
+    () => new Map(clients.map((client) => [client.id, client])),
+    [clients],
+  );
   const productOptions = useMemo<NamedOption[]>(
     () =>
       products.map((item) => ({
@@ -1012,6 +1197,8 @@ export default function InvoiceFormPage() {
       client: "",
       date: getLocalDate(),
       discount: 0,
+      paymentMode: "none",
+      partialPaymentAmount: 0,
       rows: [buildEmptyRow()],
     },
     validate: validateInvoiceForm,
@@ -1049,10 +1236,27 @@ export default function InvoiceFormPage() {
       }
 
       try {
+        const invoiceSubtotal = values.rows.reduce(
+          (acc, row) => acc + getCreateItemTotal(row),
+          0,
+        );
+        const invoiceTotal = Math.max(
+          0,
+          invoiceSubtotal * (1 - clampDiscount(values.discount) / 100),
+        );
+        const paymentError = getPaymentValidationMessage(values, invoiceTotal);
+
+        if (paymentError) {
+          dispatch(setSnackbar({ message: paymentError, type: "error" }));
+          return;
+        }
+
+        const paymentPayload = getPaymentPayload(values, invoiceTotal);
         const created = await createInvoice({
           client: values.client,
           date: normalizedDate,
           discount: values.discount,
+          ...paymentPayload,
           state: "open",
           items: values.rows.map((row) => ({
             product: row.product,
@@ -1080,6 +1284,8 @@ export default function InvoiceFormPage() {
       client: "",
       date: "",
       discount: 0,
+      paymentMode: "none",
+      partialPaymentAmount: 0,
       rows: [buildEmptyRow()],
     },
     validate: validateInvoiceForm,
@@ -1195,6 +1401,8 @@ export default function InvoiceFormPage() {
       client: parsedClient?.id || "",
       date: String(invoice.date).slice(0, 10),
       discount: Number(invoice.discount ?? 0),
+      paymentMode: "none",
+      partialPaymentAmount: 0,
       rows: detailRows,
     });
   }, [invoice, isEditMode, isNewMode]);
@@ -1390,10 +1598,33 @@ export default function InvoiceFormPage() {
     }
 
     try {
+      const invoiceSubtotal = values.rows.reduce(
+        (acc, row) => acc + getCreateItemTotal(row),
+        0,
+      );
+      const invoiceTotal = Math.max(
+        0,
+        invoiceSubtotal * (1 - clampDiscount(values.discount) / 100),
+      );
+      const paymentError =
+        targetState === "open"
+          ? getPaymentValidationMessage(values, invoiceTotal)
+          : "";
+
+      if (paymentError) {
+        dispatch(setSnackbar({ message: paymentError, type: "error" }));
+        return;
+      }
+
+      const paymentPayload =
+        targetState === "open"
+          ? getPaymentPayload(values, invoiceTotal)
+          : { paidNow: false, paidAmount: 0 };
       const created = await createInvoice({
         client: values.client,
         date: normalizedDate,
         discount: values.discount,
+        ...paymentPayload,
         state: targetState,
         items: values.rows.map((row) => ({
           product: row.product,
@@ -1481,6 +1712,8 @@ export default function InvoiceFormPage() {
     (typeof invoice?.client === "string" ? invoice.client : "-");
   const selectedInvoiceClientId =
     activeFormik.values.client || parsedClient?.id || "";
+  const selectedClient = clientById.get(selectedInvoiceClientId) || null;
+  const selectedClientBalance = Number(selectedClient?.balance ?? 0);
   const hasInvoiceDate = Boolean(normalizeIsoDate(activeFormik.values.date));
   const lastInvoiceRow =
     activeFormik.values.rows[activeFormik.values.rows.length - 1];
@@ -1968,32 +2201,44 @@ export default function InvoiceFormPage() {
                 pt: 2.5,
               }}
             >
-              <TextField
-                size="small"
-                fullWidth
-                label="Descuento factura (%)"
-                type="number"
-                value={activeFormik.values.discount}
-                onChange={(e) =>
-                  activeFormik.setFieldValue(
-                    "discount",
-                    clampDiscount(Number(e.target.value || 0)),
-                  )
-                }
-                inputProps={{ min: 0, max: 100, step: "0.01" }}
-                disabled={!isEditable}
-                sx={!isEditable ? readableDisabledFieldSx : undefined}
-              />
-
               <InvoiceTotalsSummary
                 subtotal={summarySubtotal}
                 discountPercent={activeFormik.values.discount}
                 total={summaryTotal}
+                disabled={!isEditable}
+                onDiscountChange={(discount) =>
+                  activeFormik.setFieldValue("discount", discount)
+                }
               />
+
+              {isNewMode && (
+                <ClientBalanceSummary
+                  currentBalance={selectedClientBalance}
+                  invoiceTotal={summaryTotal}
+                  paymentMode={activeFormik.values.paymentMode}
+                  partialPaymentAmount={
+                    activeFormik.values.partialPaymentAmount
+                  }
+                  onPaymentModeChange={(mode) => {
+                    activeFormik.setFieldValue("paymentMode", mode);
+                    if (mode !== "partial") {
+                      activeFormik.setFieldValue("partialPaymentAmount", 0);
+                    }
+                  }}
+                  onPartialPaymentAmountChange={(amount) =>
+                    activeFormik.setFieldValue("partialPaymentAmount", amount)
+                  }
+                />
+              )}
             </Stack>
 
             {isNewMode && (
-              <Stack spacing={1} sx={{ width: "100%" }}>
+              <Stack
+                spacing={1}
+                sx={{
+                  width: "100%",
+                }}
+              >
                 <Button
                   size="small"
                   variant="contained"
@@ -2159,39 +2404,61 @@ export default function InvoiceFormPage() {
                 pl: { xs: 0, lg: 2.25 },
                 pt: { xs: 2.5, lg: 0 },
                 gap: { xs: 2.5, lg: 2 },
+                overflow: "hidden",
               }}
             >
-              <Stack spacing={2}>
-                <TextField
-                  size="small"
-                  fullWidth
-                  label="Descuento factura (%)"
-                  type="number"
-                  value={activeFormik.values.discount}
-                  onChange={(e) =>
-                    activeFormik.setFieldValue(
-                      "discount",
-                      clampDiscount(Number(e.target.value || 0)),
-                    )
-                  }
-                  inputProps={{ min: 0, max: 100, step: "0.01" }}
-                  disabled={!isEditable}
-                  sx={!isEditable ? readableDisabledFieldSx : undefined}
-                />
-
+              <Stack
+                spacing={2}
+                sx={{
+                  flex: "1 1 auto",
+                  minHeight: 0,
+                  overflowY: "auto",
+                  overflowX: "hidden",
+                  pr: { lg: 0.75 },
+                  pb: { lg: 1 },
+                }}
+              >
                 <InvoiceTotalsSummary
                   subtotal={summarySubtotal}
                   discountPercent={activeFormik.values.discount}
                   total={summaryTotal}
+                  disabled={!isEditable}
+                  onDiscountChange={(discount) =>
+                    activeFormik.setFieldValue("discount", discount)
+                  }
                 />
+
+                {isNewMode && (
+                  <ClientBalanceSummary
+                    currentBalance={selectedClientBalance}
+                    invoiceTotal={summaryTotal}
+                    paymentMode={activeFormik.values.paymentMode}
+                    partialPaymentAmount={
+                      activeFormik.values.partialPaymentAmount
+                    }
+                    onPaymentModeChange={(mode) => {
+                      activeFormik.setFieldValue("paymentMode", mode);
+                      if (mode !== "partial") {
+                        activeFormik.setFieldValue("partialPaymentAmount", 0);
+                      }
+                    }}
+                    onPartialPaymentAmountChange={(amount) =>
+                      activeFormik.setFieldValue("partialPaymentAmount", amount)
+                    }
+                  />
+                )}
               </Stack>
 
               {isNewMode && (
                 <Stack
                   spacing={1}
                   sx={{
-                    mt: { xs: 1, lg: "auto" },
+                    flex: "0 0 auto",
+                    mt: "auto",
                     width: "100%",
+                    borderTop: "1px solid #E5E7EB",
+                    pt: 1.5,
+                    backgroundColor: "background.paper",
                   }}
                 >
                   <Button

@@ -34,7 +34,6 @@ const paymentAccountMovementsTag = ApiTag.PaymentAccountMovements;
 const paymentAccountMovementTypesTag = ApiTag.PaymentAccountMovementTypes;
 const typedPb = pb as TypedPocketBase;
 const MAX_DISCOUNT_PERCENT = 100;
-const DEFAULT_INVOICE_STATE = "open";
 
 export type PaymentAccountMovementTypeName = "payment" | "debt" | "adjustment";
 
@@ -51,6 +50,8 @@ export interface CreateInvoiceReq {
   discount: number;
   items: CreateInvoiceItemReq[];
   state?: "draft" | "open" | "void";
+  paidNow?: boolean;
+  paidAmount?: number;
 }
 
 export interface UpdateInvoiceReq {
@@ -85,7 +86,7 @@ interface CreateClientReq {
 
 export interface CreatePaymentAccountMovementReq {
   clientId: string;
-  typeId: string;
+  typeId?: string;
   typeName: PaymentAccountMovementTypeName;
   amount: number;
   description?: string;
@@ -94,6 +95,12 @@ export interface CreatePaymentAccountMovementReq {
 export interface CreatePaymentAccountMovementRes {
   movement: PaymentAccountMovementsResponse;
   client: ClientsResponse;
+}
+
+export interface CreateInvoiceRes {
+  invoice: InvoicesResponse;
+  invoiceProducts: InvoicesProductsResponse[];
+  paymentMovements?: PaymentAccountMovementsResponse[];
 }
 
 export type PaymentAccountMovementExpand = {
@@ -177,16 +184,6 @@ const getItemTotal = (item: CreateInvoiceItemReq) => {
     0,
     item.amount * item.unitPrice * (1 - discountPercent / 100),
   );
-};
-
-const getPaymentAccountMovementBalance = (
-  typeName: PaymentAccountMovementTypeName,
-  currentBalance: number,
-  amount: number,
-) => {
-  if (typeName === "payment") return currentBalance - Math.abs(amount);
-  if (typeName === "debt") return currentBalance + Math.abs(amount);
-  return amount;
 };
 
 const buildPaymentAccountMovementsListFilter = (filter: string | undefined) => {
@@ -348,46 +345,20 @@ export const invoiceApi = mainApi.injectEndpoints({
       CreatePaymentAccountMovementReq
     >({
       queryFn: async (_arg) => {
-        let createdMovement: PaymentAccountMovementsResponse | undefined;
-
-        try {
-          const amount = Number(_arg.amount);
-          const currentClient = await typedPb
-            .collection("clients")
-            .getOne(_arg.clientId);
-          const nextBalance = getPaymentAccountMovementBalance(
-            _arg.typeName,
-            Number(currentClient.balance ?? 0),
-            amount,
-          );
-
-          const movement = await typedPb
-            .collection("payment_account_movements")
-            .create({
-              client: _arg.clientId,
-              type: _arg.typeId,
-              amount,
+        const res = await typedPb.send<CreatePaymentAccountMovementRes>(
+          "/coki/payment-account-movements",
+          {
+            method: "POST",
+            body: {
+              clientId: _arg.clientId,
+              typeName: _arg.typeName,
+              amount: _arg.amount,
               description: _arg.description?.trim() || "",
-            });
-          createdMovement = movement;
+            },
+          },
+        );
 
-          const client = await typedPb.collection("clients").update(_arg.clientId, {
-            balance: nextBalance,
-          });
-
-          return { data: { movement, client } };
-        } catch (error) {
-          if (createdMovement?.id) {
-            try {
-              await typedPb
-                .collection("payment_account_movements")
-                .delete(createdMovement.id);
-            } catch {
-              // Keep the original error; the UI should report the failed operation.
-            }
-          }
-          throw error;
-        }
+        return { data: res };
       },
       invalidatesTags: [paymentAccountMovementsTag, clientsTag],
     }),
@@ -516,61 +487,22 @@ export const invoiceApi = mainApi.injectEndpoints({
       },
       providesTags: [invoiceProductsTag],
     }),
-    createInvoice: build.mutation<
-      {
-        invoice: InvoicesResponse;
-        invoiceProducts: InvoicesProductsResponse[];
-      },
-      CreateInvoiceReq
-    >({
+    createInvoice: build.mutation<CreateInvoiceRes, CreateInvoiceReq>({
       queryFn: async (_arg) => {
-        const invoiceProductsData = _arg.items.map((item) => ({
-          ...item,
-          total: getItemTotal(item),
-        }));
+        const res = await typedPb.send<CreateInvoiceRes>("/coki/invoices", {
+          method: "POST",
+          body: _arg,
+        });
 
-        const subtotal = invoiceProductsData.reduce(
-          (acc, item) => acc + item.total,
-          0,
-        );
-        const invoiceDiscountPercent = normalizeDiscountPercent(_arg.discount);
-        const invoiceTotal = Math.max(
-          0,
-          subtotal * (1 - invoiceDiscountPercent / 100),
-        );
-
-        const invoiceStateName = _arg.state || DEFAULT_INVOICE_STATE;
-
-        const invoicePayload: Create<"invoices"> = {
-          client: _arg.client,
-          date: _arg.date,
-          discount: invoiceDiscountPercent,
-          total: invoiceTotal,
-          state: (
-            await typedPb
-              .collection("invoicestates")
-              .getFirstListItem(`name = "${invoiceStateName}"`)
-          ).id,
-        };
-
-        const invoice = await typedPb.collection("invoices").create(invoicePayload);
-
-        const invoiceProducts: InvoicesProductsResponse[] = [];
-        for (const item of invoiceProductsData) {
-          const createdItem = await typedPb.collection("invoices_products").create({
-            invoice: invoice.id,
-            product: item.product,
-            amount: item.amount,
-            unit_price: item.unitPrice,
-            discount: normalizeDiscountPercent(item.discount),
-            total: item.total,
-          });
-          invoiceProducts.push(createdItem);
-        }
-
-        return { data: { invoice, invoiceProducts } };
+        return { data: res };
       },
-      invalidatesTags: [invoiceTag, invoiceProductsTag, invoicesViewTag],
+      invalidatesTags: [
+        invoiceTag,
+        invoiceProductsTag,
+        invoicesViewTag,
+        paymentAccountMovementsTag,
+        clientsTag,
+      ],
     }),
     updateInvoice: build.mutation<InvoicesResponse, UpdateInvoiceReq>({
       queryFn: async (_arg, _api, _options) => {
