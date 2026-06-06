@@ -16,7 +16,7 @@ import { paymentsBreadcrumbFlow } from "./breadcrumbFlow";
 import PaymentMovementDialog from "./PaymentMovementDialog";
 
 const paymentTypeLabels: Record<PaymentAccountMovementTypeName, string> = {
-  payment: "Pago",
+  payment: "Entrega",
   debt: "Deuda",
   adjustment: "Ajuste",
 };

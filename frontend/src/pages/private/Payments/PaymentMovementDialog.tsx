@@ -41,7 +41,7 @@ interface PaymentMovementDialogProps {
 }
 
 const paymentTypeLabels: Record<PaymentAccountMovementTypeName, string> = {
-  payment: "Pago",
+  payment: "Entrega",
   debt: "Deuda",
   adjustment: "Ajuste",
 };
@@ -119,14 +119,18 @@ export default function PaymentMovementDialog({
         .required(FORM_MSG.required)
         .min(FORM_VLDN.REAL_NUMBER.min, FORM_MSG.minLength(1))
         .max(FORM_VLDN.REAL_NUMBER.max, FORM_MSG.maxLength(12))
-        .test("movement-amount", "El importe no puede ser cero.", (value, context) => {
-          if (value === undefined) return false;
-          const type = movementTypesById.get(
-            String(context.parent.typeId || ""),
-          );
-          if (type?.name === "adjustment") return true;
-          return Number(value) !== 0;
-        })
+        .test(
+          "movement-amount",
+          "El importe no puede ser cero.",
+          (value, context) => {
+            if (value === undefined) return false;
+            const type = movementTypesById.get(
+              String(context.parent.typeId || ""),
+            );
+            if (type?.name === "adjustment") return true;
+            return Number(value) !== 0;
+          },
+        )
         .test(
           "payment-debt-positive",
           "El importe debe ser mayor a cero.",
@@ -181,7 +185,8 @@ export default function PaymentMovementDialog({
     },
   });
 
-  const selectedClient = client || clientsById.get(formik.values.clientId) || null;
+  const selectedClient =
+    client || clientsById.get(formik.values.clientId) || null;
 
   const selectedType = movementTypesById.get(formik.values.typeId);
   const selectedTypeName = String(selectedType?.name || "");

@@ -32,15 +32,16 @@ export const DRAWER_SECTIONS: DrawerSection[] = [
         icon: <PeopleRounded />,
         to: AppRoutes.Clients,
       },
-      {
-        text: "Pagos",
-        icon: <PaymentsRounded />,
-        to: AppRoutes.Payments,
-      },
+
       {
         text: "Productos",
         icon: <Inventory2Rounded />,
         to: AppRoutes.Products,
+      },
+      {
+        text: "Cuentas",
+        icon: <PaymentsRounded />,
+        to: AppRoutes.Payments,
       },
       {
         text: "Informes",
