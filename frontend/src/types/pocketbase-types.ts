@@ -12,6 +12,7 @@ export const Collections = {
 	Otps: "_otps",
 	Superusers: "_superusers",
 	Clients: "clients",
+	Configs: "configs",
 	Invoices: "invoices",
 	InvoicesProducts: "invoices_products",
 	Invoicestates: "invoicestates",
@@ -114,6 +115,14 @@ export type ClientsRecord = {
 	phone?: string
 	updated: IsoAutoDateString
 	updated_by?: RecordIdString
+}
+
+export type ConfigsRecord = {
+	company?: string
+	created: IsoAutoDateString
+	id: string
+	retrieve_last_price?: boolean
+	updated: IsoAutoDateString
 }
 
 export type InvoicesRecord = {
@@ -239,6 +248,7 @@ export type MfasResponse<Texpand = unknown> = Required<MfasRecord> & BaseSystemF
 export type OtpsResponse<Texpand = unknown> = Required<OtpsRecord> & BaseSystemFields<Texpand>
 export type SuperusersResponse<Texpand = unknown> = Required<SuperusersRecord> & AuthSystemFields<Texpand>
 export type ClientsResponse<Texpand = unknown> = Required<ClientsRecord> & BaseSystemFields<Texpand>
+export type ConfigsResponse<Texpand = unknown> = Required<ConfigsRecord> & BaseSystemFields<Texpand>
 export type InvoicesResponse<Texpand = unknown> = Required<InvoicesRecord> & BaseSystemFields<Texpand>
 export type InvoicesProductsResponse<Texpand = unknown> = Required<InvoicesProductsRecord> & BaseSystemFields<Texpand>
 export type InvoicestatesResponse<Texpand = unknown> = Required<InvoicestatesRecord> & BaseSystemFields<Texpand>
@@ -259,6 +269,7 @@ export type CollectionRecords = {
 	_otps: OtpsRecord
 	_superusers: SuperusersRecord
 	clients: ClientsRecord
+	configs: ConfigsRecord
 	invoices: InvoicesRecord
 	invoices_products: InvoicesProductsRecord
 	invoicestates: InvoicestatesRecord
@@ -278,6 +289,7 @@ export type CollectionResponses = {
 	_otps: OtpsResponse
 	_superusers: SuperusersResponse
 	clients: ClientsResponse
+	configs: ConfigsResponse
 	invoices: InvoicesResponse
 	invoices_products: InvoicesProductsResponse
 	invoicestates: InvoicestatesResponse

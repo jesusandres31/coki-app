@@ -43,6 +43,7 @@ export enum AppRoutes {
   ProductsNew = "/products/new",
   ProductsDetail = "/products/:productId",
   Config = "/config",
+  ConfigGeneralSettings = "/config/general-settings",
   ConfigProductTypes = "/config/product-types",
   ConfigProductTypesNew = "/config/product-types/new",
   ConfigProductTypesDetail = "/config/product-types/:productTypeId",
@@ -55,4 +56,5 @@ export const configKey = {
   LANDING_PAGE: AppRoutes.Invoices,
   AUTHORIZATION: "Authorization",
   TOKEN_PREFIX: "Bearer",
+  COMPANY: "cokiapp",
 };

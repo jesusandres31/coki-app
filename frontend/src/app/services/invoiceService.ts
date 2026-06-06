@@ -4,6 +4,7 @@ import { pb } from "src/libs";
 import { GetList } from "src/types";
 import {
   ClientsResponse,
+  ConfigsResponse,
   Create,
   InvoicestatesResponse,
   InvoicesProductsResponse,
@@ -15,6 +16,7 @@ import {
   Update,
   VInvoicesResponse,
 } from "src/types/pocketbase-types";
+import { configKey } from "src/config";
 import { ApiTag, mainApi, pbFilter, pbSort } from "./api";
 
 const invoiceTag = ApiTag.Invoices;
@@ -24,6 +26,7 @@ const invoiceStatesTag = ApiTag.InvoiceStates;
 const clientsTag = ApiTag.Clients;
 const productsTag = ApiTag.Products;
 const productTypesTag = ApiTag.ProductTypes;
+const configsTag = ApiTag.Configs;
 const measureUnitsTag = ApiTag.MeasureUnits;
 const typedPb = pb as TypedPocketBase;
 const MAX_DISCOUNT_PERCENT = 100;
@@ -82,8 +85,54 @@ interface CreateProductTypeReq {
   data: Create<"product_types">;
 }
 
+interface UpdateConfigReq {
+  id: string;
+  data: Update<"configs">;
+}
+
 const normalizeDiscountPercent = (value: number) =>
   Math.min(MAX_DISCOUNT_PERCENT, Math.max(0, Number(value || 0)));
+
+const escapePbFilterValue = (value: string) =>
+  value.replace(/\\/g, "\\\\").replace(/"/g, '\\"').trim();
+
+const parseInvoiceSearchDate = (value: string) => {
+  const match = value.trim().match(/^(\d{2})\/(\d{2})\/(\d{2})$/);
+  if (!match) return null;
+
+  const [, dayValue, monthValue, yearValue] = match;
+  const day = Number(dayValue);
+  const month = Number(monthValue);
+  const year = 2000 + Number(yearValue);
+  const date = new Date(Date.UTC(year, month - 1, day));
+
+  if (
+    date.getUTCFullYear() !== year ||
+    date.getUTCMonth() !== month - 1 ||
+    date.getUTCDate() !== day
+  ) {
+    return null;
+  }
+
+  return `${year}-${monthValue}-${dayValue}`;
+};
+
+const buildInvoicesListFilter = (filter: string | undefined) => {
+  if (!filter) return `deleted = ""`;
+
+  const safeFilter = escapePbFilterValue(filter);
+  if (!safeFilter) return `deleted = ""`;
+
+  const searchFilters = [`client.name ~ "${safeFilter}"`];
+  const searchDate = parseInvoiceSearchDate(safeFilter);
+
+  if (searchDate) {
+    const nextDate = dayjs(searchDate).add(1, "day").format("YYYY-MM-DD");
+    searchFilters.push(`(date >= "${searchDate}" && date < "${nextDate}")`);
+  }
+
+  return `(${searchFilters.join(" || ")}) && deleted = ""`;
+};
 
 const pbFilterNoDeleted = (
   filter: string | undefined,
@@ -116,7 +165,7 @@ export const invoiceApi = mainApi.injectEndpoints({
           _arg.page,
           _arg.perPage,
           {
-            filter: pbFilter(_arg.filter, ["date", "id"]),
+            filter: buildInvoicesListFilter(_arg.filter),
             sort: pbSort(_arg.order, _arg.orderBy),
           },
         );
@@ -282,6 +331,15 @@ export const invoiceApi = mainApi.injectEndpoints({
       },
       providesTags: [productTypesTag],
     }),
+    getConfig: build.query<ConfigsResponse, void>({
+      queryFn: async () => {
+        const res = await typedPb
+          .collection("configs")
+          .getFirstListItem(`company = "${configKey.COMPANY}"`);
+        return { data: res };
+      },
+      providesTags: [configsTag],
+    }),
     createInvoice: build.mutation<
       {
         invoice: InvoicesResponse;
@@ -442,6 +500,13 @@ export const invoiceApi = mainApi.injectEndpoints({
       },
       invalidatesTags: [productTypesTag],
     }),
+    updateConfig: build.mutation<ConfigsResponse, UpdateConfigReq>({
+      queryFn: async (_arg) => {
+        const res = await typedPb.collection("configs").update(_arg.id, _arg.data);
+        return { data: res };
+      },
+      invalidatesTags: [configsTag],
+    }),
     createProductType: build.mutation<ProductTypesResponse, CreateProductTypeReq>({
       queryFn: async (_arg) => {
         const res = await typedPb.collection("product_types").create(_arg.data);
@@ -476,12 +541,14 @@ export const {
   useGetInvoicesViewQuery,
   useGetMeasureUnitsQuery,
   useGetProductByIdQuery,
+  useGetConfigQuery,
   useGetProductTypeByIdQuery,
   useGetProductTypesListQuery,
   useGetProductsQuery,
   useGetProductsListQuery,
   useUpdateClientMutation,
   useUpdateInvoiceMutation,
+  useUpdateConfigMutation,
   useUpdateProductMutation,
   useUpdateProductTypeMutation,
 } = invoiceApi;

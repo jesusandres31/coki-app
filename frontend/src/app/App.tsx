@@ -44,6 +44,9 @@ const ProductTypes = lazy(() =>
 const ProductTypeDetail = lazy(() =>
   import("src/pages").then((module) => ({ default: module.ProductTypeDetail })),
 );
+const GeneralSettings = lazy(() =>
+  import("src/pages").then((module) => ({ default: module.GeneralSettings })),
+);
 
 const privateRoutes = [
   {
@@ -104,7 +107,11 @@ const privateRoutes = [
   },
   {
     route: AppRoutes.Config,
-    render: <Navigate to={AppRoutes.ConfigProductTypes} replace />,
+    render: <Navigate to={AppRoutes.ConfigGeneralSettings} replace />,
+  },
+  {
+    route: AppRoutes.ConfigGeneralSettings,
+    render: <GeneralSettings />,
   },
   {
     route: AppRoutes.ConfigProductTypes,

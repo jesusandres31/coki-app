@@ -13,5 +13,6 @@ export { default as Clients } from "./private/Clients/Clients";
 export { default as ClientDetail } from "./private/Clients/ClientDetail";
 export { default as Products } from "./private/Products/Products";
 export { default as ProductDetail } from "./private/Products/ProductDetail";
+export { default as GeneralSettings } from "./private/GeneralSettings/GeneralSettings";
 export { default as ProductTypes } from "./private/ProductTypes/ProductTypes";
 export { default as ProductTypeDetail } from "./private/ProductTypes/ProductTypeDetail";

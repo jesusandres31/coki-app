@@ -8,6 +8,7 @@ import {
   PriceCheckRounded,
   PeopleRounded,
   SettingsRounded,
+  TuneRounded,
 } from "@mui/icons-material";
 import { AppRoutes } from "src/config";
 import { DrawerSection } from "src/types";
@@ -60,6 +61,11 @@ export const DRAWER_SECTIONS: DrawerSection[] = [
         text: "Configuración",
         icon: <SettingsRounded />,
         nestedItems: [
+          {
+            text: "General",
+            icon: <TuneRounded />,
+            to: AppRoutes.ConfigGeneralSettings,
+          },
           {
             text: "Tipos de producto",
             icon: <CategoryRounded />,
