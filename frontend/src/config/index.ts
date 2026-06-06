@@ -32,6 +32,7 @@ export enum AppRoutes {
   Invoices = "/invoices",
   InvoicesNew = "/invoices/new",
   InvoicesDetail = "/invoices/:invoiceId",
+  Payments = "/payments",
   Reports = "/reports",
   ReportsDistribution = "/reports/distribution",
   ReportsSales = "/reports/sales",

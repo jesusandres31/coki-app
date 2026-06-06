@@ -4,6 +4,7 @@ import {
   CategoryRounded,
   DescriptionRounded,
   Inventory2Rounded,
+  PaymentsRounded,
   LocalShippingRounded,
   PriceCheckRounded,
   PeopleRounded,
@@ -30,6 +31,11 @@ export const DRAWER_SECTIONS: DrawerSection[] = [
         text: "Clientes",
         icon: <PeopleRounded />,
         to: AppRoutes.Clients,
+      },
+      {
+        text: "Pagos",
+        icon: <PaymentsRounded />,
+        to: AppRoutes.Payments,
       },
       {
         text: "Productos",

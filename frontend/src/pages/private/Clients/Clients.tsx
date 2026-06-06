@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import {
   AddRounded,
+  AddCardRounded,
   DeleteRounded,
   EditRounded,
   OpenInNewRounded,
@@ -20,13 +21,18 @@ import {
   useGetClientsListQuery,
 } from "src/app/services/invoiceService";
 import { useAppDispatch } from "src/app/store";
-import { resetBreadcrumbs, setBreadcrumbs, setSnackbar } from "src/slices/uiSlice";
+import {
+  resetBreadcrumbs,
+  setBreadcrumbs,
+  setSnackbar,
+} from "src/slices/uiSlice";
 import { useRouter } from "src/hooks";
 import { AppRoutes } from "src/config";
 import { ClientsResponse } from "src/types/pocketbase-types";
 import { Column, DataGridRowAction, GetList } from "src/types";
 import { formatMoney } from "src/utils/format";
 import { clientsBreadcrumbFlow } from "./breadcrumbFlow";
+import PaymentMovementDialog from "../Payments/PaymentMovementDialog";
 
 export default function Clients() {
   const dispatch = useAppDispatch();
@@ -34,6 +40,8 @@ export default function Clients() {
   const [clientToDelete, setClientToDelete] = useState<ClientsResponse | null>(
     null,
   );
+  const [clientForPaymentMovement, setClientForPaymentMovement] =
+    useState<ClientsResponse | null>(null);
   const [queryArgs, setQueryArgs] = useState<GetList>(() => ({
     ...getListArgsInitialState,
     order: "asc",
@@ -107,6 +115,12 @@ export default function Clients() {
   const rowActions: DataGridRowAction[] = useMemo(
     () => [
       {
+        id: "add-payment-account-movement",
+        label: "Registrar movimiento",
+        icon: <AddCardRounded fontSize="small" color="primary" />,
+        onClick: (item) => setClientForPaymentMovement(item as ClientsResponse),
+      },
+      {
         id: "open",
         label: "Abrir cliente",
         icon: <OpenInNewRounded fontSize="small" color="primary" />,
@@ -116,7 +130,8 @@ export default function Clients() {
         id: "edit",
         label: "Editar cliente",
         icon: <EditRounded fontSize="small" color="info" />,
-        onClick: (item) => handleGoTo(`${AppRoutes.Clients}/${item.id}?mode=edit`),
+        onClick: (item) =>
+          handleGoTo(`${AppRoutes.Clients}/${item.id}?mode=edit`),
       },
       {
         id: "delete",
@@ -150,6 +165,11 @@ export default function Clients() {
             Crear cliente
           </Button>
         }
+      />
+      <PaymentMovementDialog
+        open={Boolean(clientForPaymentMovement)}
+        client={clientForPaymentMovement}
+        onClose={() => setClientForPaymentMovement(null)}
       />
       <Dialog
         open={Boolean(clientToDelete)}

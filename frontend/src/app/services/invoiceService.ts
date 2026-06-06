@@ -10,6 +10,8 @@ import {
   InvoicesProductsResponse,
   InvoicesResponse,
   MeasureunitsResponse,
+  PaymentAccountMovementTypesResponse,
+  PaymentAccountMovementsResponse,
   ProductTypesResponse,
   ProductsResponse,
   TypedPocketBase,
@@ -28,9 +30,13 @@ const productsTag = ApiTag.Products;
 const productTypesTag = ApiTag.ProductTypes;
 const configsTag = ApiTag.Configs;
 const measureUnitsTag = ApiTag.MeasureUnits;
+const paymentAccountMovementsTag = ApiTag.PaymentAccountMovements;
+const paymentAccountMovementTypesTag = ApiTag.PaymentAccountMovementTypes;
 const typedPb = pb as TypedPocketBase;
 const MAX_DISCOUNT_PERCENT = 100;
 const DEFAULT_INVOICE_STATE = "open";
+
+export type PaymentAccountMovementTypeName = "payment" | "debt" | "adjustment";
 
 interface CreateInvoiceItemReq {
   product: string;
@@ -76,6 +82,27 @@ interface UpdateClientReq {
 interface CreateClientReq {
   data: Create<"clients">;
 }
+
+export interface CreatePaymentAccountMovementReq {
+  clientId: string;
+  typeId: string;
+  typeName: PaymentAccountMovementTypeName;
+  amount: number;
+  description?: string;
+}
+
+export interface CreatePaymentAccountMovementRes {
+  movement: PaymentAccountMovementsResponse;
+  client: ClientsResponse;
+}
+
+export type PaymentAccountMovementExpand = {
+  client?: ClientsResponse;
+  type?: PaymentAccountMovementTypesResponse;
+};
+
+export type PaymentAccountMovementWithExpand =
+  PaymentAccountMovementsResponse<PaymentAccountMovementExpand>;
 
 interface UpdateProductReq {
   id: string;
@@ -150,6 +177,29 @@ const getItemTotal = (item: CreateInvoiceItemReq) => {
     0,
     item.amount * item.unitPrice * (1 - discountPercent / 100),
   );
+};
+
+const getPaymentAccountMovementBalance = (
+  typeName: PaymentAccountMovementTypeName,
+  currentBalance: number,
+  amount: number,
+) => {
+  if (typeName === "payment") return currentBalance - Math.abs(amount);
+  if (typeName === "debt") return currentBalance + Math.abs(amount);
+  return amount;
+};
+
+const buildPaymentAccountMovementsListFilter = (filter: string | undefined) => {
+  if (!filter) return "";
+
+  const safeFilter = escapePbFilterValue(filter);
+  if (!safeFilter) return "";
+
+  return [
+    `client.name ~ "${safeFilter}"`,
+    `type.name ~ "${safeFilter}"`,
+    `description ~ "${safeFilter}"`,
+  ].join(" || ");
 };
 
 const softDeletePayload = FLAG.delete as unknown as Update<
@@ -260,6 +310,86 @@ export const invoiceApi = mainApi.injectEndpoints({
         return { data: res };
       },
       providesTags: [clientsTag],
+    }),
+    getPaymentAccountMovementTypes: build.query<
+      PaymentAccountMovementTypesResponse[],
+      void
+    >({
+      queryFn: async () => {
+        const res = await typedPb
+          .collection("payment_account_movement_types")
+          .getFullList({
+            sort: "+name",
+          });
+        return { data: res };
+      },
+      providesTags: [paymentAccountMovementTypesTag],
+    }),
+    getPaymentAccountMovementsList: build.query<
+      ListResult<PaymentAccountMovementWithExpand>,
+      GetList
+    >({
+      queryFn: async (_arg) => {
+        const res = await typedPb.collection("payment_account_movements").getList(
+          _arg.page,
+          _arg.perPage,
+          {
+            expand: "client,type",
+            filter: buildPaymentAccountMovementsListFilter(_arg.filter),
+            sort: pbSort(_arg.order, _arg.orderBy),
+          },
+        );
+        return { data: res as ListResult<PaymentAccountMovementWithExpand> };
+      },
+      providesTags: [paymentAccountMovementsTag],
+    }),
+    createPaymentAccountMovement: build.mutation<
+      CreatePaymentAccountMovementRes,
+      CreatePaymentAccountMovementReq
+    >({
+      queryFn: async (_arg) => {
+        let createdMovement: PaymentAccountMovementsResponse | undefined;
+
+        try {
+          const amount = Number(_arg.amount);
+          const currentClient = await typedPb
+            .collection("clients")
+            .getOne(_arg.clientId);
+          const nextBalance = getPaymentAccountMovementBalance(
+            _arg.typeName,
+            Number(currentClient.balance ?? 0),
+            amount,
+          );
+
+          const movement = await typedPb
+            .collection("payment_account_movements")
+            .create({
+              client: _arg.clientId,
+              type: _arg.typeId,
+              amount,
+              description: _arg.description?.trim() || "",
+            });
+          createdMovement = movement;
+
+          const client = await typedPb.collection("clients").update(_arg.clientId, {
+            balance: nextBalance,
+          });
+
+          return { data: { movement, client } };
+        } catch (error) {
+          if (createdMovement?.id) {
+            try {
+              await typedPb
+                .collection("payment_account_movements")
+                .delete(createdMovement.id);
+            } catch {
+              // Keep the original error; the UI should report the failed operation.
+            }
+          }
+          throw error;
+        }
+      },
+      invalidatesTags: [paymentAccountMovementsTag, clientsTag],
     }),
     getClientById: build.query<ClientsResponse, string>({
       queryFn: async (_arg) => {
@@ -610,6 +740,7 @@ export const invoiceApi = mainApi.injectEndpoints({
 export const {
   useCreateClientMutation,
   useCreateInvoiceMutation,
+  useCreatePaymentAccountMovementMutation,
   useCreateProductMutation,
   useCreateProductTypeMutation,
   useDeleteClientMutation,
@@ -627,6 +758,8 @@ export const {
   useGetInvoiceStatesQuery,
   useGetInvoicesViewQuery,
   useGetMeasureUnitsQuery,
+  useGetPaymentAccountMovementsListQuery,
+  useGetPaymentAccountMovementTypesQuery,
   useGetProductByIdQuery,
   useGetConfigQuery,
   useGetProductTypeByIdQuery,
