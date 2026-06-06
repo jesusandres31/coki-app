@@ -128,6 +128,7 @@ interface DebouncedAutocompleteProps {
   error?: boolean;
   helperText?: string;
   helperTextNoWrap?: boolean;
+  prioritizeStartsWith?: boolean;
 }
 
 interface ProductTableRowData {
@@ -423,6 +424,20 @@ const getInvoiceStateValue = (value: unknown) => {
   return "";
 };
 
+const normalizeSearchValue = (value: string) =>
+  value
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .trim();
+
+const getSearchMatchRank = (optionName: string, query: string) => {
+  const normalizedName = normalizeSearchValue(optionName);
+  if (normalizedName.startsWith(query)) return 0;
+  if (normalizedName.includes(query)) return 1;
+  return 2;
+};
+
 function DebouncedAutocomplete({
   options,
   valueId,
@@ -436,6 +451,7 @@ function DebouncedAutocomplete({
   error = false,
   helperText,
   helperTextNoWrap = false,
+  prioritizeStartsWith = false,
 }: DebouncedAutocompleteProps) {
   const [inputValue, setInputValue] = useState("");
   const [debouncedInputValue, setDebouncedInputValue] = useState("");
@@ -458,12 +474,23 @@ function DebouncedAutocomplete({
   }, [inputValue]);
 
   const filteredOptions = useMemo(() => {
-    const query = debouncedInputValue.trim().toLowerCase();
+    const query = normalizeSearchValue(debouncedInputValue);
     if (!query) return options;
-    return options.filter((option) =>
-      option.name.toLowerCase().includes(query),
+
+    const matches = options.filter((option) =>
+      normalizeSearchValue(option.name).includes(query),
     );
-  }, [debouncedInputValue, options]);
+
+    if (!prioritizeStartsWith) return matches;
+
+    return [...matches].sort((a, b) => {
+      const rankA = getSearchMatchRank(a.name, query);
+      const rankB = getSearchMatchRank(b.name, query);
+
+      if (rankA !== rankB) return rankA - rankB;
+      return a.name.localeCompare(b.name);
+    });
+  }, [debouncedInputValue, options, prioritizeStartsWith]);
 
   return (
     <Autocomplete
@@ -726,6 +753,7 @@ function ProductsTable({
                       options={productOptions}
                       valueId={row.productId}
                       placeholder="Seleccionar producto"
+                      prioritizeStartsWith
                       variant="standard"
                       disabled={inputsDisabled}
                       inputRef={setFieldRef(row.id, "product")}
