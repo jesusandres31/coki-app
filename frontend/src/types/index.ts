@@ -16,6 +16,7 @@ export interface IColumn<T> {
   id: keyof T;
   label: string;
   minWidth?: number;
+  width?: number | string;
   align?: "right" | "left";
   render?: (item: T) => JSX.Element | string | null | undefined;
   tooltip?: (item: T) => JSX.Element | string | null | undefined;

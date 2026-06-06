@@ -4,11 +4,19 @@ import * as Yup from "yup";
 import { useParams, useSearchParams } from "react-router-dom";
 import {
   Box,
+  Button,
   Card,
   Container,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogContentText,
+  DialogTitle,
 } from "@mui/material";
+import { DeleteRounded } from "@mui/icons-material";
 import {
   useCreateProductMutation,
+  useDeleteProductMutation,
   useGetMeasureUnitsQuery,
   useGetProductByIdQuery,
   useGetProductTypesListQuery,
@@ -54,6 +62,7 @@ export default function ProductFormPage() {
     searchParams.get("mode") === "edit" ? "edit" : "review";
   const [mode, setMode] = useState<ProductPageMode>(requestedDetailMode);
   const isEditMode = mode === "edit";
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
 
   useEffect(() => {
     if (isNewMode) return;
@@ -76,6 +85,7 @@ export default function ProductFormPage() {
   });
   const [createProduct, { isLoading: isCreating }] = useCreateProductMutation();
   const [updateProduct, { isLoading: isUpdating }] = useUpdateProductMutation();
+  const [deleteProduct, { isLoading: isDeleting }] = useDeleteProductMutation();
   const productTypes = productTypesResponse?.items || [];
 
   useEffect(() => {
@@ -226,6 +236,51 @@ export default function ProductFormPage() {
     setSearchParams({ mode: "review" });
   };
 
+  const extractApiMessage = (error: unknown): string | undefined => {
+    if (typeof error !== "object" || !error) return undefined;
+    const maybeData = (error as { data?: unknown }).data;
+    if (!maybeData || typeof maybeData !== "object") return undefined;
+    const maybeMessage = (maybeData as { message?: unknown }).message;
+    return typeof maybeMessage === "string" ? maybeMessage : undefined;
+  };
+
+  const handleDelete = async () => {
+    if (!productId) return;
+
+    try {
+      await deleteProduct(productId).unwrap();
+      dispatch(
+        setSnackbar({
+          message: "Producto eliminado satisfactoriamente.",
+          type: "success",
+        }),
+      );
+      setDeleteDialogOpen(false);
+      handleGoTo(AppRoutes.Products);
+    } catch (error) {
+      dispatch(
+        setSnackbar({
+          message:
+            extractApiMessage(error) || "No se pudo eliminar el producto.",
+          type: "error",
+        }),
+      );
+    }
+  };
+
+  const reviewHeaderActions =
+    !isNewMode && !isEditMode ? (
+      <Button
+        size="small"
+        variant="contained"
+        color="error"
+        startIcon={<DeleteRounded />}
+        onClick={() => setDeleteDialogOpen(true)}
+      >
+        Eliminar
+      </Button>
+    ) : undefined;
+
   if (!isNewMode && isFetching) {
     return (
       <PageContainer>
@@ -270,22 +325,56 @@ export default function ProductFormPage() {
   }
 
   return (
-    <EntityFormContainer
-      title={
-        isNewMode
-          ? "Crear producto"
-          : `Producto "${product?.name || product?.id || ""}"`
-      }
-      mode={isNewMode ? "new" : mode}
-      inputs={inputs}
-      formik={formik}
-      onBack={() => handleGoTo(AppRoutes.Products)}
-      onEdit={isNewMode ? undefined : handleEdit}
-      onCancelEdit={isNewMode ? undefined : handleCancelEdit}
-      onSubmit={() => void formik.submitForm()}
-      loading={isNewMode ? isCreating : isUpdating}
-      submitDisabled={isNewMode ? isCreating : isUpdating}
-      submitLabel={isNewMode ? "Crear" : "Guardar"}
-    />
+    <>
+      <EntityFormContainer
+        title={
+          isNewMode
+            ? "Crear producto"
+            : `Producto "${product?.name || product?.id || ""}"`
+        }
+        mode={isNewMode ? "new" : mode}
+        inputs={inputs}
+        formik={formik}
+        onBack={() => handleGoTo(AppRoutes.Products)}
+        onEdit={isNewMode ? undefined : handleEdit}
+        onCancelEdit={isNewMode ? undefined : handleCancelEdit}
+        onSubmit={() => void formik.submitForm()}
+        loading={isNewMode ? isCreating : isUpdating}
+        submitDisabled={isNewMode ? isCreating : isUpdating}
+        submitLabel={isNewMode ? "Crear" : "Guardar"}
+        headerActions={reviewHeaderActions}
+      />
+      <Dialog
+        open={deleteDialogOpen}
+        onClose={isDeleting ? undefined : () => setDeleteDialogOpen(false)}
+      >
+        <DialogTitle>Eliminar producto</DialogTitle>
+        <DialogContent>
+          <DialogContentText>
+            ¿Seguro que querés eliminar este producto?
+          </DialogContentText>
+        </DialogContent>
+        <DialogActions>
+          <Button
+            variant="text"
+            color="inherit"
+            sx={{ color: "text.secondary" }}
+            onClick={() => setDeleteDialogOpen(false)}
+            disabled={isDeleting}
+          >
+            Cancelar
+          </Button>
+          <Button
+            color="error"
+            variant="contained"
+            onClick={() => void handleDelete()}
+            loading={isDeleting}
+            disabled={isDeleting}
+          >
+            Eliminar
+          </Button>
+        </DialogActions>
+      </Dialog>
+    </>
   );
 }

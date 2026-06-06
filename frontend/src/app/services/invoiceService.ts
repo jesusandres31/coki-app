@@ -17,7 +17,7 @@ import {
   VInvoicesResponse,
 } from "src/types/pocketbase-types";
 import { configKey } from "src/config";
-import { ApiTag, mainApi, pbFilter, pbSort } from "./api";
+import { ApiTag, FLAG, mainApi, pbFilter, pbSort } from "./api";
 
 const invoiceTag = ApiTag.Invoices;
 const invoiceProductsTag = ApiTag.InvoicesProducts;
@@ -134,21 +134,6 @@ const buildInvoicesListFilter = (filter: string | undefined) => {
   return `(${searchFilters.join(" || ")}) && deleted = ""`;
 };
 
-const pbFilterNoDeleted = (
-  filter: string | undefined,
-  props: string[],
-): string | undefined => {
-  if (!filter) return undefined;
-  const safeFilter = filter
-    .replace(/\\/g, "\\\\")
-    .replace(/"/g, '\\"')
-    .trim();
-
-  if (!safeFilter) return undefined;
-
-  return props.map((prop) => `${prop} ~ "${safeFilter}"`).join(" || ");
-};
-
 const getItemTotal = (item: CreateInvoiceItemReq) => {
   const discountPercent = normalizeDiscountPercent(item.discount);
   return Math.max(
@@ -156,6 +141,10 @@ const getItemTotal = (item: CreateInvoiceItemReq) => {
     item.amount * item.unitPrice * (1 - discountPercent / 100),
   );
 };
+
+const softDeletePayload = FLAG.delete as unknown as Update<
+  "clients" | "invoices" | "invoices_products" | "product_types" | "products"
+>;
 
 export const invoiceApi = mainApi.injectEndpoints({
   endpoints: (build) => ({
@@ -222,7 +211,7 @@ export const invoiceApi = mainApi.injectEndpoints({
     getInvoiceProductsByInvoiceId: build.query<InvoicesProductsResponse[], string>({
       queryFn: async (_arg) => {
         const res = await typedPb.collection("invoices_products").getFullList({
-          filter: `invoice = "${_arg}"`,
+          filter: `invoice = "${escapePbFilterValue(_arg)}" && deleted = ""`,
           sort: "+created",
         });
         return { data: res };
@@ -316,7 +305,7 @@ export const invoiceApi = mainApi.injectEndpoints({
           _arg.page,
           _arg.perPage,
           {
-            filter: pbFilterNoDeleted(_arg.filter, ["name"]),
+            filter: pbFilter(_arg.filter, ["name"]),
             sort: pbSort(_arg.order, _arg.orderBy),
           },
         );
@@ -411,12 +400,14 @@ export const invoiceApi = mainApi.injectEndpoints({
           const existingItems = await typedPb
             .collection("invoices_products")
             .getFullList({
-              filter: `invoice = "${_arg.id}"`,
+              filter: `invoice = "${escapePbFilterValue(_arg.id)}" && deleted = ""`,
             });
 
           await Promise.all(
             existingItems.map((item) =>
-              typedPb.collection("invoices_products").delete(item.id),
+              typedPb
+                .collection("invoices_products")
+                .update(item.id, softDeletePayload),
             ),
           );
 
@@ -441,7 +432,7 @@ export const invoiceApi = mainApi.injectEndpoints({
           const existingItems = await typedPb
             .collection("invoices_products")
             .getFullList({
-              filter: `invoice = "${_arg.id}"`,
+              filter: `invoice = "${escapePbFilterValue(_arg.id)}" && deleted = ""`,
             });
 
           subtotal = existingItems.reduce(
@@ -466,15 +457,17 @@ export const invoiceApi = mainApi.injectEndpoints({
         const existingItems = await typedPb
           .collection("invoices_products")
           .getFullList({
-            filter: `invoice = "${escapePbFilterValue(_arg)}"`,
+            filter: `invoice = "${escapePbFilterValue(_arg)}" && deleted = ""`,
           });
 
         await Promise.all(
           existingItems.map((item) =>
-            typedPb.collection("invoices_products").delete(item.id),
+            typedPb
+              .collection("invoices_products")
+              .update(item.id, softDeletePayload),
           ),
         );
-        await typedPb.collection("invoices").delete(_arg);
+        await typedPb.collection("invoices").update(_arg, softDeletePayload);
 
         return { data: undefined };
       },
@@ -494,6 +487,13 @@ export const invoiceApi = mainApi.injectEndpoints({
       },
       invalidatesTags: [clientsTag],
     }),
+    deleteClient: build.mutation<void, string>({
+      queryFn: async (_arg) => {
+        await typedPb.collection("clients").update(_arg, softDeletePayload);
+        return { data: undefined };
+      },
+      invalidatesTags: [clientsTag],
+    }),
     updateProduct: build.mutation<ProductsResponse, UpdateProductReq>({
       queryFn: async (_arg) => {
         const res = await typedPb
@@ -507,6 +507,13 @@ export const invoiceApi = mainApi.injectEndpoints({
       queryFn: async (_arg) => {
         const res = await typedPb.collection("products").create(_arg.data);
         return { data: res };
+      },
+      invalidatesTags: [productsTag],
+    }),
+    deleteProduct: build.mutation<void, string>({
+      queryFn: async (_arg) => {
+        await typedPb.collection("products").update(_arg, softDeletePayload);
+        return { data: undefined };
       },
       invalidatesTags: [productsTag],
     }),
@@ -535,7 +542,7 @@ export const invoiceApi = mainApi.injectEndpoints({
     }),
     deleteProductType: build.mutation<void, string>({
       queryFn: async (_arg) => {
-        await typedPb.collection("product_types").delete(_arg);
+        await typedPb.collection("product_types").update(_arg, softDeletePayload);
         return { data: undefined };
       },
       invalidatesTags: [productTypesTag],
@@ -548,7 +555,9 @@ export const {
   useCreateInvoiceMutation,
   useCreateProductMutation,
   useCreateProductTypeMutation,
+  useDeleteClientMutation,
   useDeleteInvoiceMutation,
+  useDeleteProductMutation,
   useDeleteProductTypeMutation,
   useGetClientByIdQuery,
   useGetClientsQuery,

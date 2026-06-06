@@ -91,7 +91,10 @@ export default function CustomTableHead({
               key={`${String(column.id)}-${i}`}
               variant="head"
               align={column.align ?? "right"}
-              style={{ width: column.minWidth }}
+              style={{ width: column.width ?? column.minWidth }}
+              sx={{
+                minWidth: column.minWidth,
+              }}
               sortDirection={direction}
             >
               <TableSortLabel
@@ -118,7 +121,7 @@ export default function CustomTableHead({
           <TableCell
             padding="none"
             align="center"
-            sx={{ ...actionsStickySx, px: 1 }}
+            sx={{ ...actionsStickySx, pl: 1, pr: 2 }}
           >
             <Typography variant="body2" fontWeight={700} sx={{ mt: 0.3 }}>
               {isMobile ? "Accs." : "Acciones"}

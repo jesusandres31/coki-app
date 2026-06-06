@@ -1821,7 +1821,7 @@ export default function InvoiceFormPage() {
         <DialogTitle>Eliminar factura</DialogTitle>
         <DialogContent>
           <DialogContentText>
-            {`¿Seguro que querés eliminar la factura "${invoice?.id || ""}"? Esta acción eliminará la factura y sus productos completamente de la base de datos.`}
+            {`¿Seguro que querés eliminar la factura "${invoice?.id || ""}"? Esta acción marcará la factura y sus productos como eliminados, sin borrar los datos de la base.`}
           </DialogContentText>
         </DialogContent>
         <DialogActions>

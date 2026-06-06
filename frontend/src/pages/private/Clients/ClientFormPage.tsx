@@ -4,11 +4,19 @@ import * as Yup from "yup";
 import { useParams, useSearchParams } from "react-router-dom";
 import {
   Box,
+  Button,
   Card,
   Container,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogContentText,
+  DialogTitle,
 } from "@mui/material";
+import { DeleteRounded } from "@mui/icons-material";
 import {
   useCreateClientMutation,
+  useDeleteClientMutation,
   useGetClientByIdQuery,
   useUpdateClientMutation,
 } from "src/app/services/invoiceService";
@@ -50,6 +58,7 @@ export default function ClientFormPage() {
     searchParams.get("mode") === "edit" ? "edit" : "review";
   const [mode, setMode] = useState<ClientPageMode>(requestedDetailMode);
   const isEditMode = mode === "edit";
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
 
   useEffect(() => {
     if (isNewMode) return;
@@ -61,6 +70,7 @@ export default function ClientFormPage() {
   });
   const [createClient, { isLoading: isCreating }] = useCreateClientMutation();
   const [updateClient, { isLoading: isUpdating }] = useUpdateClientMutation();
+  const [deleteClient, { isLoading: isDeleting }] = useDeleteClientMutation();
 
   useEffect(() => {
     if (isNewMode) {
@@ -149,6 +159,50 @@ export default function ClientFormPage() {
     setSearchParams({ mode: "review" });
   };
 
+  const extractApiMessage = (error: unknown): string | undefined => {
+    if (typeof error !== "object" || !error) return undefined;
+    const maybeData = (error as { data?: unknown }).data;
+    if (!maybeData || typeof maybeData !== "object") return undefined;
+    const maybeMessage = (maybeData as { message?: unknown }).message;
+    return typeof maybeMessage === "string" ? maybeMessage : undefined;
+  };
+
+  const handleDelete = async () => {
+    if (!clientId) return;
+
+    try {
+      await deleteClient(clientId).unwrap();
+      dispatch(
+        setSnackbar({
+          message: "Cliente eliminado satisfactoriamente.",
+          type: "success",
+        }),
+      );
+      setDeleteDialogOpen(false);
+      handleGoTo(AppRoutes.Clients);
+    } catch (error) {
+      dispatch(
+        setSnackbar({
+          message: extractApiMessage(error) || "No se pudo eliminar el cliente.",
+          type: "error",
+        }),
+      );
+    }
+  };
+
+  const reviewHeaderActions =
+    !isNewMode && !isEditMode ? (
+      <Button
+        size="small"
+        variant="contained"
+        color="error"
+        startIcon={<DeleteRounded />}
+        onClick={() => setDeleteDialogOpen(true)}
+      >
+        Eliminar
+      </Button>
+    ) : undefined;
+
   const inputs: Input[] = [
     {
       required: true,
@@ -223,22 +277,56 @@ export default function ClientFormPage() {
   }
 
   return (
-    <EntityFormContainer
-      title={
-        isNewMode
-          ? "Crear cliente"
-          : `Cliente "${client?.name || client?.id || ""}"`
-      }
-      mode={isNewMode ? "new" : mode}
-      inputs={inputs}
-      formik={formik}
-      onBack={() => handleGoTo(AppRoutes.Clients)}
-      onEdit={isNewMode ? undefined : handleEdit}
-      onCancelEdit={isNewMode ? undefined : handleCancelEdit}
-      onSubmit={() => void formik.submitForm()}
-      loading={isNewMode ? isCreating : isUpdating}
-      submitDisabled={isNewMode ? isCreating : isUpdating}
-      submitLabel={isNewMode ? "Crear" : "Guardar"}
-    />
+    <>
+      <EntityFormContainer
+        title={
+          isNewMode
+            ? "Crear cliente"
+            : `Cliente "${client?.name || client?.id || ""}"`
+        }
+        mode={isNewMode ? "new" : mode}
+        inputs={inputs}
+        formik={formik}
+        onBack={() => handleGoTo(AppRoutes.Clients)}
+        onEdit={isNewMode ? undefined : handleEdit}
+        onCancelEdit={isNewMode ? undefined : handleCancelEdit}
+        onSubmit={() => void formik.submitForm()}
+        loading={isNewMode ? isCreating : isUpdating}
+        submitDisabled={isNewMode ? isCreating : isUpdating}
+        submitLabel={isNewMode ? "Crear" : "Guardar"}
+        headerActions={reviewHeaderActions}
+      />
+      <Dialog
+        open={deleteDialogOpen}
+        onClose={isDeleting ? undefined : () => setDeleteDialogOpen(false)}
+      >
+        <DialogTitle>Eliminar cliente</DialogTitle>
+        <DialogContent>
+          <DialogContentText>
+            ¿Seguro que querés eliminar este cliente?
+          </DialogContentText>
+        </DialogContent>
+        <DialogActions>
+          <Button
+            variant="text"
+            color="inherit"
+            sx={{ color: "text.secondary" }}
+            onClick={() => setDeleteDialogOpen(false)}
+            disabled={isDeleting}
+          >
+            Cancelar
+          </Button>
+          <Button
+            color="error"
+            variant="contained"
+            onClick={() => void handleDelete()}
+            loading={isDeleting}
+            disabled={isDeleting}
+          >
+            Eliminar
+          </Button>
+        </DialogActions>
+      </Dialog>
+    </>
   );
 }

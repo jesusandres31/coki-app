@@ -50,6 +50,10 @@ export default function CustomTableBody({
 }: CustomTableBodyProps) {
   const isCollapsible = Boolean(detailColumns);
   const hasRowActions = rowActions.length > 0;
+  const actionsColumnWidth =
+    rowActions.length > 0
+      ? rowActions.length * 30 + (rowActions.length - 1) * 4 + 16
+      : 56;
   const tableIconButtonSx = {
     width: 30,
     height: 30,
@@ -63,6 +67,10 @@ export default function CustomTableBody({
     right: isCollapsible ? 48 : 0,
     zIndex: 1,
     backgroundColor: "background.paper",
+    width: actionsColumnWidth,
+    minWidth: actionsColumnWidth,
+    maxWidth: actionsColumnWidth,
+    boxSizing: "border-box",
   };
 
   const isSelected = (selectedItems: string[], itemId: string) => {
@@ -133,6 +141,8 @@ export default function CustomTableBody({
                     key={`${column.id}-${i}`}
                     align={column.align ?? "right"}
                     sx={{
+                      width: column.width ?? column.minWidth,
+                      minWidth: column.minWidth,
                       cursor: isCollapsible ? "pointer" : "default",
                       py: 0.5,
                     }}
@@ -165,6 +175,8 @@ export default function CustomTableBody({
                   className="row-sticky-cell"
                   sx={{
                     py: 0.25,
+                    pl: 1,
+                    pr: 1,
                     ...actionsStickySx,
                   }}
                 >

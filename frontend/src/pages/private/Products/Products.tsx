@@ -1,16 +1,28 @@
 import { useEffect, useMemo, useState } from "react";
-import { OpenInNewRounded } from "@mui/icons-material";
-import { Button } from "@mui/material";
-import { AddRounded } from "@mui/icons-material";
+import {
+  AddRounded,
+  DeleteRounded,
+  EditRounded,
+  OpenInNewRounded,
+} from "@mui/icons-material";
+import {
+  Button,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogContentText,
+  DialogTitle,
+} from "@mui/material";
 import DataGrid from "src/components/common/DataGrid/DataGrid";
 import { getListArgsInitialState } from "src/constants";
 import {
+  useDeleteProductMutation,
   useGetMeasureUnitsQuery,
   useGetProductTypesListQuery,
   useGetProductsListQuery,
 } from "src/app/services/invoiceService";
 import { useAppDispatch } from "src/app/store";
-import { resetBreadcrumbs, setBreadcrumbs } from "src/slices/uiSlice";
+import { resetBreadcrumbs, setBreadcrumbs, setSnackbar } from "src/slices/uiSlice";
 import { useRouter } from "src/hooks";
 import { AppRoutes } from "src/config";
 import { ProductsResponse } from "src/types/pocketbase-types";
@@ -21,6 +33,8 @@ import { productsBreadcrumbFlow } from "./breadcrumbFlow";
 export default function Products() {
   const dispatch = useAppDispatch();
   const { handleGoTo } = useRouter();
+  const [productToDelete, setProductToDelete] =
+    useState<ProductsResponse | null>(null);
   const [queryArgs, setQueryArgs] = useState<GetList>(() => ({
     ...getListArgsInitialState,
     order: "asc",
@@ -35,6 +49,8 @@ export default function Products() {
   }, [dispatch]);
 
   const { data, error, isFetching } = useGetProductsListQuery(queryArgs);
+  const [deleteProduct, { isLoading: isDeleting }] =
+    useDeleteProductMutation();
   const { data: measureUnits = [] } = useGetMeasureUnitsQuery();
   const { data: productTypesList } = useGetProductTypesListQuery({
     page: 1,
@@ -43,6 +59,28 @@ export default function Products() {
     orderBy: "name",
   });
   const productTypes = productTypesList?.items || [];
+
+  const handleDelete = async () => {
+    if (!productToDelete) return;
+
+    try {
+      await deleteProduct(productToDelete.id).unwrap();
+      dispatch(
+        setSnackbar({
+          message: "Producto eliminado satisfactoriamente.",
+          type: "success",
+        }),
+      );
+      setProductToDelete(null);
+    } catch {
+      dispatch(
+        setSnackbar({
+          message: "No se pudo eliminar el producto.",
+          type: "error",
+        }),
+      );
+    }
+  };
 
   const measureUnitById = useMemo(
     () =>
@@ -106,31 +144,76 @@ export default function Products() {
         icon: <OpenInNewRounded fontSize="small" color="primary" />,
         onClick: (item) => handleGoTo(`${AppRoutes.Products}/${item.id}`),
       },
+      {
+        id: "edit",
+        label: "Editar producto",
+        icon: <EditRounded fontSize="small" color="info" />,
+        onClick: (item) => handleGoTo(`${AppRoutes.Products}/${item.id}?mode=edit`),
+      },
+      {
+        id: "delete",
+        label: "Eliminar producto",
+        icon: <DeleteRounded fontSize="small" color="error" />,
+        onClick: (item) => setProductToDelete(item as ProductsResponse),
+      },
     ],
     [handleGoTo],
   );
 
   return (
-    <DataGrid
-      data={data}
-      error={error}
-      isFetching={isFetching}
-      columns={columns}
-      hasSearch
-      searchPlaceholder="Buscar producto"
-      initialQuery={queryArgs}
-      onQueryChange={setQueryArgs}
-      rowActions={rowActions}
-      toolbarElement={
-        <Button
-          size="small"
-          variant="contained"
-          startIcon={<AddRounded />}
-          onClick={() => handleGoTo(AppRoutes.ProductsNew)}
-        >
-          Crear producto
-        </Button>
-      }
-    />
+    <>
+      <DataGrid
+        data={data}
+        error={error}
+        isFetching={isFetching}
+        columns={columns}
+        hasSearch
+        searchPlaceholder="Buscar producto"
+        initialQuery={queryArgs}
+        onQueryChange={setQueryArgs}
+        rowActions={rowActions}
+        toolbarElement={
+          <Button
+            size="small"
+            variant="contained"
+            startIcon={<AddRounded />}
+            onClick={() => handleGoTo(AppRoutes.ProductsNew)}
+          >
+            Crear producto
+          </Button>
+        }
+      />
+      <Dialog
+        open={Boolean(productToDelete)}
+        onClose={isDeleting ? undefined : () => setProductToDelete(null)}
+      >
+        <DialogTitle>Eliminar producto</DialogTitle>
+        <DialogContent>
+          <DialogContentText>
+            ¿Seguro que querés eliminar este producto?
+          </DialogContentText>
+        </DialogContent>
+        <DialogActions>
+          <Button
+            variant="text"
+            color="inherit"
+            sx={{ color: "text.secondary" }}
+            onClick={() => setProductToDelete(null)}
+            disabled={isDeleting}
+          >
+            Cancelar
+          </Button>
+          <Button
+            color="error"
+            variant="contained"
+            onClick={() => void handleDelete()}
+            loading={isDeleting}
+            disabled={isDeleting}
+          >
+            Eliminar
+          </Button>
+        </DialogActions>
+      </Dialog>
+    </>
   );
 }

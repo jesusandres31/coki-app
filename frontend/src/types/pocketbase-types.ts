@@ -176,6 +176,7 @@ export type MeasureunitsRecord = {
 
 export type ProductTypesRecord = {
 	created: IsoAutoDateString
+	deleted?: IsoDateString
 	id: string
 	name?: string
 	updated: IsoAutoDateString
