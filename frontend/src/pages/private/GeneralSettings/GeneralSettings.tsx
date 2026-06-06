@@ -17,7 +17,11 @@ import { useAppDispatch } from "src/app/store";
 import { ErrorMsg, Loading } from "src/components/common";
 import PageContainer from "src/components/common/PageContainer/PageContainer";
 import { configKey } from "src/config";
-import { resetBreadcrumbs, setBreadcrumbs, setSnackbar } from "src/slices/uiSlice";
+import {
+  resetBreadcrumbs,
+  setBreadcrumbs,
+  setSnackbar,
+} from "src/slices/uiSlice";
 import { generalSettingsBreadcrumbFlow } from "./breadcrumbFlow";
 
 const cardSx = {
@@ -75,7 +79,11 @@ export default function GeneralSettings() {
   if (isFetching) {
     return (
       <PageContainer>
-        <Container component="main" maxWidth="lg" sx={{ py: 3, width: "100%", mx: "auto" }}>
+        <Container
+          component="main"
+          maxWidth="lg"
+          sx={{ py: 3, width: "100%", mx: "auto" }}
+        >
           <Card variant="outlined" sx={feedbackCardSx}>
             <Loading />
           </Card>
@@ -87,7 +95,11 @@ export default function GeneralSettings() {
   if (error || !appConfig) {
     return (
       <PageContainer>
-        <Container component="main" maxWidth="lg" sx={{ py: 3, width: "100%", mx: "auto" }}>
+        <Container
+          component="main"
+          maxWidth="lg"
+          sx={{ py: 3, width: "100%", mx: "auto" }}
+        >
           <Card variant="outlined" sx={feedbackCardSx}>
             <Box sx={{ textAlign: "center" }}>
               <ErrorMsg />
@@ -100,7 +112,11 @@ export default function GeneralSettings() {
 
   return (
     <PageContainer>
-      <Container component="main" maxWidth="lg" sx={{ py: 3, width: "100%", mx: "auto" }}>
+      <Container
+        component="main"
+        maxWidth="lg"
+        sx={{ py: 3, width: "100%", mx: "auto" }}
+      >
         <Card variant="outlined" sx={cardSx}>
           <Stack spacing={3} sx={{ p: { xs: 2, md: 3 } }}>
             <Box>
@@ -120,7 +136,8 @@ export default function GeneralSettings() {
             >
               <Box>
                 <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>
-                  Recuperar último precio
+                  Recuperar último precio de productos por cliente en
+                  facturación
                 </Typography>
               </Box>
               <FormControlLabel
@@ -131,10 +148,15 @@ export default function GeneralSettings() {
                       void handleRetrieveLastPriceChange(checked)
                     }
                     disabled={isUpdating}
-                    inputProps={{ "aria-label": "Recuperar último precio" }}
+                    inputProps={{
+                      "aria-label":
+                        "Recuperar último precio de productos por cliente en facturación",
+                    }}
                   />
                 }
-                label={Boolean(appConfig.retrieve_last_price) ? "Activo" : "Inactivo"}
+                label={
+                  Boolean(appConfig.retrieve_last_price) ? "Activo" : "Inactivo"
+                }
                 labelPlacement="start"
                 sx={{ m: 0 }}
               />

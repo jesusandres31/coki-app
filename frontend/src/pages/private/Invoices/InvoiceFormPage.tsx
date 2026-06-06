@@ -319,11 +319,16 @@ function ProductsTable({
   return (
     <TableContainer
       sx={{
-        flex: "1 1 auto",
-        minHeight: { xs: 220, sm: 240, md: 280 },
-        maxHeight: { xs: 340, md: "none" },
+        width: "100%",
+        height: "100%",
+        maxWidth: "100%",
+        flex: "1 1 0",
+        minHeight: 0,
+        minWidth: 0,
         overflowY: "auto",
         overflowX: "auto",
+        overscrollBehavior: "contain",
+        WebkitOverflowScrolling: "touch",
         border: "1px solid",
         borderColor: "divider",
         borderRadius: 1,
@@ -487,17 +492,43 @@ function InvoiceTotalsSummary({
   discountPercent,
   total,
 }: InvoiceTotalsSummaryProps) {
+  const totalRows = [
+    { label: "Subtotal", value: formatMoney(subtotal) },
+    { label: "Descuento factura", value: formatPercent(discountPercent) },
+  ];
+
   return (
-    <Stack spacing={0.5} sx={{ alignItems: "flex-start" }}>
-      <Typography variant="body2" color="text.primary">
-        Subtotal: {formatMoney(subtotal)}
-      </Typography>
-      <Typography variant="body2" color="text.primary">
-        Descuento factura: {formatPercent(discountPercent)}
-      </Typography>
-      <Typography variant="h6" fontWeight={700}>
-        Total: {formatMoney(total)}
-      </Typography>
+    <Stack spacing={1.25} sx={{ width: "100%" }}>
+      {totalRows.map((row) => (
+        <Stack
+          key={row.label}
+          direction="row"
+          justifyContent="space-between"
+          alignItems="center"
+          spacing={1}
+        >
+          <Typography variant="body2" color="text.secondary">
+            {row.label}
+          </Typography>
+          <Typography variant="body2" color="text.primary" fontWeight={600}>
+            {row.value}
+          </Typography>
+        </Stack>
+      ))}
+      <Divider />
+      <Stack
+        direction="row"
+        justifyContent="space-between"
+        alignItems="baseline"
+        spacing={1}
+      >
+        <Typography variant="subtitle2" color="text.primary">
+          Total
+        </Typography>
+        <Typography variant="h6" fontWeight={700} textAlign="right">
+          {formatMoney(total)}
+        </Typography>
+      </Stack>
     </Stack>
   );
 }
@@ -860,7 +891,7 @@ export default function InvoiceFormPage() {
     if (currentInvoiceState === "void") {
       return {
         nextState: "open" as InvoiceState,
-        label: "Reabrir factura",
+        label: "Confirmar factura",
         color: "success" as const,
       };
     }
@@ -868,7 +899,7 @@ export default function InvoiceFormPage() {
     if (currentInvoiceState === "draft") {
       return {
         nextState: "open" as InvoiceState,
-        label: "Abrir factura",
+        label: "Confirmar factura",
         color: "success" as const,
       };
     }
@@ -1270,9 +1301,11 @@ export default function InvoiceFormPage() {
         submitLabel="Guardar"
         headerActions={reviewHeaderActions}
         showDefaultNewSubmit={false}
-        maxWidth="lg"
+        maxWidth="xl"
         containerSx={{
           width: "100%",
+          maxWidth: "100%",
+          minWidth: 0,
           mx: "auto",
           display: "flex",
           flexDirection: "column",
@@ -1284,67 +1317,302 @@ export default function InvoiceFormPage() {
           display: "flex",
           flexDirection: "column",
           minHeight: 0,
+          minWidth: 0,
         }}
         contentSx={{
           flex: "1 1 auto",
           display: "flex",
           flexDirection: "column",
           minHeight: 0,
-          overflowY: { xs: "visible", sm: "auto" },
+          minWidth: 0,
+          overflowY: { xs: "visible", lg: "hidden" },
           overflowX: "hidden",
-          "@media (max-height: 900px)": {
-            overflowY: "auto",
-          },
         }}
       >
-        <Stack spacing={2.5} sx={{ flex: "1 1 auto", minHeight: 0 }}>
-          <Stack direction={{ xs: "column", md: "row" }} spacing={1.5}>
-            <Box sx={{ flex: 1 }}>
-              {isEditable ? (
-                <DebouncedAutocomplete
-                  options={clientOptions}
-                  valueId={activeFormik.values.client}
-                  label="Cliente"
-                  placeholder="Seleccionar cliente"
-                  onChange={(value) =>
-                    activeFormik.setFieldValue("client", value)
-                  }
-                />
-              ) : (
-                <TextField
-                  fullWidth
-                  size="small"
-                  label="Cliente"
-                  value={invoiceClientName}
-                  disabled
-                  sx={readableDisabledFieldSx}
-                />
-              )}
-            </Box>
-
-            <Box sx={{ minWidth: { md: 220 } }}>
-              <DatePicker
-                label="Fecha"
-                value={parsePickerDate(activeFormik.values.date)}
+        <Stack
+          spacing={3}
+          sx={{
+            display: { xs: "flex", lg: "none" },
+            width: "100%",
+            minWidth: 0,
+          }}
+        >
+          <Stack spacing={1.5}>
+            {isEditable ? (
+              <DebouncedAutocomplete
+                options={clientOptions}
+                valueId={activeFormik.values.client}
+                label="Cliente"
+                placeholder="Seleccionar cliente"
                 onChange={(value) =>
-                  activeFormik.setFieldValue("date", formatPickerDate(value))
+                  activeFormik.setFieldValue("client", value)
                 }
-                format="DD/MM/YYYY"
-                disabled={!isEditable}
-                slotProps={{
-                  field: {
-                    readOnly: true,
-                  },
-                  textField: {
-                    size: "small",
-                    fullWidth: true,
-                    sx: !isEditable ? readableDisabledFieldSx : undefined,
-                  },
+              />
+            ) : (
+              <TextField
+                fullWidth
+                size="small"
+                label="Cliente"
+                value={invoiceClientName}
+                disabled
+                sx={readableDisabledFieldSx}
+              />
+            )}
+
+            <DatePicker
+              label="Fecha"
+              value={parsePickerDate(activeFormik.values.date)}
+              onChange={(value) =>
+                activeFormik.setFieldValue("date", formatPickerDate(value))
+              }
+              format="DD/MM/YYYY"
+              disabled={!isEditable}
+              slotProps={{
+                field: {
+                  readOnly: true,
+                },
+                textField: {
+                  size: "small",
+                  fullWidth: true,
+                  sx: !isEditable ? readableDisabledFieldSx : undefined,
+                },
+              }}
+            />
+          </Stack>
+
+          <Stack spacing={1.5}>
+            <Stack spacing={1}>
+              <Typography variant="subtitle1" fontWeight={600}>
+                Productos
+              </Typography>
+              <Button
+                size="small"
+                variant="contained"
+                color="primary"
+                startIcon={<AddRounded />}
+                onClick={isEditable ? handleAddRow : undefined}
+                disabled={!isEditable || isProductsLoading}
+                tabIndex={isEditable ? 0 : -1}
+                aria-hidden={!isEditable}
+                sx={{
+                  width: "100%",
+                  visibility: isEditable ? "visible" : "hidden",
+                  pointerEvents: isEditable ? "auto" : "none",
                 }}
+              >
+                Agregar producto
+              </Button>
+            </Stack>
+
+            <Box
+              sx={{
+                width: "100%",
+                minWidth: 0,
+                minHeight: 250,
+                height: "25vh",
+                maxHeight: 250,
+              }}
+            >
+              <ProductsTable
+                rows={tableRows}
+                editable={isEditable}
+                productOptions={productOptions}
+                onRowChange={handleRowChange}
+                onRemoveRow={handleRemoveRow}
+                canRemoveRow={() => activeFormik.values.rows.length > 1}
               />
             </Box>
+          </Stack>
 
-            <Box sx={{ minWidth: { md: 220 } }}>
+          <Stack
+            spacing={2}
+            sx={{
+              borderTop: "1px solid #E5E7EB",
+              pt: 2.5,
+            }}
+          >
+            <TextField
+              size="small"
+              fullWidth
+              label="Descuento factura (%)"
+              type="number"
+              value={activeFormik.values.discount}
+              onChange={(e) =>
+                activeFormik.setFieldValue(
+                  "discount",
+                  clampDiscount(Number(e.target.value || 0)),
+                )
+              }
+              inputProps={{ min: 0, max: 100, step: "0.01" }}
+              disabled={!isEditable}
+              sx={!isEditable ? readableDisabledFieldSx : undefined}
+            />
+
+            <InvoiceTotalsSummary
+              subtotal={summarySubtotal}
+              discountPercent={activeFormik.values.discount}
+              total={summaryTotal}
+            />
+          </Stack>
+
+          {isNewMode && (
+            <Stack spacing={1} sx={{ width: "100%" }}>
+              <Button
+                size="small"
+                variant="contained"
+                color="info"
+                startIcon={<SaveRounded />}
+                onClick={handleCreateDraft}
+                loading={isCreating}
+                disabled={!canCreate || isCreating}
+                sx={{ width: "100%" }}
+              >
+                Guardar borrador
+              </Button>
+
+              <Button
+                size="small"
+                variant="contained"
+                color="success"
+                startIcon={<AddRounded />}
+                onClick={handleCreateInvoice}
+                loading={isCreating}
+                disabled={!canCreate || isCreating}
+                sx={{ width: "100%" }}
+              >
+                Crear factura
+              </Button>
+            </Stack>
+          )}
+        </Stack>
+
+        <Box
+          sx={{
+            width: "100%",
+            flex: "1 1 auto",
+            minHeight: 0,
+            minWidth: 0,
+            height: { lg: "100%" },
+            display: { xs: "none", lg: "grid" },
+            gridTemplateColumns: {
+              lg: "minmax(0, 85fr) minmax(220px, 15fr)",
+            },
+            gap: 2.25,
+          }}
+        >
+          <Stack
+            spacing={2.25}
+            sx={{
+              minHeight: 0,
+              minWidth: 0,
+              height: { lg: "100%" },
+            }}
+          >
+            <Stack direction={{ xs: "column", md: "row" }} spacing={1.5}>
+              <Box sx={{ flex: 1 }}>
+                {isEditable ? (
+                  <DebouncedAutocomplete
+                    options={clientOptions}
+                    valueId={activeFormik.values.client}
+                    label="Cliente"
+                    placeholder="Seleccionar cliente"
+                    onChange={(value) =>
+                      activeFormik.setFieldValue("client", value)
+                    }
+                  />
+                ) : (
+                  <TextField
+                    fullWidth
+                    size="small"
+                    label="Cliente"
+                    value={invoiceClientName}
+                    disabled
+                    sx={readableDisabledFieldSx}
+                  />
+                )}
+              </Box>
+
+              <Box sx={{ minWidth: { md: 220 } }}>
+                <DatePicker
+                  label="Fecha"
+                  value={parsePickerDate(activeFormik.values.date)}
+                  onChange={(value) =>
+                    activeFormik.setFieldValue("date", formatPickerDate(value))
+                  }
+                  format="DD/MM/YYYY"
+                  disabled={!isEditable}
+                  slotProps={{
+                    field: {
+                      readOnly: true,
+                    },
+                    textField: {
+                      size: "small",
+                      fullWidth: true,
+                      sx: !isEditable ? readableDisabledFieldSx : undefined,
+                    },
+                  }}
+                />
+              </Box>
+            </Stack>
+
+            <Divider />
+
+            <Stack
+              direction={{ xs: "column", sm: "row" }}
+              justifyContent="space-between"
+              alignItems={{ xs: "stretch", sm: "center" }}
+              spacing={1}
+            >
+              <Typography variant="subtitle1" fontWeight={600}>
+                Productos
+              </Typography>
+              <Button
+                size="small"
+                variant="contained"
+                color="primary"
+                startIcon={<AddRounded />}
+                onClick={isEditable ? handleAddRow : undefined}
+                disabled={!isEditable || isProductsLoading}
+                tabIndex={isEditable ? 0 : -1}
+                aria-hidden={!isEditable}
+                sx={{
+                  visibility: isEditable ? "visible" : "hidden",
+                  pointerEvents: isEditable ? "auto" : "none",
+                }}
+              >
+                Agregar producto
+              </Button>
+            </Stack>
+
+            <ProductsTable
+              rows={tableRows}
+              editable={isEditable}
+              productOptions={productOptions}
+              onRowChange={handleRowChange}
+              onRemoveRow={handleRemoveRow}
+              canRemoveRow={() => activeFormik.values.rows.length > 1}
+            />
+          </Stack>
+
+          <Box
+            component="aside"
+            sx={{
+              display: "flex",
+              flexDirection: "column",
+              alignSelf: "stretch",
+              position: "relative",
+              zIndex: 1,
+              minHeight: 0,
+              minWidth: 0,
+              backgroundColor: "background.paper",
+              borderLeft: { lg: "1px solid #E5E7EB" },
+              borderTop: { xs: "1px solid #E5E7EB", lg: 0 },
+              pl: { xs: 0, lg: 2.25 },
+              pt: { xs: 2.5, lg: 0 },
+              gap: { xs: 2.5, lg: 2 },
+            }}
+          >
+            <Stack spacing={2}>
               <TextField
                 size="small"
                 fullWidth
@@ -1361,72 +1629,20 @@ export default function InvoiceFormPage() {
                 disabled={!isEditable}
                 sx={!isEditable ? readableDisabledFieldSx : undefined}
               />
-            </Box>
-          </Stack>
 
-          <Divider />
-
-          <Stack
-            direction={{ xs: "column", sm: "row" }}
-            justifyContent="space-between"
-            alignItems={{ xs: "stretch", sm: "center" }}
-            spacing={1}
-          >
-            <Typography variant="subtitle1" fontWeight={600}>
-              Productos
-            </Typography>
-            <Button
-              size="small"
-              variant="contained"
-              color="primary"
-              startIcon={<AddRounded />}
-              onClick={isEditable ? handleAddRow : undefined}
-              disabled={!isEditable || isProductsLoading}
-              tabIndex={isEditable ? 0 : -1}
-              aria-hidden={!isEditable}
-              sx={{
-                visibility: isEditable ? "visible" : "hidden",
-                pointerEvents: isEditable ? "auto" : "none",
-              }}
-            >
-              Agregar producto
-            </Button>
-          </Stack>
-
-          <ProductsTable
-            rows={tableRows}
-            editable={isEditable}
-            productOptions={productOptions}
-            onRowChange={handleRowChange}
-            onRemoveRow={handleRemoveRow}
-            canRemoveRow={() => activeFormik.values.rows.length > 1}
-          />
-
-          <Divider />
-
-          <Box
-            sx={{
-              mt: "auto",
-              display: "flex",
-              justifyContent: "space-between",
-              alignItems: "center",
-              gap: 1.5,
-              flexWrap: "wrap",
-            }}
-          >
-            <InvoiceTotalsSummary
-              subtotal={summarySubtotal}
-              discountPercent={activeFormik.values.discount}
-              total={summaryTotal}
-            />
+              <InvoiceTotalsSummary
+                subtotal={summarySubtotal}
+                discountPercent={activeFormik.values.discount}
+                total={summaryTotal}
+              />
+            </Stack>
 
             {isNewMode && (
               <Stack
-                direction={{ xs: "column", sm: "row" }}
                 spacing={1}
                 sx={{
-                  ml: { xs: 0, sm: "auto" },
-                  width: { xs: "100%", sm: "auto" },
+                  mt: { xs: 1, lg: "auto" },
+                  width: "100%",
                 }}
               >
                 <Button
@@ -1437,7 +1653,7 @@ export default function InvoiceFormPage() {
                   onClick={handleCreateDraft}
                   loading={isCreating}
                   disabled={!canCreate || isCreating}
-                  sx={{ width: { xs: "100%", sm: "auto" } }}
+                  sx={{ width: "100%" }}
                 >
                   Guardar borrador
                 </Button>
@@ -1450,14 +1666,14 @@ export default function InvoiceFormPage() {
                   onClick={handleCreateInvoice}
                   loading={isCreating}
                   disabled={!canCreate || isCreating}
-                  sx={{ width: { xs: "100%", sm: "auto" } }}
+                  sx={{ width: "100%" }}
                 >
                   Crear factura
                 </Button>
               </Stack>
             )}
           </Box>
-        </Stack>
+        </Box>
       </EntityFormContainer>
     </LocalizationProvider>
   );

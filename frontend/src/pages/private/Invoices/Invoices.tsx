@@ -56,9 +56,12 @@ export default function Invoices() {
   const [invoiceProductsByInvoiceId, setInvoiceProductsByInvoiceId] = useState<
     Record<string, InvoicesProductsResponse[]>
   >({});
-  const [invoiceProductsLoadingByInvoiceId, setInvoiceProductsLoadingByInvoiceId] =
-    useState<Record<string, boolean>>({});
-  const [triggerGetInvoiceProducts] = useLazyGetInvoiceProductsByInvoiceIdQuery();
+  const [
+    invoiceProductsLoadingByInvoiceId,
+    setInvoiceProductsLoadingByInvoiceId,
+  ] = useState<Record<string, boolean>>({});
+  const [triggerGetInvoiceProducts] =
+    useLazyGetInvoiceProductsByInvoiceIdQuery();
 
   useEffect(() => {
     dispatch(setBreadcrumbs(invoiceBreadcrumbFlow.list()));
@@ -75,7 +78,8 @@ export default function Invoices() {
   const { data: measureUnits = [] } = useGetMeasureUnitsQuery();
 
   const clientNameById = useMemo(
-    () => new Map(clients.map((client) => [client.id, String(client.name || "-")])),
+    () =>
+      new Map(clients.map((client) => [client.id, String(client.name || "-")])),
     [clients],
   );
 
@@ -105,7 +109,10 @@ export default function Invoices() {
   );
 
   const productNameById = useMemo(
-    () => new Map(products.map((product) => [product.id, String(product.name || "-")])),
+    () =>
+      new Map(
+        products.map((product) => [product.id, String(product.name || "-")]),
+      ),
     [products],
   );
 
@@ -270,7 +277,7 @@ export default function Invoices() {
     () => [
       {
         id: "open",
-        label: "Abrir factura",
+        label: "Confirmar factura",
         icon: <OpenInNewRounded fontSize="small" color="primary" />,
         onClick: (item) => handleGoTo(`${AppRoutes.Invoices}/${item.id}`),
       },
