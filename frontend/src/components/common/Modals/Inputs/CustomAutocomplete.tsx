@@ -127,11 +127,14 @@ export default function CustomAutocomplete({
         return false;
       }}
       getOptionLabel={getOptionLabel}
+      getOptionKey={(option) => option.id}
       options={options ?? []}
       loading={loading}
       renderOption={(props, option) => {
+        const { key: _key, ...optionProps } = props;
+
         return (
-          <li {...props} key={option.id}>
+          <li key={option.id} {...optionProps}>
             {getOptionLabel && getOptionLabel(option)}
           </li>
         );

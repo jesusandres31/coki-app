@@ -156,7 +156,7 @@ export default function CustomList({
         const selected = isSelected(item) || isNestedSelected(item);
 
         return (
-          <React.Fragment key={`${index}-${item.to}`}>
+          <React.Fragment key={itemKey}>
             <ListItem
               disablePadding
               sx={{

@@ -277,7 +277,7 @@ export default function Invoices() {
     () => [
       {
         id: "open",
-        label: "Confirmar factura",
+        label: "Abrir factura",
         icon: <OpenInNewRounded fontSize="small" color="primary" />,
         onClick: (item) => handleGoTo(`${AppRoutes.Invoices}/${item.id}`),
       },

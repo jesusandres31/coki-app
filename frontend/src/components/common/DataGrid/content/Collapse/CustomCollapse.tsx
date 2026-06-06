@@ -117,13 +117,10 @@ export default function CustomCollapse({
                           </TableRow>
                         </TableHead>
 
-                        <TableBody
-                          key={`${i}-${row.id}`}
-                          sx={{ width: "100%" }}
-                        >
+                        <TableBody key={row.id} sx={{ width: "100%" }}>
                           {Array.isArray(detailRows) &&
                             detailRows.map((item, i) => (
-                              <TableRow key={`${item.id}-${i}`}>
+                              <TableRow key={item.id}>
                                 {(detailCol.columns as IColumn<DataItem>[]).map(
                                   (column) => {
                                     const value = column.render

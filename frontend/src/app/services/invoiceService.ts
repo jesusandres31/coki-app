@@ -461,6 +461,25 @@ export const invoiceApi = mainApi.injectEndpoints({
       },
       invalidatesTags: [invoiceTag, invoiceProductsTag, invoicesViewTag],
     }),
+    deleteInvoice: build.mutation<void, string>({
+      queryFn: async (_arg) => {
+        const existingItems = await typedPb
+          .collection("invoices_products")
+          .getFullList({
+            filter: `invoice = "${escapePbFilterValue(_arg)}"`,
+          });
+
+        await Promise.all(
+          existingItems.map((item) =>
+            typedPb.collection("invoices_products").delete(item.id),
+          ),
+        );
+        await typedPb.collection("invoices").delete(_arg);
+
+        return { data: undefined };
+      },
+      invalidatesTags: [invoiceTag, invoiceProductsTag, invoicesViewTag],
+    }),
     updateClient: build.mutation<ClientsResponse, UpdateClientReq>({
       queryFn: async (_arg) => {
         const res = await typedPb.collection("clients").update(_arg.id, _arg.data);
@@ -529,6 +548,7 @@ export const {
   useCreateInvoiceMutation,
   useCreateProductMutation,
   useCreateProductTypeMutation,
+  useDeleteInvoiceMutation,
   useDeleteProductTypeMutation,
   useGetClientByIdQuery,
   useGetClientsQuery,

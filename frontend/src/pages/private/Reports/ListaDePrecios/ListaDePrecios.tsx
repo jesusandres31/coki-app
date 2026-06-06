@@ -493,6 +493,7 @@ export default function ListaDePrecios() {
             loading={isFetchingPriceListTypes}
             isOptionEqualToValue={(option, value) => option.id === value.id}
             getOptionLabel={(option) => option.name}
+            getOptionKey={(option) => option.id}
             noOptionsText="Sin tipos disponibles"
             renderInput={(params) => (
               <TextField
@@ -540,6 +541,7 @@ export default function ListaDePrecios() {
             }}
             isOptionEqualToValue={(option, value) => option.id === value.id}
             getOptionLabel={(option) => option.name}
+            getOptionKey={(option) => option.id}
             noOptionsText="Sin productos disponibles"
             renderInput={(params) => (
               <TextField

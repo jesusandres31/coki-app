@@ -76,7 +76,7 @@ export default function CustomTableBody({
         const collapsed = collapseItem === row.id;
 
         return (
-          <React.Fragment key={`${index}-${row.id}`}>
+          <React.Fragment key={row.id}>
             <TableRow
               selected={selected}
               sx={{

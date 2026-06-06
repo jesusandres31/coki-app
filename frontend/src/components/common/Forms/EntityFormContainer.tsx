@@ -29,7 +29,7 @@ import PageContainer from "src/components/common/PageContainer/PageContainer";
 type EntityPageMode = "new" | "review" | "edit";
 
 interface EntityFormContainerProps {
-  title: string;
+  title: ReactNode;
   mode: EntityPageMode;
   inputs: Input[];
   formik: FormikProps<any>;
@@ -89,9 +89,13 @@ export default function EntityFormContainer({
           spacing={1}
           mb={1.5}
         >
-          <Typography variant="h6" fontWeight={600} color="text.primary">
-            {title}
-          </Typography>
+          {typeof title === "string" ? (
+            <Typography variant="h6" fontWeight={600} color="text.primary">
+              {title}
+            </Typography>
+          ) : (
+            title
+          )}
 
           <Stack direction={{ xs: "column", sm: "row" }} spacing={1}>
             {isReview && onEdit ? (
