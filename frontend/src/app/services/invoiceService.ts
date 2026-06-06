@@ -58,6 +58,16 @@ export interface GetInvoicesByDateRangeReq {
   to: string;
 }
 
+export interface GetLastProductPriceForClientReq {
+  clientId: string;
+  productId: string;
+  excludeInvoiceId?: string;
+}
+
+export interface LastProductPriceForClient {
+  unitPrice: number;
+}
+
 interface UpdateClientReq {
   id: string;
   data: Update<"clients">;
@@ -329,6 +339,53 @@ export const invoiceApi = mainApi.injectEndpoints({
       },
       providesTags: [configsTag],
     }),
+    getLastProductPriceForClient: build.query<
+      LastProductPriceForClient | null,
+      GetLastProductPriceForClientReq
+    >({
+      queryFn: async (_arg) => {
+        const clientId = escapePbFilterValue(_arg.clientId);
+        const productId = escapePbFilterValue(_arg.productId);
+        const openState = await typedPb
+          .collection("invoicestates")
+          .getFirstListItem(`name = "open"`);
+        const excludeInvoiceId = _arg.excludeInvoiceId
+          ? escapePbFilterValue(_arg.excludeInvoiceId)
+          : "";
+        const excludeFilter = excludeInvoiceId
+          ? ` && id != "${excludeInvoiceId}"`
+          : "";
+
+        const invoices = await typedPb.collection("invoices").getFullList({
+          filter: `client = "${clientId}" && state = "${escapePbFilterValue(openState.id)}" && deleted = ""${excludeFilter}`,
+          sort: "-date,-created",
+          fields: "id,date,created",
+          requestKey: null,
+        });
+
+        for (const invoice of invoices) {
+          const invoiceProducts = await typedPb
+            .collection("invoices_products")
+            .getFullList({
+              filter: `invoice = "${escapePbFilterValue(invoice.id)}" && product = "${productId}" && deleted = ""`,
+              sort: "-created",
+              requestKey: null,
+            });
+          const lastItem = invoiceProducts[0];
+
+          if (lastItem) {
+            return {
+              data: {
+                unitPrice: Number(lastItem.unit_price ?? 0),
+              },
+            };
+          }
+        }
+
+        return { data: null };
+      },
+      providesTags: [invoiceProductsTag],
+    }),
     createInvoice: build.mutation<
       {
         invoice: InvoicesResponse;
@@ -565,6 +622,7 @@ export const {
   useGetInvoicesListQuery,
   useGetInvoiceViewByIdQuery,
   useLazyGetInvoiceProductsByInvoiceIdQuery,
+  useLazyGetLastProductPriceForClientQuery,
   useGetInvoicesByDateRangeQuery,
   useGetInvoiceStatesQuery,
   useGetInvoicesViewQuery,

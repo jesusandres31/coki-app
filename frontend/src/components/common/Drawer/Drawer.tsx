@@ -307,7 +307,7 @@ export default function Drawer({ noTable }: DrawerProps) {
         }}
       >
         <Toolbar variant="dense" />
-        <Box sx={{ px: 3, pt: 3 }}>
+        <Box sx={{ px: 3, pt: 2.5, mb: -0.5 }}>
           <Breadcrumbs
             aria-label="breadcrumb"
             separator={<NavigateNextRounded fontSize="small" />}

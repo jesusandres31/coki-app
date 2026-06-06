@@ -43,11 +43,13 @@ import { useAppDispatch } from "src/app/store";
 import {
   useCreateInvoiceMutation,
   useDeleteInvoiceMutation,
+  useGetConfigQuery,
   useGetClientsQuery,
   useGetInvoiceViewByIdQuery,
   useGetInvoiceStatesQuery,
   useGetMeasureUnitsQuery,
   useGetProductsQuery,
+  useLazyGetLastProductPriceForClientQuery,
   useUpdateInvoiceMutation,
 } from "src/app/services/invoiceService";
 import { ErrorMsg, Loading } from "src/components/common";
@@ -122,6 +124,7 @@ interface ProductTableRowData {
   measureUnitName: string;
   amount: number;
   unitPrice: number;
+  catalogUnitPrice?: number;
   discount: number;
   total: number;
 }
@@ -130,6 +133,7 @@ interface ProductsTableProps {
   rows: ProductTableRowData[];
   editable: boolean;
   productOptions: NamedOption[];
+  showCatalogPriceHint?: boolean;
   onRowChange?: (
     id: string,
     field: keyof Omit<InvoiceProductInput, "id">,
@@ -156,7 +160,6 @@ const invoiceProductsActionColumnWidth = 56;
 const invoiceProductsTotalColumnWidth = 100;
 
 const invoiceProductsTotalColumnSx = {
-  position: "sticky",
   width: invoiceProductsTotalColumnWidth,
   minWidth: invoiceProductsTotalColumnWidth,
   maxWidth: invoiceProductsTotalColumnWidth,
@@ -350,11 +353,16 @@ function ProductsTable({
   rows,
   editable,
   productOptions,
+  showCatalogPriceHint = false,
   onRowChange,
   onRemoveRow,
   canRemoveRow,
 }: ProductsTableProps) {
-  const totalColumnRight = editable ? invoiceProductsActionColumnWidth : 0;
+  const bodyCellSx = {
+    py: 0.75,
+    pb: editable && showCatalogPriceHint ? 2.75 : 0.75,
+    verticalAlign: "middle",
+  };
 
   return (
     <TableContainer
@@ -386,10 +394,7 @@ function ProductsTable({
               align="right"
               sx={{
                 ...invoiceProductsTotalColumnSx,
-                right: totalColumnRight,
-                zIndex: 3,
                 backgroundColor: "#F8FAFC",
-                borderLeft: "1px solid #E5E7EB",
               }}
             >
               Total
@@ -401,6 +406,7 @@ function ProductsTable({
                   ...invoiceProductsActionColumnSx,
                   zIndex: 4,
                   backgroundColor: "#F8FAFC",
+                  borderLeft: "1px solid #E5E7EB",
                 }}
               />
             )}
@@ -409,7 +415,7 @@ function ProductsTable({
         <TableBody>
           {rows.map((row) => (
             <TableRow key={row.id}>
-              <TableCell sx={{ py: 0.75, verticalAlign: "middle" }}>
+              <TableCell sx={bodyCellSx}>
                 {editable ? (
                   <DebouncedAutocomplete
                     options={productOptions}
@@ -432,7 +438,7 @@ function ProductsTable({
                 )}
               </TableCell>
 
-              <TableCell sx={{ py: 0.75, verticalAlign: "middle" }}>
+              <TableCell sx={bodyCellSx}>
                 <TextField
                   fullWidth
                   size="small"
@@ -454,7 +460,7 @@ function ProductsTable({
                 />
               </TableCell>
 
-              <TableCell sx={{ py: 0.75, verticalAlign: "middle" }}>
+              <TableCell sx={bodyCellSx}>
                 <TextField
                   fullWidth
                   size="small"
@@ -465,27 +471,46 @@ function ProductsTable({
                 />
               </TableCell>
 
-              <TableCell sx={{ py: 0.75, verticalAlign: "middle" }}>
-                <TextField
-                  fullWidth
-                  size="small"
-                  variant="standard"
-                  type="number"
-                  value={row.unitPrice}
-                  onChange={(e) =>
-                    onRowChange?.(
-                      row.id,
-                      "unitPrice",
-                      Math.max(0, Number(e.target.value || 0)),
-                    )
-                  }
-                  inputProps={{ min: 0, step: "0.01" }}
-                  disabled={!editable}
-                  sx={readableDisabledFieldSx}
-                />
+              <TableCell sx={bodyCellSx}>
+                <Box sx={{ position: "relative" }}>
+                  <TextField
+                    fullWidth
+                    size="small"
+                    variant="standard"
+                    type="number"
+                    value={row.unitPrice}
+                    onChange={(e) =>
+                      onRowChange?.(
+                        row.id,
+                        "unitPrice",
+                        Math.max(0, Number(e.target.value || 0)),
+                      )
+                    }
+                    inputProps={{ min: 0, step: "0.01" }}
+                    disabled={!editable}
+                    sx={readableDisabledFieldSx}
+                  />
+                  {editable && showCatalogPriceHint && row.productId && (
+                    <Typography
+                      variant="caption"
+                      color="text.secondary"
+                      noWrap
+                      sx={{
+                        position: "absolute",
+                        top: "100%",
+                        left: 0,
+                        mt: 0.25,
+                        maxWidth: "100%",
+                        pointerEvents: "none",
+                      }}
+                    >
+                      {`Precio actual: ${formatMoney(row.catalogUnitPrice ?? 0)}`}
+                    </Typography>
+                  )}
+                </Box>
               </TableCell>
 
-              <TableCell sx={{ py: 0.75, verticalAlign: "middle" }}>
+              <TableCell sx={bodyCellSx}>
                 <TextField
                   fullWidth
                   size="small"
@@ -509,12 +534,7 @@ function ProductsTable({
                 align="right"
                 sx={{
                   ...invoiceProductsTotalColumnSx,
-                  right: totalColumnRight,
-                  py: 0.75,
-                  verticalAlign: "middle",
-                  zIndex: 1,
-                  backgroundColor: "background.paper",
-                  borderLeft: "1px solid #E5E7EB",
+                  ...bodyCellSx,
                 }}
               >
                 <Typography variant="body2" fontWeight={600}>
@@ -527,10 +547,10 @@ function ProductsTable({
                   align="center"
                   sx={{
                     ...invoiceProductsActionColumnSx,
-                    py: 0.75,
-                    verticalAlign: "middle",
+                    ...bodyCellSx,
                     zIndex: 2,
                     backgroundColor: "background.paper",
+                    borderLeft: "1px solid #E5E7EB",
                   }}
                 >
                   <IconButton
@@ -647,6 +667,7 @@ export default function InvoiceFormPage() {
   const { data: clients = [] } = useGetClientsQuery(undefined, {
     skip: !isNewMode && !isEditMode,
   });
+  const { data: appConfig } = useGetConfigQuery();
   const { data: invoiceStates = [] } = useGetInvoiceStatesQuery(undefined, {
     skip: !isDetailRoute,
   });
@@ -666,6 +687,8 @@ export default function InvoiceFormPage() {
   const [createInvoice, { isLoading: isCreating }] = useCreateInvoiceMutation();
   const [updateInvoice, { isLoading: isUpdating }] = useUpdateInvoiceMutation();
   const [deleteInvoice, { isLoading: isDeleting }] = useDeleteInvoiceMutation();
+  const [triggerGetLastProductPriceForClient] =
+    useLazyGetLastProductPriceForClientQuery();
 
   const clientOptions = useMemo<NamedOption[]>(
     () =>
@@ -988,6 +1011,7 @@ export default function InvoiceFormPage() {
   const createTableRows = useMemo<ProductTableRowData[]>(
     () =>
       newFormik.values.rows.map((row) => {
+        const product = productById.get(row.product);
         const productName =
           productOptions.find((option) => option.id === row.product)?.name ||
           "";
@@ -996,11 +1020,10 @@ export default function InvoiceFormPage() {
           productId: row.product,
           productName,
           measureUnitName:
-            measureUnitById.get(
-              productById.get(row.product)?.measureUnitId || "",
-            ) || "-",
+            measureUnitById.get(product?.measureUnitId || "") || "-",
           amount: row.amount,
           unitPrice: row.unitPrice,
+          catalogUnitPrice: product?.unitPrice ?? 0,
           discount: row.discount,
           total: getCreateItemTotal(row),
         };
@@ -1011,6 +1034,7 @@ export default function InvoiceFormPage() {
   const detailTableRows = useMemo<ProductTableRowData[]>(
     () =>
       editFormik.values.rows.map((row) => {
+        const product = productById.get(row.product);
         const productName =
           productOptions.find((option) => option.id === row.product)?.name ||
           invoiceProducts.find((item) => item.id === row.id)?.product_name ||
@@ -1021,11 +1045,10 @@ export default function InvoiceFormPage() {
           productId: row.product,
           productName,
           measureUnitName:
-            measureUnitById.get(
-              productById.get(row.product)?.measureUnitId || "",
-            ) || "-",
+            measureUnitById.get(product?.measureUnitId || "") || "-",
           amount: row.amount,
           unitPrice: row.unitPrice,
+          catalogUnitPrice: product?.unitPrice ?? 0,
           discount: row.discount,
           total: getCreateItemTotal(row),
         };
@@ -1158,6 +1181,9 @@ export default function InvoiceFormPage() {
   const invoiceClientName =
     parsedClient?.name ||
     (typeof invoice?.client === "string" ? invoice.client : "-");
+  const selectedInvoiceClientId =
+    activeFormik.values.client || parsedClient?.id || "";
+  const retrieveLastPriceEnabled = Boolean(appConfig?.retrieve_last_price);
   const pageTitle = isNewMode ? (
     "Crear factura"
   ) : (
@@ -1243,24 +1269,51 @@ export default function InvoiceFormPage() {
     );
   };
 
-  const handleRowChange = (
+  const handleRowChange = async (
     id: string,
     field: keyof Omit<InvoiceProductInput, "id">,
     value: string | number,
   ) => {
+    if (field === "product") {
+      const productId = String(value);
+      const selected = productById.get(productId);
+      let unitPrice = selected ? selected.unitPrice : 0;
+
+      if (retrieveLastPriceEnabled && selectedInvoiceClientId && productId) {
+        try {
+          const lastPrice = await triggerGetLastProductPriceForClient({
+            clientId: selectedInvoiceClientId,
+            productId,
+            excludeInvoiceId: invoiceId,
+          }).unwrap();
+
+          if (lastPrice) {
+            unitPrice = Math.max(0, Number(lastPrice.unitPrice || 0));
+          }
+        } catch {
+          unitPrice = selected ? selected.unitPrice : 0;
+        }
+      }
+
+      activeFormik.setFieldValue(
+        "rows",
+        activeFormik.values.rows.map((row) =>
+          row.id === id
+            ? {
+                ...row,
+                product: productId,
+                unitPrice,
+              }
+            : row,
+        ),
+      );
+      return;
+    }
+
     activeFormik.setFieldValue(
       "rows",
       activeFormik.values.rows.map((row) => {
         if (row.id !== id) return row;
-
-        if (field === "product") {
-          const selected = productById.get(String(value));
-          return {
-            ...row,
-            product: String(value),
-            unitPrice: selected ? selected.unitPrice : row.unitPrice,
-          };
-        }
 
         return {
           ...row,
@@ -1552,6 +1605,7 @@ export default function InvoiceFormPage() {
                   rows={tableRows}
                   editable={isEditable}
                   productOptions={productOptions}
+                  showCatalogPriceHint={retrieveLastPriceEnabled}
                   onRowChange={handleRowChange}
                   onRemoveRow={handleRemoveRow}
                   canRemoveRow={() => activeFormik.values.rows.length > 1}
@@ -1726,6 +1780,7 @@ export default function InvoiceFormPage() {
                 rows={tableRows}
                 editable={isEditable}
                 productOptions={productOptions}
+                showCatalogPriceHint={retrieveLastPriceEnabled}
                 onRowChange={handleRowChange}
                 onRemoveRow={handleRemoveRow}
                 canRemoveRow={() => activeFormik.values.rows.length > 1}
