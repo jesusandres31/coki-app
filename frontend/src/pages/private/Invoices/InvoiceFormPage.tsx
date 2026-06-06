@@ -1,7 +1,9 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import type { KeyboardEvent, Ref, RefObject } from "react";
 import { useParams, useSearchParams } from "react-router-dom";
 import dayjs, { Dayjs } from "dayjs";
 import { useFormik } from "formik";
+import type { FormikErrors } from "formik";
 import {
   AddRounded,
   CancelRounded,
@@ -117,6 +119,11 @@ interface DebouncedAutocompleteProps {
   placeholder?: string;
   variant?: "outlined" | "standard";
   disabled?: boolean;
+  inputRef?: Ref<HTMLInputElement>;
+  onKeyDown?: (event: KeyboardEvent<HTMLInputElement>) => void;
+  error?: boolean;
+  helperText?: string;
+  helperTextNoWrap?: boolean;
 }
 
 interface ProductTableRowData {
@@ -135,8 +142,10 @@ interface ProductsTableProps {
   rows: ProductTableRowData[];
   editable: boolean;
   inputsDisabled?: boolean;
+  rowErrors?: InvoiceProductRowErrors[];
   productOptions: NamedOption[];
   showCatalogPriceHint?: boolean;
+  addProductButtonRef?: RefObject<HTMLButtonElement>;
   onRowChange?: (
     id: string,
     field: keyof Omit<InvoiceProductInput, "id">,
@@ -158,6 +167,23 @@ interface InvoiceFormValues {
   discount: number;
   rows: InvoiceProductInput[];
 }
+
+type InvoiceProductRowErrors = Partial<
+  Record<keyof Omit<InvoiceProductInput, "id">, string>
+>;
+
+type ProductTableEditableField =
+  | "product"
+  | "amount"
+  | "unitPrice"
+  | "discount";
+
+const productTableEditableFields: ProductTableEditableField[] = [
+  "product",
+  "amount",
+  "unitPrice",
+  "discount",
+];
 
 const invoiceProductsActionColumnWidth = 56;
 const invoiceProductsTotalColumnWidth = 100;
@@ -228,6 +254,59 @@ const hasInvalidInvoiceRows = (rows: InvoiceProductInput[]) =>
       row.discount > 100,
   );
 
+const isCompleteInvoiceRow = (row: InvoiceProductInput | undefined) =>
+  Boolean(row) &&
+  Boolean(row?.product) &&
+  Number(row?.amount || 0) > 0 &&
+  Number(row?.unitPrice || 0) >= 0 &&
+  Number(row?.discount || 0) >= 0 &&
+  Number(row?.discount || 0) <= 100;
+
+const validateInvoiceForm = (values: InvoiceFormValues) => {
+  const errors: FormikErrors<InvoiceFormValues> = {};
+
+  if (!values.client) {
+    errors.client = "Seleccioná un cliente.";
+  }
+
+  if (!normalizeIsoDate(values.date)) {
+    errors.date = "Seleccioná una fecha válida.";
+  }
+
+  const rowErrors = values.rows.map<InvoiceProductRowErrors>((row) => {
+    const errors: InvoiceProductRowErrors = {};
+
+    if (!row.product) {
+      errors.product = "Seleccioná un producto.";
+    }
+
+    if (row.amount <= 0) {
+      errors.amount = "Ingresá cantidad.";
+    }
+
+    if (row.unitPrice < 0) {
+      errors.unitPrice = "Precio inválido.";
+    }
+
+    if (row.discount < 0 || row.discount > 100) {
+      errors.discount = "Descuento inválido.";
+    }
+
+    return errors;
+  });
+
+  if (rowErrors.some((rowError) => Object.keys(rowError).length > 0)) {
+    errors.rows = rowErrors as FormikErrors<InvoiceProductInput>[];
+  }
+
+  return errors;
+};
+
+const getInvoiceRowErrors = (errors: FormikErrors<InvoiceFormValues>) =>
+  Array.isArray(errors.rows)
+    ? (errors.rows as InvoiceProductRowErrors[])
+    : [];
+
 const readableDisabledFieldSx = (theme: Theme) => ({
   "& .MuiInputBase-input.Mui-disabled": {
     WebkitTextFillColor: theme.palette.text.primary,
@@ -296,6 +375,11 @@ function DebouncedAutocomplete({
   placeholder,
   variant = "outlined",
   disabled = false,
+  inputRef,
+  onKeyDown,
+  error = false,
+  helperText,
+  helperTextNoWrap = false,
 }: DebouncedAutocompleteProps) {
   const [inputValue, setInputValue] = useState("");
   const [debouncedInputValue, setDebouncedInputValue] = useState("");
@@ -346,6 +430,21 @@ function DebouncedAutocomplete({
           variant={variant}
           label={label}
           placeholder={placeholder}
+          inputRef={inputRef}
+          onKeyDown={onKeyDown}
+          error={error}
+          helperText={helperText}
+          FormHelperTextProps={
+            helperTextNoWrap
+              ? {
+                  sx: {
+                    whiteSpace: "nowrap",
+                    overflow: "hidden",
+                    textOverflow: "ellipsis",
+                  },
+                }
+              : undefined
+          }
         />
       )}
     />
@@ -356,12 +455,16 @@ function ProductsTable({
   rows,
   editable,
   inputsDisabled = false,
+  rowErrors = [],
   productOptions,
   showCatalogPriceHint = false,
+  addProductButtonRef,
   onRowChange,
   onRemoveRow,
   canRemoveRow,
 }: ProductsTableProps) {
+  const fieldRefs = useRef(new Map<string, HTMLElement>());
+  const previousRowsLengthRef = useRef(rows.length);
   const controlsDisabled = !editable || inputsDisabled;
   const bodyCellSx = {
     py: 0.75,
@@ -376,6 +479,141 @@ function ProductsTable({
     ...editableBodyCellSx,
     pb: bodyCellSx.py,
   };
+  const totalCellSx = {
+    ...invoiceProductsTotalColumnSx,
+    ...editableBodyCellSx,
+  };
+  const totalValueSx = {
+    minHeight: 32,
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "flex-end",
+  };
+  const singleLineHelperTextProps = {
+    sx: {
+      whiteSpace: "nowrap",
+      overflow: "hidden",
+      textOverflow: "ellipsis",
+    },
+  };
+  const getFieldKey = (rowId: string, field: ProductTableEditableField) =>
+    `${rowId}:${field}`;
+  const setFieldRef =
+    (rowId: string, field: ProductTableEditableField) =>
+    (element: HTMLElement | null) => {
+      const key = getFieldKey(rowId, field);
+
+      if (element) {
+        fieldRefs.current.set(key, element);
+        return;
+      }
+
+      fieldRefs.current.delete(key);
+    };
+  const focusField = (rowIndex: number, fieldIndex: number) => {
+    const targetRow = rows[rowIndex];
+    const targetField = productTableEditableFields[fieldIndex];
+    if (!targetRow || !targetField) return;
+
+    const element = fieldRefs.current.get(
+      getFieldKey(targetRow.id, targetField),
+    );
+    if (!element) return;
+
+    element.focus();
+    if (element instanceof HTMLInputElement) {
+      element.select();
+    }
+  };
+  const focusAddProductButton = () => {
+    addProductButtonRef?.current?.focus();
+  };
+  const focusNextField = (rowIndex: number, fieldIndex: number) => {
+    if (fieldIndex < productTableEditableFields.length - 1) {
+      focusField(rowIndex, fieldIndex + 1);
+      return;
+    }
+
+    focusAddProductButton();
+  };
+  const handleFieldKeyDown =
+    (rowIndex: number, field: ProductTableEditableField) =>
+    (event: KeyboardEvent<HTMLInputElement>) => {
+      if (controlsDisabled) return;
+
+      const fieldIndex = productTableEditableFields.indexOf(field);
+
+      if (event.key === "Tab" && !event.shiftKey && field === "discount") {
+        event.preventDefault();
+        focusAddProductButton();
+        return;
+      }
+
+      if (
+        field === "product" &&
+        ["ArrowUp", "ArrowDown", "Enter"].includes(event.key)
+      ) {
+        return;
+      }
+
+      if (event.key === "Enter") {
+        event.preventDefault();
+        focusNextField(rowIndex, fieldIndex);
+        return;
+      }
+
+      if (event.key === "Delete" && event.ctrlKey) {
+        event.preventDefault();
+        if (canRemoveRow?.(rows[rowIndex]?.id || "")) {
+          onRemoveRow?.(rows[rowIndex].id);
+          requestAnimationFrame(() =>
+            focusField(Math.max(0, rowIndex - 1), fieldIndex),
+          );
+        }
+        return;
+      }
+
+      if (event.key === "ArrowRight") {
+        event.preventDefault();
+        focusField(
+          rowIndex,
+          Math.min(fieldIndex + 1, productTableEditableFields.length - 1),
+        );
+        return;
+      }
+
+      if (event.key === "ArrowLeft") {
+        event.preventDefault();
+        focusField(rowIndex, Math.max(fieldIndex - 1, 0));
+        return;
+      }
+
+      if (field === "product") return;
+
+      if (event.key === "ArrowDown") {
+        event.preventDefault();
+        focusField(Math.min(rowIndex + 1, rows.length - 1), fieldIndex);
+        return;
+      }
+
+      if (event.key === "ArrowUp") {
+        event.preventDefault();
+        focusField(Math.max(rowIndex - 1, 0), fieldIndex);
+      }
+    };
+
+  useEffect(() => {
+    const previousRowsLength = previousRowsLengthRef.current;
+    previousRowsLengthRef.current = rows.length;
+
+    if (!editable || inputsDisabled || rows.length <= previousRowsLength) {
+      return;
+    }
+
+    if (document.activeElement !== addProductButtonRef?.current) return;
+
+    requestAnimationFrame(() => focusField(rows.length - 1, 0));
+  }, [addProductButtonRef, editable, inputsDisabled, rows.length]);
 
   return (
     <TableContainer
@@ -427,7 +665,10 @@ function ProductsTable({
           </TableRow>
         </TableHead>
         <TableBody>
-          {rows.map((row) => (
+          {rows.map((row, rowIndex) => {
+            const rowError = rowErrors[rowIndex] || {};
+
+            return (
             <TableRow key={row.id}>
               <TableCell sx={editableBodyCellSx}>
                 {editable ? (
@@ -437,9 +678,15 @@ function ProductsTable({
                     placeholder="Seleccionar producto"
                     variant="standard"
                     disabled={inputsDisabled}
-                    onChange={(value) =>
-                      onRowChange?.(row.id, "product", value)
-                    }
+                    inputRef={setFieldRef(row.id, "product")}
+                    onKeyDown={handleFieldKeyDown(rowIndex, "product")}
+                    error={Boolean(rowError.product)}
+                    helperText={rowError.product}
+                    helperTextNoWrap
+                    onChange={(value) => {
+                      onRowChange?.(row.id, "product", value);
+                      requestAnimationFrame(() => focusField(rowIndex, 1));
+                    }}
                   />
                 ) : (
                   <TextField
@@ -470,7 +717,12 @@ function ProductsTable({
                     )
                   }
                   inputProps={{ min: 1, step: 1 }}
+                  inputRef={setFieldRef(row.id, "amount")}
+                  onKeyDown={handleFieldKeyDown(rowIndex, "amount")}
                   disabled={controlsDisabled}
+                  error={Boolean(rowError.amount)}
+                  helperText={rowError.amount}
+                  FormHelperTextProps={singleLineHelperTextProps}
                   sx={readableDisabledFieldSx}
                 />
               </TableCell>
@@ -502,7 +754,12 @@ function ProductsTable({
                       )
                     }
                     inputProps={{ min: 0, step: "0.01" }}
+                    inputRef={setFieldRef(row.id, "unitPrice")}
+                    onKeyDown={handleFieldKeyDown(rowIndex, "unitPrice")}
                     disabled={controlsDisabled}
+                    error={Boolean(rowError.unitPrice)}
+                    helperText={rowError.unitPrice}
+                    FormHelperTextProps={singleLineHelperTextProps}
                     sx={readableDisabledFieldSx}
                   />
                   {editable && showCatalogPriceHint && row.productId && (
@@ -539,19 +796,21 @@ function ProductsTable({
                     )
                   }
                   inputProps={{ min: 0, max: 100, step: "0.01" }}
+                  inputRef={setFieldRef(row.id, "discount")}
+                  onKeyDown={handleFieldKeyDown(rowIndex, "discount")}
                   disabled={controlsDisabled}
+                  error={Boolean(rowError.discount)}
+                  helperText={rowError.discount}
+                  FormHelperTextProps={singleLineHelperTextProps}
                   sx={readableDisabledFieldSx}
                 />
               </TableCell>
 
               <TableCell
                 align="right"
-                sx={{
-                  ...invoiceProductsTotalColumnSx,
-                  ...editableBodyCellSx,
-                }}
+                sx={totalCellSx}
               >
-                <Typography variant="body2" fontWeight={600}>
+                <Typography variant="body2" fontWeight={600} sx={totalValueSx}>
                   {formatMoney(row.total)}
                 </Typography>
               </TableCell>
@@ -585,7 +844,8 @@ function ProductsTable({
                 </TableCell>
               )}
             </TableRow>
-          ))}
+            );
+          })}
         </TableBody>
       </Table>
     </TableContainer>
@@ -654,6 +914,8 @@ export default function InvoiceFormPage() {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [retrieveLastPriceEnabled, setRetrieveLastPriceEnabled] =
     useState(false);
+  const mobileAddProductButtonRef = useRef<HTMLButtonElement>(null);
+  const desktopAddProductButtonRef = useRef<HTMLButtonElement>(null);
 
   useEffect(() => {
     setMode(isDetailRoute ? requestedDetailMode : "new");
@@ -752,6 +1014,8 @@ export default function InvoiceFormPage() {
       discount: 0,
       rows: [buildEmptyRow()],
     },
+    validate: validateInvoiceForm,
+    validateOnMount: true,
     onSubmit: async (values) => {
       const normalizedDate = normalizeIsoDate(values.date);
       if (!normalizedDate) {
@@ -818,6 +1082,8 @@ export default function InvoiceFormPage() {
       discount: 0,
       rows: [buildEmptyRow()],
     },
+    validate: validateInvoiceForm,
+    validateOnMount: true,
     onSubmit: async (values) => {
       if (!invoiceId) return;
       const normalizedDate = normalizeIsoDate(values.date);
@@ -1086,6 +1352,7 @@ export default function InvoiceFormPage() {
   const hasInvalidRows = hasInvalidInvoiceRows(newFormik.values.rows);
   const canCreate =
     !!newFormik.values.client &&
+    Boolean(normalizeIsoDate(newFormik.values.date)) &&
     newFormik.values.rows.length > 0 &&
     !hasInvalidRows;
 
@@ -1186,6 +1453,16 @@ export default function InvoiceFormPage() {
 
   const activeFormik = isNewMode ? newFormik : editFormik;
   const isEditable = isNewMode || isEditMode;
+  const activeErrors = activeFormik.errors;
+  const clientError =
+    isEditable && typeof activeErrors.client === "string"
+      ? activeErrors.client
+      : "";
+  const dateError =
+    isEditable && typeof activeErrors.date === "string"
+      ? activeErrors.date
+      : "";
+  const productRowErrors = isEditable ? getInvoiceRowErrors(activeErrors) : [];
   const tableRows = isNewMode ? createTableRows : detailTableRows;
   const summarySubtotal = isNewMode ? newSubtotal : detailSubtotal;
   const summaryTotal = isNewMode ? newTotal : detailTotal;
@@ -1205,8 +1482,12 @@ export default function InvoiceFormPage() {
   const selectedInvoiceClientId =
     activeFormik.values.client || parsedClient?.id || "";
   const hasInvoiceDate = Boolean(normalizeIsoDate(activeFormik.values.date));
+  const lastInvoiceRow =
+    activeFormik.values.rows[activeFormik.values.rows.length - 1];
   const canEditProducts =
     isEditable && Boolean(selectedInvoiceClientId) && hasInvoiceDate;
+  const canAddProductRow =
+    canEditProducts && isCompleteInvoiceRow(lastInvoiceRow);
   const pageTitle = isNewMode ? (
     "Crear factura"
   ) : (
@@ -1306,7 +1587,7 @@ export default function InvoiceFormPage() {
   ) : undefined;
 
   const handleAddRow = () => {
-    if (!canEditProducts) return;
+    if (!canAddProductRow) return;
 
     activeFormik.setFieldValue("rows", [
       ...activeFormik.values.rows,
@@ -1591,6 +1872,8 @@ export default function InvoiceFormPage() {
                   valueId={activeFormik.values.client}
                   label="Cliente"
                   placeholder="Seleccionar cliente"
+                  error={Boolean(clientError)}
+                  helperText={clientError}
                   onChange={(value) =>
                     activeFormik.setFieldValue("client", value)
                   }
@@ -1621,6 +1904,8 @@ export default function InvoiceFormPage() {
                   textField: {
                     size: "small",
                     fullWidth: true,
+                    error: Boolean(dateError),
+                    helperText: dateError,
                     sx: !isEditable ? readableDisabledFieldSx : undefined,
                   },
                 }}
@@ -1633,13 +1918,14 @@ export default function InvoiceFormPage() {
                   Productos
                 </Typography>
                 <Button
+                  ref={mobileAddProductButtonRef}
                   size="small"
                   variant="contained"
                   color="primary"
                   startIcon={<AddRounded />}
-                  onClick={canEditProducts ? handleAddRow : undefined}
-                  disabled={!canEditProducts || isProductsLoading}
-                  tabIndex={canEditProducts ? 0 : -1}
+                  onClick={canAddProductRow ? handleAddRow : undefined}
+                  disabled={!canAddProductRow || isProductsLoading}
+                  tabIndex={canAddProductRow ? 0 : -1}
                   aria-hidden={!isEditable}
                   sx={{
                     width: "100%",
@@ -1664,6 +1950,8 @@ export default function InvoiceFormPage() {
                   rows={tableRows}
                   editable={isEditable}
                   inputsDisabled={!canEditProducts}
+                  rowErrors={canEditProducts ? productRowErrors : []}
+                  addProductButtonRef={mobileAddProductButtonRef}
                   productOptions={productOptions}
                   showCatalogPriceHint={retrieveLastPriceEnabled}
                   onRowChange={handleRowChange}
@@ -1765,6 +2053,8 @@ export default function InvoiceFormPage() {
                       valueId={activeFormik.values.client}
                       label="Cliente"
                       placeholder="Seleccionar cliente"
+                      error={Boolean(clientError)}
+                      helperText={clientError}
                       onChange={(value) =>
                         activeFormik.setFieldValue("client", value)
                       }
@@ -1800,6 +2090,8 @@ export default function InvoiceFormPage() {
                       textField: {
                         size: "small",
                         fullWidth: true,
+                        error: Boolean(dateError),
+                        helperText: dateError,
                         sx: !isEditable ? readableDisabledFieldSx : undefined,
                       },
                     }}
@@ -1819,13 +2111,14 @@ export default function InvoiceFormPage() {
                   Productos
                 </Typography>
                 <Button
+                  ref={desktopAddProductButtonRef}
                   size="small"
                   variant="contained"
                   color="primary"
                   startIcon={<AddRounded />}
-                  onClick={canEditProducts ? handleAddRow : undefined}
-                  disabled={!canEditProducts || isProductsLoading}
-                  tabIndex={canEditProducts ? 0 : -1}
+                  onClick={canAddProductRow ? handleAddRow : undefined}
+                  disabled={!canAddProductRow || isProductsLoading}
+                  tabIndex={canAddProductRow ? 0 : -1}
                   aria-hidden={!isEditable}
                   sx={{
                     visibility: isEditable ? "visible" : "hidden",
@@ -1840,6 +2133,8 @@ export default function InvoiceFormPage() {
                 rows={tableRows}
                 editable={isEditable}
                 inputsDisabled={!canEditProducts}
+                rowErrors={canEditProducts ? productRowErrors : []}
+                addProductButtonRef={desktopAddProductButtonRef}
                 productOptions={productOptions}
                 showCatalogPriceHint={retrieveLastPriceEnabled}
                 onRowChange={handleRowChange}

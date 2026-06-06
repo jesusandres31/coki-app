@@ -25,6 +25,7 @@ import { useRouter } from "src/hooks";
 import { AppRoutes } from "src/config";
 import { ClientsResponse } from "src/types/pocketbase-types";
 import { Column, DataGridRowAction, GetList } from "src/types";
+import { formatMoney } from "src/utils/format";
 import { clientsBreadcrumbFlow } from "./breadcrumbFlow";
 
 export default function Clients() {
@@ -90,6 +91,14 @@ export default function Clients() {
         label: "Teléfono",
         align: "left",
         minWidth: 180,
+      },
+      {
+        id: "balance",
+        label: "Saldo",
+        align: "right",
+        minWidth: 140,
+        type: "number",
+        render: (item: ClientsResponse) => formatMoney(item.balance ?? 0),
       },
     ],
     [],
