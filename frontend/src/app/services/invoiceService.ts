@@ -203,6 +203,45 @@ const softDeletePayload = FLAG.delete as unknown as Update<
   "clients" | "invoices" | "invoices_products" | "product_types" | "products"
 >;
 
+// ---------------------------------------------------------------------------
+// Private helper: create a payment_account_movement and update client balance.
+// Mirrors the logic previously handled by 00_payment_account.pb.js.
+// ---------------------------------------------------------------------------
+const createAccountMovement = async (
+  clientId: string,
+  typeName: PaymentAccountMovementTypeName,
+  amount: number,
+  description: string,
+) => {
+  const type = await typedPb
+    .collection("payment_account_movement_types")
+    .getFirstListItem(`name = "${escapePbFilterValue(typeName)}"`);
+
+  const client = await typedPb.collection("clients").getOne(clientId);
+  const currentBalance = Number(client.balance ?? 0);
+  const nextBalance =
+    typeName === "payment"
+      ? currentBalance - Math.abs(amount)
+      : typeName === "debt"
+        ? currentBalance + Math.abs(amount)
+        : amount; // adjustment
+
+  const movement = await typedPb
+    .collection("payment_account_movements")
+    .create({
+      client: clientId,
+      type: type.id,
+      amount,
+      description: description.trim(),
+    });
+
+  await typedPb
+    .collection("clients")
+    .update(clientId, { balance: nextBalance });
+
+  return movement;
+};
+
 export const invoiceApi = mainApi.injectEndpoints({
   endpoints: (build) => ({
     getInvoicesList: build.query<ListResult<InvoicesResponse>, GetList>({
@@ -345,20 +384,36 @@ export const invoiceApi = mainApi.injectEndpoints({
       CreatePaymentAccountMovementReq
     >({
       queryFn: async (_arg) => {
-        const res = await typedPb.send<CreatePaymentAccountMovementRes>(
-          "/coki/payment-account-movements",
-          {
-            method: "POST",
-            body: {
-              clientId: _arg.clientId,
-              typeName: _arg.typeName,
-              amount: _arg.amount,
-              description: _arg.description?.trim() || "",
-            },
-          },
-        );
+        const type = await typedPb
+          .collection("payment_account_movement_types")
+          .getFirstListItem(`name = "${escapePbFilterValue(_arg.typeName)}"`);
 
-        return { data: res };
+        const client = await typedPb
+          .collection("clients")
+          .getOne(_arg.clientId);
+
+        const currentBalance = Number(client.balance ?? 0);
+        const nextBalance =
+          _arg.typeName === "payment"
+            ? currentBalance - Math.abs(_arg.amount)
+            : _arg.typeName === "debt"
+              ? currentBalance + Math.abs(_arg.amount)
+              : _arg.amount; // adjustment
+
+        const movement = await typedPb
+          .collection("payment_account_movements")
+          .create({
+            client: _arg.clientId,
+            type: type.id,
+            amount: _arg.amount,
+            description: _arg.description?.trim() ?? "",
+          });
+
+        const updatedClient = await typedPb
+          .collection("clients")
+          .update(_arg.clientId, { balance: nextBalance });
+
+        return { data: { movement, client: updatedClient } };
       },
       invalidatesTags: [paymentAccountMovementsTag, clientsTag],
     }),
@@ -489,12 +544,76 @@ export const invoiceApi = mainApi.injectEndpoints({
     }),
     createInvoice: build.mutation<CreateInvoiceRes, CreateInvoiceReq>({
       queryFn: async (_arg) => {
-        const res = await typedPb.send<CreateInvoiceRes>("/coki/invoices", {
-          method: "POST",
-          body: _arg,
+        // 1. Resolve invoice state record by name
+        const stateName = _arg.state ?? "open";
+        const stateRecord = await typedPb
+          .collection("invoicestates")
+          .getFirstListItem(`name = "${escapePbFilterValue(stateName)}"`);
+
+        // 2. Compute totals
+        const invoiceItems = _arg.items.map((item) => ({
+          ...item,
+          total: getItemTotal(item),
+        }));
+        const subtotal = invoiceItems.reduce((acc, item) => acc + item.total, 0);
+        const discountPercent = normalizeDiscountPercent(_arg.discount);
+        const invoiceTotal = Math.max(
+          0,
+          subtotal * (1 - discountPercent / 100),
+        );
+
+        // 3. Create invoice record
+        const invoice = await typedPb.collection("invoices").create({
+          client: _arg.client,
+          date: _arg.date,
+          discount: discountPercent,
+          total: invoiceTotal,
+          state: stateRecord.id,
         });
 
-        return { data: res };
+        // 4. Create invoice product records
+        const invoiceProducts = await Promise.all(
+          invoiceItems.map((item) =>
+            typedPb.collection("invoices_products").create({
+              invoice: invoice.id,
+              product: item.product,
+              amount: item.amount,
+              unit_price: item.unitPrice,
+              discount: normalizeDiscountPercent(item.discount),
+              total: item.total,
+            }),
+          ),
+        );
+
+        // 5. Account movements (only for "open" invoices with a positive total)
+        const paymentMovements: PaymentAccountMovementsResponse[] = [];
+        const shouldUpdateAccount = stateName === "open";
+
+        if (shouldUpdateAccount && invoiceTotal > 0) {
+          const debtMovement = await createAccountMovement(
+            _arg.client,
+            "debt",
+            invoiceTotal,
+            `Factura ${invoice.id}`,
+          );
+          paymentMovements.push(debtMovement);
+
+          const paidAmount = _arg.paidNow
+            ? invoiceTotal
+            : Math.max(0, _arg.paidAmount ?? 0);
+
+          if (paidAmount > 0) {
+            const paymentMovement = await createAccountMovement(
+              _arg.client,
+              "payment",
+              paidAmount,
+              `Pago factura ${invoice.id}`,
+            );
+            paymentMovements.push(paymentMovement);
+          }
+        }
+
+        return { data: { invoice, invoiceProducts, paymentMovements } };
       },
       invalidatesTags: [
         invoiceTag,

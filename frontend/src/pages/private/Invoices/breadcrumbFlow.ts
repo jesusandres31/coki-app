@@ -1,5 +1,6 @@
 import { AppRoutes } from "src/config";
 import { IUIBreadcrumb } from "src/slices/uiSlice";
+import { getShortInvoiceId } from "src/components/common/pdf";
 
 const baseInvoiceCrumb: IUIBreadcrumb = {
   label: "Facturación",
@@ -15,7 +16,7 @@ export const invoiceBreadcrumbFlow = {
   detail: (invoiceId: string, isEditMode = false): IUIBreadcrumb[] => [
     baseInvoiceCrumb,
     {
-      label: `Factura ${invoiceId}`,
+      label: `Factura ${getShortInvoiceId(invoiceId)}`,
       to: `${AppRoutes.Invoices}/${invoiceId}?mode=review`,
     },
     ...(isEditMode ? [{ label: "Editar" }] : []),
