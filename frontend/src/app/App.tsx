@@ -138,6 +138,27 @@ function App(): JSX.Element {
   const { isLoggedIn } = useAuth();
   const { isLayoutRoutes } = useRouter();
 
+  React.useEffect(() => {
+    const handleNumberInputWheel = (event: WheelEvent) => {
+      const target = event.target;
+
+      if (target instanceof HTMLInputElement && target.type === "number") {
+        target.blur();
+      }
+    };
+
+    document.addEventListener("wheel", handleNumberInputWheel, {
+      capture: true,
+      passive: true,
+    });
+
+    return () => {
+      document.removeEventListener("wheel", handleNumberInputWheel, {
+        capture: true,
+      });
+    };
+  }, []);
+
   return (
     <React.Fragment>
       <Suspense
