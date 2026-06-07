@@ -4,14 +4,7 @@ import { useParams, useSearchParams } from "react-router-dom";
 import dayjs, { Dayjs } from "dayjs";
 import { useFormik } from "formik";
 import type { FormikErrors } from "formik";
-import {
-  AddRounded,
-  CancelRounded,
-  DeleteRounded,
-  OpenInNewRounded,
-  PrintRounded,
-  SaveRounded,
-} from "@mui/icons-material";
+import { AddRounded, DeleteRounded, PrintRounded } from "@mui/icons-material";
 import {
   Box,
   Button,
@@ -27,8 +20,6 @@ import {
   TableHead,
   TableRow,
   Autocomplete,
-  Chip,
-  ChipProps,
   Dialog,
   DialogActions,
   DialogContent,
@@ -53,7 +44,6 @@ import {
   useGetConfigQuery,
   useGetClientsQuery,
   useGetInvoiceViewByIdQuery,
-  useGetInvoiceStatesQuery,
   useGetMeasureUnitsQuery,
   useGetProductsQuery,
   useLazyGetLastProductPriceForClientQuery,
@@ -80,17 +70,7 @@ import {
 import { getShortInvoiceId } from "src/components/common/pdf";
 
 type InvoicePageMode = "new" | "review" | "edit";
-type InvoiceState = "draft" | "open" | "void";
 type InvoicePaymentMode = "none" | "full" | "partial";
-
-const invoiceStateMeta: Record<
-  InvoiceState,
-  { color: ChipProps["color"]; label: string }
-> = {
-  draft: { color: "info", label: "Borrador" },
-  open: { color: "success", label: "Confirmada" },
-  void: { color: "error", label: "Cancelada" },
-};
 
 interface InvoiceProductInput {
   id: string;
@@ -414,17 +394,6 @@ const parseJsonValue = <T,>(value: unknown): T | null => {
   return null;
 };
 
-const getInvoiceStateValue = (value: unknown) => {
-  if (typeof value === "string") return value;
-
-  if (value && typeof value === "object" && "name" in value) {
-    const stateName = (value as { name?: unknown }).name;
-    return typeof stateName === "string" ? stateName : "";
-  }
-
-  return "";
-};
-
 const normalizeSearchValue = (value: string) =>
   value
     .normalize("NFD")
@@ -501,6 +470,7 @@ function DebouncedAutocomplete({
       value={selectedOption}
       inputValue={inputValue}
       disabled={disabled}
+      openOnFocus
       isOptionEqualToValue={(option, value) => option.id === value.id}
       getOptionLabel={(option) => option.name}
       getOptionKey={(option) => option.id}
@@ -598,10 +568,16 @@ function ProductsTable({
     );
     if (!element) return;
 
-    element.focus();
     if (element instanceof HTMLInputElement) {
+      element.focus({ preventScroll: true });
+      if (targetField === "product") {
+        element.click();
+      }
       element.select();
+      return;
     }
+
+    element.focus();
   };
   const focusAddProductButton = () => {
     addProductButtonRef?.current?.focus();
@@ -690,7 +666,13 @@ function ProductsTable({
 
     if (document.activeElement !== addProductButtonRef?.current) return;
 
-    requestAnimationFrame(() => focusField(rows.length - 1, 0));
+    requestAnimationFrame(() => {
+      focusField(rows.length - 1, 0);
+      requestAnimationFrame(() => {
+        focusField(rows.length - 1, 0);
+        window.setTimeout(() => focusField(rows.length - 1, 0), 0);
+      });
+    });
   }, [addProductButtonRef, editable, inputsDisabled, rows.length]);
 
   return (
@@ -717,7 +699,7 @@ function ProductsTable({
             <TableCell sx={{ width: "31%" }}>Producto</TableCell>
             <TableCell sx={{ width: "8%" }}>Cantidad</TableCell>
             <TableCell sx={{ width: "3%" }}>Unidad</TableCell>
-            <TableCell sx={{ width: "5%" }}>Precio unit.</TableCell>
+            <TableCell sx={{ width: "10%" }}>Precio unit.</TableCell>
             <TableCell sx={{ width: "8%" }}>Descuento</TableCell>
             <TableCell
               align="right"
@@ -774,6 +756,8 @@ function ProductsTable({
                       variant="standard"
                       value={row.productName}
                       disabled
+                      helperText=" "
+                      FormHelperTextProps={singleLineHelperTextProps}
                       sx={readableDisabledFieldSx}
                     />
                   )}
@@ -952,7 +936,7 @@ function InvoiceTotalsSummary({
         spacing={1}
       >
         <Typography variant="body2" color="text.secondary">
-          Subtotal
+          Subtotal:
         </Typography>
         <Typography variant="body2" color="text.primary" fontWeight={600}>
           {formatMoney(subtotal)}
@@ -967,7 +951,7 @@ function InvoiceTotalsSummary({
         <TextField
           variant="standard"
           fullWidth
-          label="Descuento factura (%)"
+          label="Descuento factura"
           type="number"
           value={discountPercent}
           onChange={(event) =>
@@ -1073,7 +1057,7 @@ function ClientBalanceSummary({
         onChange={(event) =>
           onPaymentModeChange(event.target.value as InvoicePaymentMode)
         }
-        sx={{ gap: 0.25 }}
+        sx={{ gap: 0.25, pl: 1 }}
       >
         <FormControlLabel
           value="none"
@@ -1130,6 +1114,7 @@ export default function InvoiceFormPage() {
   );
   const [isPrinting, setIsPrinting] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [isInvoiceDeleted, setIsInvoiceDeleted] = useState(false);
   const [retrieveLastPriceEnabled, setRetrieveLastPriceEnabled] =
     useState(false);
   const mobileAddProductButtonRef = useRef<HTMLButtonElement>(null);
@@ -1138,6 +1123,10 @@ export default function InvoiceFormPage() {
   useEffect(() => {
     setMode(isDetailRoute ? requestedDetailMode : "new");
   }, [isDetailRoute, requestedDetailMode]);
+
+  useEffect(() => {
+    setIsInvoiceDeleted(false);
+  }, [invoiceId]);
 
   const isNewMode = mode === "new";
   const isEditMode = mode === "edit";
@@ -1163,9 +1152,6 @@ export default function InvoiceFormPage() {
     skip: !isNewMode && !isEditMode,
   });
   const { data: appConfig } = useGetConfigQuery();
-  const { data: invoiceStates = [] } = useGetInvoiceStatesQuery(undefined, {
-    skip: !isDetailRoute,
-  });
   const { data: measureUnits = [] } = useGetMeasureUnitsQuery(undefined, {
     skip: !isNewMode && !isDetailRoute,
   });
@@ -1176,7 +1162,7 @@ export default function InvoiceFormPage() {
     isFetching,
     error,
   } = useGetInvoiceViewByIdQuery(invoiceId || "", {
-    skip: !isDetailRoute,
+    skip: !isDetailRoute || isInvoiceDeleted,
   });
 
   const [createInvoice, { isLoading: isCreating }] = useCreateInvoiceMutation();
@@ -1216,17 +1202,6 @@ export default function InvoiceFormPage() {
     () =>
       new Map(measureUnits.map((unit) => [unit.id, String(unit.name || "-")])),
     [measureUnits],
-  );
-
-  const invoiceStateByName = useMemo(
-    () =>
-      new Map(
-        invoiceStates.map((state) => [
-          String(state.name || "").toLowerCase(),
-          state,
-        ]),
-      ),
-    [invoiceStates],
   );
 
   const newFormik = useFormik<InvoiceFormValues>({
@@ -1386,6 +1361,7 @@ export default function InvoiceFormPage() {
             discount: values.discount,
           },
           items: normalizedRows.map((row) => ({
+            id: row.id,
             product: row.product,
             amount: row.amount,
             unitPrice: row.unitPrice,
@@ -1496,50 +1472,6 @@ export default function InvoiceFormPage() {
     [detailSubtotal, editFormik.values.discount],
   );
 
-  const currentInvoiceState = useMemo(() => {
-    const rawState = getInvoiceStateValue(
-      (invoice as typeof invoice & { state?: unknown })?.state,
-    ).toLowerCase();
-
-    if (rawState === "draft" || rawState === "open" || rawState === "void") {
-      return rawState as InvoiceState;
-    }
-
-    return "";
-  }, [invoice]);
-  const currentInvoiceStateMeta = currentInvoiceState
-    ? invoiceStateMeta[currentInvoiceState]
-    : { color: "default" as ChipProps["color"], label: "-" };
-  const isClosedInvoice = currentInvoiceState === "void";
-
-  const stateActionConfig = useMemo(() => {
-    if (currentInvoiceState === "open") {
-      return {
-        nextState: "void" as InvoiceState,
-        label: "Anular factura",
-        color: "error" as const,
-      };
-    }
-
-    if (currentInvoiceState === "void") {
-      return {
-        nextState: "open" as InvoiceState,
-        label: "Reabrir factura",
-        color: "success" as const,
-      };
-    }
-
-    if (currentInvoiceState === "draft") {
-      return {
-        nextState: "open" as InvoiceState,
-        label: "Abrir factura",
-        color: "success" as const,
-      };
-    }
-
-    return null;
-  }, [currentInvoiceState]);
-
   const createTableRows = useMemo<ProductTableRowData[]>(
     () =>
       newFormik.values.rows.map((row) => {
@@ -1601,103 +1533,14 @@ export default function InvoiceFormPage() {
     newFormik.values.rows.length > 0 &&
     !hasInvalidRows;
 
-  const submitNewInvoice = async (targetState: InvoiceState) => {
-    const values = newFormik.values;
-    const normalizedDate = normalizeIsoDate(values.date);
-    if (!normalizedDate) {
-      dispatch(
-        setSnackbar({
-          message: "Fecha inválida. Seleccioná una fecha entre 2000 y 2100.",
-          type: "error",
-        }),
-      );
-      return;
-    }
-
-    if (!values.client) {
-      dispatch(
-        setSnackbar({ message: "Seleccioná un cliente.", type: "error" }),
-      );
-      return;
-    }
-
-    const invalidRows = hasInvalidInvoiceRows(values.rows);
-
-    if (values.rows.length === 0 || invalidRows) {
-      dispatch(
-        setSnackbar({
-          message:
-            "Completá los productos con cantidad válida, precio y descuentos correctos.",
-          type: "error",
-        }),
-      );
-      return;
-    }
-
-    try {
-      const invoiceSubtotal = values.rows.reduce(
-        (acc, row) => acc + getCreateItemTotal(row),
-        0,
-      );
-      const invoiceTotal = Math.max(
-        0,
-        invoiceSubtotal * (1 - clampDiscount(values.discount) / 100),
-      );
-      const paymentError =
-        targetState === "open"
-          ? getPaymentValidationMessage(values, invoiceTotal)
-          : "";
-
-      if (paymentError) {
-        dispatch(setSnackbar({ message: paymentError, type: "error" }));
-        return;
-      }
-
-      const paymentPayload =
-        targetState === "open"
-          ? getPaymentPayload(values, invoiceTotal)
-          : { paidNow: false, paidAmount: 0 };
-      const created = await createInvoice({
-        client: values.client,
-        date: normalizedDate,
-        discount: values.discount,
-        ...paymentPayload,
-        state: targetState,
-        items: values.rows.map((row) => ({
-          product: row.product,
-          amount: row.amount,
-          unitPrice: row.unitPrice,
-          discount: row.discount,
-        })),
-      }).unwrap();
-
-      dispatch(
-        setSnackbar({
-          message:
-            targetState === "draft"
-              ? "Factura guardada como borrador."
-              : "Factura creada satisfactoriamente.",
-          type: "success",
-        }),
-      );
-
-      setMode("review");
-      handleGoTo(`${AppRoutes.Invoices}/${created.invoice.id}`);
-    } catch {
-      // Error feedback is already handled by RTK middleware.
-    }
-  };
-
   const handleCreateInvoice = () => {
-    void submitNewInvoice("open");
-  };
-
-  const handleCreateDraft = () => {
-    void submitNewInvoice("draft");
+    void newFormik.submitForm();
   };
 
   const handleDeleteInvoice = async () => {
-    if (!invoiceId || !isClosedInvoice) return;
+    if (!invoiceId) return;
+
+    setIsInvoiceDeleted(true);
 
     try {
       await deleteInvoice(invoiceId).unwrap();
@@ -1710,6 +1553,7 @@ export default function InvoiceFormPage() {
       setDeleteDialogOpen(false);
       handleGoTo(AppRoutes.Invoices);
     } catch {
+      setIsInvoiceDeleted(false);
       dispatch(
         setSnackbar({
           message: "No se pudo eliminar la factura.",
@@ -1758,62 +1602,24 @@ export default function InvoiceFormPage() {
     isEditable && Boolean(selectedInvoiceClientId) && hasInvoiceDate;
   const canAddProductRow =
     canEditProducts && isCompleteInvoiceRow(lastInvoiceRow);
-  const pageTitle = isNewMode ? (
-    "Crear factura"
-  ) : (
-    <Stack
-      direction="row"
-      alignItems="center"
-      spacing={1}
-      sx={{ minWidth: 0, flexWrap: "wrap" }}
-    >
-      <Typography variant="h6" fontWeight={600} color="text.primary">
-        {`Factura "${getShortInvoiceId(invoice?.id || "")}"`}
-      </Typography>
-      <Chip
-        size="small"
-        variant="outlined"
-        color={currentInvoiceStateMeta.color}
-        label={currentInvoiceStateMeta.label}
-      />
-    </Stack>
-  );
+  const pageTitle = isNewMode
+    ? "Crear factura"
+    : `Factura "${getShortInvoiceId(invoice?.id || "")}"`;
 
   const reviewHeaderActions =
     !isNewMode && !isEditMode ? (
       <>
-        {stateActionConfig && (
-          <Button
-            size="small"
-            variant="contained"
-            color={stateActionConfig.color}
-            startIcon={
-              stateActionConfig.nextState === "void" ? (
-                <CancelRounded />
-              ) : stateActionConfig.nextState === "open" ? (
-                <OpenInNewRounded />
-              ) : undefined
-            }
-            onClick={() => void handleUpdateState(stateActionConfig.nextState)}
-            loading={isUpdating}
-            disabled={isUpdating}
-          >
-            {stateActionConfig.label}
-          </Button>
-        )}
-        {isClosedInvoice && (
-          <Button
-            size="small"
-            variant="contained"
-            color="error"
-            startIcon={<DeleteRounded />}
-            onClick={() => setDeleteDialogOpen(true)}
-            loading={isDeleting}
-            disabled={isDeleting}
-          >
-            Eliminar factura
-          </Button>
-        )}
+        <Button
+          size="small"
+          variant="contained"
+          color="error"
+          startIcon={<DeleteRounded />}
+          onClick={() => setDeleteDialogOpen(true)}
+          loading={isDeleting}
+          disabled={isDeleting}
+        >
+          Eliminar factura
+        </Button>
         <Button
           size="small"
           variant="contained"
@@ -1933,40 +1739,6 @@ export default function InvoiceFormPage() {
 
   const handleCancelEdit = () => {
     setSearchParams({ mode: "review" });
-  };
-
-  const handleUpdateState = async (nextState: InvoiceState) => {
-    if (!invoiceId) return;
-
-    const nextStateId = invoiceStateByName.get(nextState)?.id;
-
-    if (!nextStateId) {
-      dispatch(
-        setSnackbar({
-          message: "No se pudo identificar el estado de factura solicitado.",
-          type: "error",
-        }),
-      );
-      return;
-    }
-
-    try {
-      await updateInvoice({
-        id: invoiceId,
-        data: {
-          state: nextStateId,
-        },
-      }).unwrap();
-
-      dispatch(
-        setSnackbar({
-          message: "Estado de factura actualizado satisfactoriamente.",
-          type: "success",
-        }),
-      );
-    } catch {
-      // Error feedback is already handled by RTK middleware.
-    }
   };
 
   const handlePrintInvoice = async () => {
@@ -2279,19 +2051,6 @@ export default function InvoiceFormPage() {
                 <Button
                   size="small"
                   variant="contained"
-                  color="info"
-                  startIcon={<SaveRounded />}
-                  onClick={handleCreateDraft}
-                  loading={isCreating}
-                  disabled={!canCreate || isCreating}
-                  sx={{ width: "100%" }}
-                >
-                  Guardar borrador
-                </Button>
-
-                <Button
-                  size="small"
-                  variant="contained"
                   color="success"
                   startIcon={<AddRounded />}
                   onClick={handleCreateInvoice}
@@ -2498,19 +2257,6 @@ export default function InvoiceFormPage() {
                     backgroundColor: "background.paper",
                   }}
                 >
-                  <Button
-                    size="small"
-                    variant="contained"
-                    color="info"
-                    startIcon={<SaveRounded />}
-                    onClick={handleCreateDraft}
-                    loading={isCreating}
-                    disabled={!canCreate || isCreating}
-                    sx={{ width: "100%" }}
-                  >
-                    Guardar borrador
-                  </Button>
-
                   <Button
                     size="small"
                     variant="contained"

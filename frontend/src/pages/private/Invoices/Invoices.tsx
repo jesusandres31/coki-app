@@ -1,11 +1,10 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { Button, Chip, ChipProps } from "@mui/material";
+import { Button } from "@mui/material";
 import { AddRounded, OpenInNewRounded } from "@mui/icons-material";
 import DataGrid from "src/components/common/DataGrid/DataGrid";
 import { getListArgsInitialState } from "src/constants";
 import {
   useGetClientsQuery,
-  useGetInvoiceStatesQuery,
   useGetInvoicesListQuery,
   useGetMeasureUnitsQuery,
   useLazyGetInvoiceProductsByInvoiceIdQuery,
@@ -23,28 +22,10 @@ import { useAppDispatch } from "src/app/store";
 import { resetBreadcrumbs, setBreadcrumbs } from "src/slices/uiSlice";
 import { invoiceBreadcrumbFlow } from "./breadcrumbFlow";
 
-type InvoiceState = "void" | "draft" | "open";
-
-const invoiceStateMeta: Record<
-  InvoiceState,
-  { color: ChipProps["color"]; label: string }
-> = {
-  void: { color: "error", label: "Cancelada" },
-  draft: { color: "info", label: "Borrador" },
-  open: { color: "success", label: "Confirmada" },
-};
-
 interface InvoiceListRow extends InvoicesResponse {
   invoice_products?: InvoicesProductsResponse[];
   invoice_products_loading?: boolean;
 }
-
-const translateInvoiceState = (state: string) => {
-  if (state in invoiceStateMeta) {
-    return invoiceStateMeta[state as InvoiceState];
-  }
-  return { color: "default" as const, label: state || "-" };
-};
 
 export default function Invoices() {
   const dispatch = useAppDispatch();
@@ -73,7 +54,6 @@ export default function Invoices() {
 
   const { data, error, isFetching } = useGetInvoicesListQuery(queryArgs);
   const { data: clients = [] } = useGetClientsQuery();
-  const { data: invoiceStates = [] } = useGetInvoiceStatesQuery();
   const { data: products = [] } = useGetProductsQuery();
   const { data: measureUnits = [] } = useGetMeasureUnitsQuery();
 
@@ -81,14 +61,6 @@ export default function Invoices() {
     () =>
       new Map(clients.map((client) => [client.id, String(client.name || "-")])),
     [clients],
-  );
-
-  const stateNameById = useMemo(
-    () =>
-      new Map(
-        invoiceStates.map((state) => [state.id, String(state.name || "")]),
-      ),
-    [invoiceStates],
   );
 
   const measureUnitNameById = useMemo(
@@ -199,24 +171,8 @@ export default function Invoices() {
         disableSort: true,
         render: (item: InvoiceListRow) => formatMoney(item.total),
       },
-      {
-        id: "state",
-        label: "Estado",
-        minWidth: 160,
-        disableSort: true,
-        render: (item: InvoiceListRow) => {
-          const state = String(
-            stateNameById.get(String(item.state || "")) || item.state || "",
-          ).toLowerCase();
-          const { color, label } = translateInvoiceState(state);
-
-          return (
-            <Chip size="small" variant="outlined" color={color} label={label} />
-          );
-        },
-      },
     ],
-    [clientNameById, stateNameById],
+    [clientNameById],
   );
 
   const detailColumns: DetailColumn = useMemo(
@@ -255,8 +211,8 @@ export default function Invoices() {
           {
             id: "unit_price",
             label: "Precio Unit.",
-            width: 120,
-            minWidth: 110,
+            width: 105,
+            minWidth: 95,
             render: (item: any) => formatMoney(item?.unit_price),
           },
           {
@@ -284,7 +240,7 @@ export default function Invoices() {
     () => [
       {
         id: "open",
-        label: "Abrir factura",
+        label: "Ver factura",
         icon: <OpenInNewRounded fontSize="small" color="primary" />,
         onClick: (item) => handleGoTo(`${AppRoutes.Invoices}/${item.id}`),
       },

@@ -38,6 +38,7 @@ const MAX_DISCOUNT_PERCENT = 100;
 export type PaymentAccountMovementTypeName = "payment" | "debt" | "adjustment";
 
 interface CreateInvoiceItemReq {
+  id?: string;
   product: string;
   amount: number;
   unitPrice: number;
@@ -202,6 +203,10 @@ const buildPaymentAccountMovementsListFilter = (filter: string | undefined) => {
 const softDeletePayload = FLAG.delete as unknown as Update<
   "clients" | "invoices" | "invoices_products" | "product_types" | "products"
 >;
+const buildInvoiceSoftDeletePayload = (deletedAt: string) =>
+  ({
+    deleted: deletedAt,
+  }) as Update<"invoices" | "invoices_products">;
 
 // ---------------------------------------------------------------------------
 // Private helper: create a payment_account_movement and update client balance.
@@ -641,12 +646,13 @@ export const invoiceApi = mainApi.injectEndpoints({
               filter: `invoice = "${escapePbFilterValue(_arg.id)}" && deleted = ""`,
             });
 
-          await Promise.all(
-            existingItems.map((item) =>
-              typedPb
-                .collection("invoices_products")
-                .update(item.id, softDeletePayload),
-            ),
+          const existingItemsById = new Map(
+            existingItems.map((item) => [item.id, item]),
+          );
+          const nextItemIds = new Set(
+            _arg.items
+              .map((item) => item.id)
+              .filter((id): id is string => Boolean(id)),
           );
 
           const nextItems = _arg.items.map((item) => ({
@@ -657,15 +663,34 @@ export const invoiceApi = mainApi.injectEndpoints({
           subtotal = nextItems.reduce((acc, item) => acc + item.total, 0);
 
           for (const item of nextItems) {
-            await typedPb.collection("invoices_products").create({
-              invoice: _arg.id,
+            const payload = {
               product: item.product,
               amount: item.amount,
               unit_price: item.unitPrice,
               discount: normalizeDiscountPercent(item.discount),
               total: item.total,
+            };
+
+            if (item.id && existingItemsById.has(item.id)) {
+              await typedPb
+                .collection("invoices_products")
+                .update(item.id, payload);
+              continue;
+            }
+
+            await typedPb.collection("invoices_products").create({
+              invoice: _arg.id,
+              ...payload,
             });
           }
+
+          await Promise.all(
+            existingItems
+              .filter((item) => !nextItemIds.has(item.id))
+              .map((item) =>
+                typedPb.collection("invoices_products").delete(item.id),
+              ),
+          );
         } else {
           const existingItems = await typedPb
             .collection("invoices_products")
@@ -692,6 +717,8 @@ export const invoiceApi = mainApi.injectEndpoints({
     }),
     deleteInvoice: build.mutation<void, string>({
       queryFn: async (_arg) => {
+        const deletedAt = new Date().toISOString();
+        const invoiceSoftDeletePayload = buildInvoiceSoftDeletePayload(deletedAt);
         const existingItems = await typedPb
           .collection("invoices_products")
           .getFullList({
@@ -702,10 +729,13 @@ export const invoiceApi = mainApi.injectEndpoints({
           existingItems.map((item) =>
             typedPb
               .collection("invoices_products")
-              .update(item.id, softDeletePayload),
+              .update(item.id, invoiceSoftDeletePayload),
           ),
         );
-        await typedPb.collection("invoices").update(_arg, softDeletePayload);
+        await typedPb.collection("invoices").update(
+          _arg,
+          invoiceSoftDeletePayload,
+        );
 
         return { data: undefined };
       },
