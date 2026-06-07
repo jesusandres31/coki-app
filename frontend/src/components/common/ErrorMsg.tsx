@@ -1,23 +1,12 @@
-import { Grid, Typography } from "@mui/material";
 import { WarningRounded } from "@mui/icons-material";
+import EmptyState from "./EmptyState";
 
 const ErrorMsg = ({
   message = "Something went wrong.",
 }: {
   message?: string;
 }) => {
-  return (
-    <>
-      <Grid>
-        <WarningRounded fontSize="large" sx={{ color: "text.primary" }} />
-      </Grid>
-      <Grid sx={{ textAlign: "center" }}>
-        <Typography variant="subtitle1" color="text.primary">
-          {message}
-        </Typography>
-      </Grid>
-    </>
-  );
+  return <EmptyState icon={WarningRounded} message={message} />;
 };
 
 export default ErrorMsg;

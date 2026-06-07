@@ -3,6 +3,7 @@ import {
   buildDeliveryListPdfTitle,
   PdfHeader,
   PdfMeta,
+  PdfSimpleTable,
   pdfStyles,
 } from "src/components/common/pdf";
 import { DeliveryListPdfModel } from "./model";
@@ -47,28 +48,30 @@ export function DeliveryListPdfDocument({ report }: DeliveryListPdfDocumentProps
           ]}
         />
 
-        <View style={pdfStyles.table}>
-          <View style={[pdfStyles.row, pdfStyles.headerRow]}>
-            <Text style={[pdfStyles.cell, styles.productCell]}>Producto</Text>
-            <Text style={[pdfStyles.cell, styles.unitCell]}>Unidad</Text>
-            <Text style={[pdfStyles.cell, styles.amountCell]}>Cantidad</Text>
-          </View>
-
-          {report.items.map((item, index) => (
-            <View
-              key={item.id}
-              style={
-                index === report.items.length - 1
-                  ? [pdfStyles.row, pdfStyles.lastRow]
-                  : pdfStyles.row
-              }
-            >
-              <Text style={[pdfStyles.cell, styles.productCell]}>{item.productName}</Text>
-              <Text style={[pdfStyles.cell, styles.unitCell]}>{item.measureUnitName}</Text>
-              <Text style={[pdfStyles.cell, styles.amountCell]}>{item.amount}</Text>
-            </View>
-          ))}
-        </View>
+        <PdfSimpleTable
+          rows={report.items}
+          getRowKey={(item) => item.id}
+          columns={[
+            {
+              key: "product",
+              label: "Producto",
+              style: styles.productCell,
+              render: (item) => item.productName,
+            },
+            {
+              key: "unit",
+              label: "Unidad",
+              style: styles.unitCell,
+              render: (item) => item.measureUnitName,
+            },
+            {
+              key: "amount",
+              label: "Cantidad",
+              style: styles.amountCell,
+              render: (item) => item.amount,
+            },
+          ]}
+        />
 
         <View style={styles.totalRow}>
           <Text>Total:</Text>

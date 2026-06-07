@@ -34,6 +34,7 @@ const paymentAccountMovementsTag = ApiTag.PaymentAccountMovements;
 const paymentAccountMovementTypesTag = ApiTag.PaymentAccountMovementTypes;
 const typedPb = pb as TypedPocketBase;
 const MAX_DISCOUNT_PERCENT = 100;
+const pbNoAutoCancelOptions = { requestKey: null } as const;
 
 export type PaymentAccountMovementTypeName = "payment" | "debt" | "adjustment";
 
@@ -251,7 +252,7 @@ const createAccountMovement = async (
 const getOpenInvoiceState = () =>
   typedPb
     .collection("invoicestates")
-    .getFirstListItem(`name = "open"`);
+    .getFirstListItem(`name = "open"`, pbNoAutoCancelOptions);
 
 const isOpenInvoiceState = async (stateId: string | undefined) => {
   if (!stateId) return false;
@@ -610,7 +611,10 @@ export const invoiceApi = mainApi.injectEndpoints({
         const stateName = (_arg.state ?? "open").trim();
         const stateRecord = await typedPb
           .collection("invoicestates")
-          .getFirstListItem(`name = "${escapePbFilterValue(stateName)}"`);
+          .getFirstListItem(
+            `name = "${escapePbFilterValue(stateName)}"`,
+            pbNoAutoCancelOptions,
+          );
 
         // 2. Compute totals
         const invoiceItems = _arg.items.map((item) => ({
@@ -636,14 +640,17 @@ export const invoiceApi = mainApi.injectEndpoints({
         // 4. Create invoice product records
         const invoiceProducts = await Promise.all(
           invoiceItems.map((item) =>
-            typedPb.collection("invoices_products").create({
-              invoice: invoice.id,
-              product: item.product,
-              amount: item.amount,
-              unit_price: item.unitPrice,
-              discount: normalizeDiscountPercent(item.discount),
-              total: item.total,
-            }),
+            typedPb.collection("invoices_products").create(
+              {
+                invoice: invoice.id,
+                product: item.product,
+                amount: item.amount,
+                unit_price: item.unitPrice,
+                discount: normalizeDiscountPercent(item.discount),
+                total: item.total,
+              },
+              pbNoAutoCancelOptions,
+            ),
           ),
         );
 

@@ -1,0 +1,232 @@
+Need to install the following packages:
+jscpd@4.2.5
+Ok to proceed? (y) 
+Clone found (javascript):
+ - [1m[32msrc\pages\private\Reports\VentasPorPeriodo\VentasPorPeriodo.tsx[39m[22m [245:59 - 296:62] (51 lines, 486 tokens)
+   [1m[32msrc\pages\private\Reports\VentasPorPeriodo\VentasPorPeriodo.tsx[39m[22m [239:72 - 260:50]
+
+Clone found (tsx):
+ - [1m[32msrc\pages\private\Reports\pdf\deliveryPdfActions.tsx[39m[22m [19:56 - 31:3] (12 lines, 95 tokens)
+   [1m[32msrc\pages\private\Reports\pdf\priceListPdfActions.tsx[39m[22m [19:57 - 31:3]
+
+Clone found (javascript):
+ - [1m[32msrc\pages\private\Reports\pdf\DeliveryListPdfDocument.tsx[39m[22m [47:12 - 54:60] (7 lines, 97 tokens)
+   [1m[32msrc\pages\private\Reports\pdf\PriceListPdfDocument.tsx[39m[22m [40:36 - 47:59]
+
+Clone found (javascript):
+ - [1m[32msrc\pages\private\Reports\pdf\DeliveryListPdfDocument.tsx[39m[22m [54:60 - 68:62] (14 lines, 147 tokens)
+   [1m[32msrc\pages\private\Reports\pdf\PriceListPdfDocument.tsx[39m[22m [47:59 - 61:61]
+
+Clone found (tsx):
+ - [1m[32msrc\pages\private\Reports\pdf\DeliveryListPdfDocument.tsx[39m[22m [54:71 - 68:77] (14 lines, 150 tokens)
+   [1m[32msrc\pages\private\Reports\pdf\PriceListPdfDocument.tsx[39m[22m [47:68 - 61:79]
+
+Clone found (tsx):
+ - [1m[32msrc\pages\private\Reports\ListaDeRepartoPorDias\ListaDeRepartoPorDias.tsx[39m[22m [276:4 - 306:18] (30 lines, 233 tokens)
+   [1m[32msrc\pages\private\Reports\VentasPorPeriodo\VentasPorPeriodo.tsx[39m[22m [124:26 - 154:19]
+
+Clone found (tsx):
+ - [1m[32msrc\pages\private\Reports\ListaDeRepartoPorDias\ListaDeRepartoPorDias.tsx[39m[22m [386:11 - 398:35] (12 lines, 114 tokens)
+   [1m[32msrc\pages\private\Reports\VentasPorPeriodo\VentasPorPeriodo.tsx[39m[22m [284:13 - 296:47]
+
+Clone found (tsx):
+ - [1m[32msrc\pages\private\Reports\ListaDePrecios\ListaDePrecios.tsx[39m[22m [102:53 - 111:34] (9 lines, 91 tokens)
+   [1m[32msrc\pages\private\Reports\ListaDeRepartoPorDias\ListaDeRepartoPorDias.tsx[39m[22m [86:64 - 94:40]
+
+Clone found (tsx):
+ - [1m[32msrc\pages\private\Reports\ListaDePrecios\ListaDePrecios.tsx[39m[22m [392:29 - 423:15] (31 lines, 227 tokens)
+   [1m[32msrc\pages\private\Reports\ListaDeRepartoPorDias\ListaDeRepartoPorDias.tsx[39m[22m [274:28 - 153:22]
+
+Clone found (tsx):
+ - [1m[32msrc\pages\private\Reports\ListaDePrecios\ListaDePrecios.tsx[39m[22m [666:9 - 681:36] (15 lines, 143 tokens)
+   [1m[32msrc\pages\private\Reports\VentasPorPeriodo\VentasPorPeriodo.tsx[39m[22m [284:13 - 299:37]
+
+Clone found (javascript):
+ - [1m[32msrc\pages\private\Invoices\pdf\InvoicePdfDocument.tsx[39m[22m [108:15 - 134:31] (26 lines, 232 tokens)
+   [1m[32msrc\pages\private\Invoices\pdf\InvoicePdfDocument.tsx[39m[22m [88:60 - 103:24]
+
+Clone found (tsx):
+ - [1m[32msrc\pages\private\Invoices\pdf\invoicePdfActions.tsx[39m[22m [19:63 - 31:3] (12 lines, 93 tokens)
+   [1m[32msrc\pages\private\Reports\pdf\priceListPdfActions.tsx[39m[22m [19:64 - 31:3]
+
+Clone found (tsx):
+ - [1m[32msrc\components\common\Modals\Inputs\CustomAutocomplete.tsx[39m[22m [1:1 - 17:34] (16 lines, 132 tokens)
+   [1m[32msrc\components\common\Modals\Inputs\CustomMultipleAutocomplete.tsx[39m[22m [1:1 - 17:42]
+
+Clone found (tsx):
+ - [1m[32msrc\components\common\Modals\Inputs\CustomAutocomplete.tsx[39m[22m [44:73 - 62:20] (18 lines, 142 tokens)
+   [1m[32msrc\components\common\Modals\Inputs\CustomMultipleAutocomplete.tsx[39m[22m [42:68 - 60:7]
+
+Clone found (tsx):
+ - [1m[32msrc\components\common\Modals\Inputs\CustomAutocomplete.tsx[39m[22m [62:49 - 82:6] (20 lines, 156 tokens)
+   [1m[32msrc\components\common\Modals\Inputs\CustomMultipleAutocomplete.tsx[39m[22m [60:74 - 80:11]
+
+Clone found (tsx):
+ - [1m[32msrc\components\common\Modals\Inputs\CustomAutocomplete.tsx[39m[22m [82:6 - 90:40] (8 lines, 90 tokens)
+   [1m[32msrc\components\common\Modals\Inputs\CustomMultipleAutocomplete.tsx[39m[22m [80:11 - 88:39]
+
+Clone found (tsx):
+ - [1m[32msrc\components\common\Modals\Inputs\CustomAutocomplete.tsx[39m[22m [121:34 - 131:25] (10 lines, 113 tokens)
+   [1m[32msrc\components\common\Modals\Inputs\CustomMultipleAutocomplete.tsx[39m[22m [122:29 - 132:26]
+
+Clone found (tsx):
+ - [1m[32msrc\components\common\Modals\Inputs\CustomAutocomplete.tsx[39m[22m [131:29 - 175:4] (44 lines, 375 tokens)
+   [1m[32msrc\components\common\Modals\Inputs\CustomMultipleAutocomplete.tsx[39m[22m [132:25 - 176:6]
+
+Clone found (tsx):
+ - [1m[32msrc\pages\public\NotFound\NotFound.tsx[39m[22m [1:1 - 18:36] (17 lines, 176 tokens)
+   [1m[32msrc\pages\public\Unauthorized\Unauthorized.tsx[39m[22m [1:1 - 18:36]
+
+Clone found (typescript):
+ - [1m[32msrc\pages\private\Reports\reportUtils.ts[39m[22m [24:8 - 37:7] (13 lines, 130 tokens)
+   [1m[32msrc\pages\private\Invoices\pdf\invoicePdfMapper.ts[39m[22m [32:1 - 45:6]
+
+Clone found (typescript):
+ - [1m[32msrc\pages\private\Reports\reportUtils.ts[39m[22m [117:18 - 128:7] (11 lines, 104 tokens)
+   [1m[32msrc\pages\private\Invoices\pdf\invoicePdfMapper.ts[39m[22m [81:24 - 92:6]
+
+Clone found (tsx):
+ - [1m[32msrc\pages\private\ProductTypes\ProductTypeFormPage.tsx[39m[22m [279:44 - 314:2] (35 lines, 222 tokens)
+   [1m[32msrc\pages\private\ProductTypes\ProductTypes.tsx[39m[22m [133:10 - 168:2]
+
+Clone found (javascript):
+ - [1m[32msrc\pages\private\Products\Products.tsx[39m[22m [166:13 - 180:60] (14 lines, 89 tokens)
+   [1m[32msrc\pages\private\ProductTypes\ProductTypes.tsx[39m[22m [115:13 - 129:70]
+
+Clone found (tsx):
+ - [1m[32msrc\pages\private\Products\Products.tsx[39m[22m [1:1 - 19:27] (18 lines, 108 tokens)
+   [1m[32msrc\pages\private\ProductTypes\ProductTypes.tsx[39m[22m [1:1 - 19:31]
+
+Clone found (tsx):
+ - [1m[32msrc\pages\private\Products\Products.tsx[39m[22m [193:46 - 219:2] (26 lines, 148 tokens)
+   [1m[32msrc\pages\private\ProductTypes\ProductTypes.tsx[39m[22m [142:54 - 168:2]
+
+Clone found (javascript):
+ - [1m[32msrc\pages\private\Products\ProductFormPage.tsx[39m[22m [277:18 - 332:31] (55 lines, 368 tokens)
+   [1m[32msrc\pages\private\ProductTypes\ProductTypeFormPage.tsx[39m[22m [198:18 - 266:39]
+
+Clone found (javascript):
+ - [1m[32msrc\pages\private\Products\ProductFormPage.tsx[39m[22m [338:52 - 372:34] (34 lines, 260 tokens)
+   [1m[32msrc\pages\private\ProductTypes\ProductTypeFormPage.tsx[39m[22m [272:62 - 306:34]
+
+Clone found (tsx):
+ - [1m[32msrc\pages\private\Products\ProductFormPage.tsx[39m[22m [23:27 - 33:30] (10 lines, 118 tokens)
+   [1m[32msrc\pages\private\ProductTypes\ProductTypeFormPage.tsx[39m[22m [21:31 - 31:18]
+
+Clone found (tsx):
+ - [1m[32msrc\pages\private\Products\ProductFormPage.tsx[39m[22m [63:51 - 72:24] (9 lines, 88 tokens)
+   [1m[32msrc\pages\private\ProductTypes\ProductTypeFormPage.tsx[39m[22m [57:55 - 67:22]
+
+Clone found (tsx):
+ - [1m[32msrc\pages\private\Products\ProductFormPage.tsx[39m[22m [114:13 - 121:17] (7 lines, 75 tokens)
+   [1m[32msrc\pages\private\ProductTypes\ProductTypeFormPage.tsx[39m[22m [104:36 - 111:6]
+
+Clone found (tsx):
+ - [1m[32msrc\pages\private\Products\ProductFormPage.tsx[39m[22m [159:9 - 169:62] (10 lines, 79 tokens)
+   [1m[32msrc\pages\private\Products\ProductFormPage.tsx[39m[22m [137:11 - 147:59]
+
+Clone found (tsx):
+ - [1m[32msrc\pages\private\Products\ProductFormPage.tsx[39m[22m [181:4 - 194:6] (13 lines, 97 tokens)
+   [1m[32msrc\pages\private\ProductTypes\ProductTypeFormPage.tsx[39m[22m [203:18 - 216:4]
+
+Clone found (tsx):
+ - [1m[32msrc\pages\private\Products\ProductFormPage.tsx[39m[22m [229:4 - 248:19] (19 lines, 238 tokens)
+   [1m[32msrc\pages\private\ProductTypes\ProductTypeFormPage.tsx[39m[22m [149:5 - 168:23]
+
+Clone found (tsx):
+ - [1m[32msrc\pages\private\Products\ProductFormPage.tsx[39m[22m [264:75 - 284:5] (20 lines, 111 tokens)
+   [1m[32msrc\pages\private\ProductTypes\ProductTypeFormPage.tsx[39m[22m [185:55 - 205:8]
+
+Clone found (tsx):
+ - [1m[32msrc\pages\private\Products\ProductFormPage.tsx[39m[22m [282:18 - 305:39] (23 lines, 166 tokens)
+   [1m[32msrc\pages\private\ProductTypes\ProductTypeFormPage.tsx[39m[22m [216:4 - 239:43]
+
+Clone found (tsx):
+ - [1m[32msrc\pages\private\Products\ProductFormPage.tsx[39m[22m [305:39 - 351:39] (46 lines, 340 tokens)
+   [1m[32msrc\pages\private\ProductTypes\ProductTypeFormPage.tsx[39m[22m [239:43 - 285:35]
+
+Clone found (tsx):
+ - [1m[32msrc\pages\private\Products\ProductFormPage.tsx[39m[22m [345:44 - 380:2] (35 lines, 214 tokens)
+   [1m[32msrc\pages\private\Products\Products.tsx[39m[22m [184:10 - 168:2]
+
+Clone found (javascript):
+ - [1m[32msrc\pages\private\Clients\Clients.tsx[39m[22m [149:13 - 163:59] (14 lines, 89 tokens)
+   [1m[32msrc\pages\private\ProductTypes\ProductTypes.tsx[39m[22m [115:13 - 129:70]
+
+Clone found (tsx):
+ - [1m[32msrc\pages\private\Clients\Clients.tsx[39m[22m [181:53 - 207:2] (26 lines, 147 tokens)
+   [1m[32msrc\pages\private\ProductTypes\ProductTypes.tsx[39m[22m [142:62 - 168:2]
+
+Clone found (javascript):
+ - [1m[32msrc\pages\private\Clients\ClientFormPage.tsx[39m[22m [199:18 - 284:30] (85 lines, 595 tokens)
+   [1m[32msrc\pages\private\ProductTypes\ProductTypeFormPage.tsx[39m[22m [198:18 - 266:39]
+
+Clone found (javascript):
+ - [1m[32msrc\pages\private\Clients\ClientFormPage.tsx[39m[22m [290:51 - 324:34] (34 lines, 260 tokens)
+   [1m[32msrc\pages\private\ProductTypes\ProductTypeFormPage.tsx[39m[22m [272:62 - 306:34]
+
+Clone found (tsx):
+ - [1m[32msrc\pages\private\Clients\ClientFormPage.tsx[39m[22m [1:1 - 18:26] (17 lines, 123 tokens)
+   [1m[32msrc\pages\private\Products\ProductFormPage.tsx[39m[22m [1:1 - 18:27]
+
+Clone found (tsx):
+ - [1m[32msrc\pages\private\Clients\ClientFormPage.tsx[39m[22m [21:26 - 32:31] (11 lines, 134 tokens)
+   [1m[32msrc\pages\private\ProductTypes\ProductTypeFormPage.tsx[39m[22m [21:31 - 32:36]
+
+Clone found (tsx):
+ - [1m[32msrc\pages\private\Clients\ClientFormPage.tsx[39m[22m [59:50 - 68:23] (9 lines, 88 tokens)
+   [1m[32msrc\pages\private\ProductTypes\ProductTypeFormPage.tsx[39m[22m [57:55 - 67:22]
+
+Clone found (tsx):
+ - [1m[32msrc\pages\private\Clients\ClientFormPage.tsx[39m[22m [95:28 - 102:14] (7 lines, 78 tokens)
+   [1m[32msrc\pages\private\ProductTypes\ProductTypeFormPage.tsx[39m[22m [104:31 - 111:6]
+
+Clone found (tsx):
+ - [1m[32msrc\pages\private\Clients\ClientFormPage.tsx[39m[22m [146:61 - 171:18] (25 lines, 277 tokens)
+   [1m[32msrc\pages\private\ProductTypes\ProductTypeFormPage.tsx[39m[22m [143:70 - 168:23]
+
+Clone found (tsx):
+ - [1m[32msrc\pages\private\Clients\ClientFormPage.tsx[39m[22m [186:81 - 218:22] (32 lines, 210 tokens)
+   [1m[32msrc\pages\private\ProductTypes\ProductTypeFormPage.tsx[39m[22m [185:55 - 195:21]
+
+Clone found (tsx):
+ - [1m[32msrc\pages\private\Clients\ClientFormPage.tsx[39m[22m [232:38 - 257:38] (25 lines, 174 tokens)
+   [1m[32msrc\pages\private\ProductTypes\ProductTypeFormPage.tsx[39m[22m [214:23 - 239:43]
+
+Clone found (tsx):
+ - [1m[32msrc\pages\private\Clients\ClientFormPage.tsx[39m[22m [257:38 - 303:38] (46 lines, 340 tokens)
+   [1m[32msrc\pages\private\ProductTypes\ProductTypeFormPage.tsx[39m[22m [239:43 - 285:35]
+
+Clone found (tsx):
+ - [1m[32msrc\pages\private\Clients\ClientFormPage.tsx[39m[22m [297:44 - 332:2] (35 lines, 214 tokens)
+   [1m[32msrc\pages\private\Clients\Clients.tsx[39m[22m [172:58 - 168:2]
+
+Clone found (tsx):
+ - [1m[32msrc\components\common\ErrorMsg.tsx[39m[22m [12:24 - 23:24] (11 lines, 103 tokens)
+   [1m[32msrc\components\common\NoItems.tsx[39m[22m [12:26 - 23:23]
+
+Clone found (typescript):
+ - [1m[32msrc\app\services\invoiceService.ts[39m[22m [535:61 - 545:37] (10 lines, 84 tokens)
+   [1m[32msrc\app\services\invoiceService.ts[39m[22m [514:56 - 524:33]
+
+[90mΓöîΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ[39m[90mΓö¼ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ[39m[90mΓö¼ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ[39m[90mΓö¼ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ[39m[90mΓö¼ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ[39m[90mΓö¼ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ[39m[90mΓö¼ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÉ[39m
+[90mΓöé[39m[31m Format     [39m[90mΓöé[39m[31m Files analyzed [39m[90mΓöé[39m[31m Total lines [39m[90mΓöé[39m[31m Total tokens [39m[90mΓöé[39m[31m Clones found [39m[90mΓöé[39m[31m Duplicated lines [39m[90mΓöé[39m[31m Duplicated tokens [39m[90mΓöé[39m
+[90mΓö£ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ[39m[90mΓö╝ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ[39m[90mΓö╝ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ[39m[90mΓö╝ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ[39m[90mΓö╝ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ[39m[90mΓö╝ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ[39m[90mΓö╝ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöñ[39m
+[90mΓöé[39m javascript [90mΓöé[39m 50             [90mΓöé[39m 3312        [90mΓöé[39m 25798        [90mΓöé[39m 10           [90mΓöé[39m 334 (10.08%)     [90mΓöé[39m 2623 (10.17%)     [90mΓöé[39m
+[90mΓö£ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ[39m[90mΓö╝ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ[39m[90mΓö╝ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ[39m[90mΓö╝ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ[39m[90mΓö╝ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ[39m[90mΓö╝ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ[39m[90mΓö╝ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöñ[39m
+[90mΓöé[39m tsx        [90mΓöé[39m 54             [90mΓöé[39m 8787        [90mΓöé[39m 71568        [90mΓöé[39m 39           [90mΓöé[39m 783 (8.91%)      [90mΓöé[39m 6222 (8.69%)      [90mΓöé[39m
+[90mΓö£ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ[39m[90mΓö╝ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ[39m[90mΓö╝ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ[39m[90mΓö╝ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ[39m[90mΓö╝ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ[39m[90mΓö╝ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ[39m[90mΓö╝ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöñ[39m
+[90mΓöé[39m typescript [90mΓöé[39m 42             [90mΓöé[39m 3334        [90mΓöé[39m 29006        [90mΓöé[39m 3            [90mΓöé[39m 34 (1.02%)       [90mΓöé[39m 318 (1.1%)        [90mΓöé[39m
+[90mΓö£ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ[39m[90mΓö╝ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ[39m[90mΓö╝ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ[39m[90mΓö╝ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ[39m[90mΓö╝ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ[39m[90mΓö╝ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ[39m[90mΓö╝ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöñ[39m
+[90mΓöé[39m txt        [90mΓöé[39m 2              [90mΓöé[39m 163         [90mΓöé[39m 1958         [90mΓöé[39m 0            [90mΓöé[39m 0 (0%)           [90mΓöé[39m 0 (0%)            [90mΓöé[39m
+[90mΓö£ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ[39m[90mΓö╝ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ[39m[90mΓö╝ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ[39m[90mΓö╝ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ[39m[90mΓö╝ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ[39m[90mΓö╝ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ[39m[90mΓö╝ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöñ[39m
+[90mΓöé[39m css        [90mΓöé[39m 2              [90mΓöé[39m 40          [90mΓöé[39m 215          [90mΓöé[39m 0            [90mΓöé[39m 0 (0%)           [90mΓöé[39m 0 (0%)            [90mΓöé[39m
+[90mΓö£ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ[39m[90mΓö╝ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ[39m[90mΓö╝ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ[39m[90mΓö╝ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ[39m[90mΓö╝ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ[39m[90mΓö╝ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ[39m[90mΓö╝ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöñ[39m
+[90mΓöé[39m [1mTotal:[22m     [90mΓöé[39m 150            [90mΓöé[39m 15636       [90mΓöé[39m 128545       [90mΓöé[39m 52           [90mΓöé[39m 1151 (7.36%)     [90mΓöé[39m 9163 (7.13%)      [90mΓöé[39m
+[90mΓööΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ[39m[90mΓö┤ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ[39m[90mΓö┤ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ[39m[90mΓö┤ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ[39m[90mΓö┤ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ[39m[90mΓö┤ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ[39m[90mΓö┤ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÿ[39m
+[90mFound 52 clones.[39m
+[3m[90mtime[39m[23m: 939.907ms
+
+[90m≡ƒÆí Auto-refactor with AI: npx skills add kucherenko/jscpd[39m
+[90m≡ƒÄ⌐ New: Gangsta Agents ΓÇö discipline your AI coding ΓåÆ gangsta.page[39m
+[90m≡ƒÆû Support jscpd project ΓåÆ https://opencollective.com/jscpd[39m

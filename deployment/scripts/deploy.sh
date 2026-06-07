@@ -7,8 +7,8 @@ SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
 # BACKEND
 echo "stop BACKEND:" 
-systemctl disable pocketbase.service
-systemctl stop pocketbase
+sudo systemctl disable cokiapp.pocketbase.service
+sudo systemctl stop cokiapp.pocketbase.service
 
 git checkout master
 git branch
@@ -29,7 +29,7 @@ sudo systemctl status nginx
 
 # BACKEND
 echo "start BACKEND:"
-systemctl enable pocketbase.service
-systemctl start pocketbase
+sudo systemctl enable cokiapp.pocketbase.service
+sudo systemctl start cokiapp.pocketbase.service
 
 echo "Done!"

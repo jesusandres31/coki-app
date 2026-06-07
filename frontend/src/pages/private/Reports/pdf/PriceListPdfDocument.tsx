@@ -2,6 +2,7 @@ import { Document, Page, StyleSheet, Text, View } from "@react-pdf/renderer";
 import {
   buildPriceListPdfTitle,
   PdfHeader,
+  PdfSimpleTable,
   pdfStyles,
 } from "src/components/common/pdf";
 import { PriceListPdfModel } from "./model";
@@ -40,28 +41,30 @@ export function PriceListPdfDocument({ report }: PriceListPdfDocumentProps) {
           aside={report.generatedAt}
         />
 
-        <View style={pdfStyles.table}>
-          <View style={[pdfStyles.row, pdfStyles.headerRow]}>
-            <Text style={[pdfStyles.cell, styles.productCell]}>Producto</Text>
-            <Text style={[pdfStyles.cell, styles.unitCell]}>Unidad</Text>
-            <Text style={[pdfStyles.cell, styles.priceCell]}>Precio</Text>
-          </View>
-
-          {report.items.map((item, index) => (
-            <View
-              key={item.id}
-              style={
-                index === report.items.length - 1
-                  ? [pdfStyles.row, pdfStyles.lastRow]
-                  : pdfStyles.row
-              }
-            >
-              <Text style={[pdfStyles.cell, styles.productCell]}>{item.productName}</Text>
-              <Text style={[pdfStyles.cell, styles.unitCell]}>{item.measureUnitName}</Text>
-              <Text style={[pdfStyles.cell, styles.priceCell]}>{item.unitPrice}</Text>
-            </View>
-          ))}
-        </View>
+        <PdfSimpleTable
+          rows={report.items}
+          getRowKey={(item) => item.id}
+          columns={[
+            {
+              key: "product",
+              label: "Producto",
+              style: styles.productCell,
+              render: (item) => item.productName,
+            },
+            {
+              key: "unit",
+              label: "Unidad",
+              style: styles.unitCell,
+              render: (item) => item.measureUnitName,
+            },
+            {
+              key: "price",
+              label: "Precio",
+              style: styles.priceCell,
+              render: (item) => item.unitPrice,
+            },
+          ]}
+        />
 
         <View style={styles.totalRow}>
           <Text>Total de productos:</Text>

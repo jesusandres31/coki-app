@@ -1,5 +1,9 @@
 import dayjs, { Dayjs } from "dayjs";
 import { ProductsResponse, VInvoicesResponse } from "src/types/pocketbase-types";
+import { getRecordDisplayName, parseJsonValue, toNumber } from "src/utils/data";
+import { getInvoiceStateLabel, getInvoiceStateName } from "src/utils/invoiceState";
+
+export { parseJsonValue, toNumber } from "src/utils/data";
 
 export type ReportPeriod = "week" | "month" | "custom";
 
@@ -14,30 +18,6 @@ export interface InvoiceProductRow {
   product_name?: string;
   amount?: number;
 }
-
-const stateLabelByName: Record<string, string> = {
-  open: "Confirmada",
-  draft: "Borrador",
-  void: "Cancelada",
-};
-
-export const parseJsonValue = <T,>(value: unknown): T | null => {
-  if (value == null) return null;
-  if (typeof value === "string") {
-    try {
-      return JSON.parse(value) as T;
-    } catch {
-      return null;
-    }
-  }
-  if (typeof value === "object") return value as T;
-  return null;
-};
-
-export const toNumber = (value: unknown) => {
-  const numericValue = Number(value);
-  return Number.isFinite(numericValue) ? numericValue : 0;
-};
 
 export const normalizeIsoDate = (value: string) => {
   if (!value) return "";
@@ -81,24 +61,12 @@ export const parseInvoiceProducts = (
 
 export const getInvoiceStateValue = (invoice: VInvoicesResponse) => {
   const stateValue = (invoice as VInvoicesResponse & { state?: unknown }).state;
-
-  if (typeof stateValue === "string") {
-    const parsedState = parseJsonValue<{ name?: string }>(stateValue);
-    const stateName = parsedState?.name || stateValue;
-    return String(stateName || "").toLowerCase();
-  }
-
-  if (stateValue && typeof stateValue === "object" && "name" in stateValue) {
-    const stateName = (stateValue as { name?: unknown }).name;
-    return typeof stateName === "string" ? stateName.toLowerCase() : "";
-  }
-
-  return "";
+  return getInvoiceStateName(stateValue);
 };
 
 export const getStateLabel = (invoice: VInvoicesResponse) => {
-  const stateName = getInvoiceStateValue(invoice);
-  return stateLabelByName[stateName] || stateName || "-";
+  const stateValue = (invoice as VInvoicesResponse & { state?: unknown }).state;
+  return getInvoiceStateLabel(stateValue);
 };
 
 export const getInvoiceDateIso = (invoiceDate: string) => {
@@ -110,19 +78,7 @@ export const getInvoiceDateIso = (invoiceDate: string) => {
 };
 
 export const getClientName = (invoice: VInvoicesResponse) => {
-  const clientValue = invoice.client;
-
-  if (typeof clientValue === "string") {
-    const parsed = parseJsonValue<{ name?: string }>(clientValue);
-    return parsed?.name || clientValue || "-";
-  }
-
-  if (clientValue && typeof clientValue === "object" && "name" in clientValue) {
-    const clientName = (clientValue as { name?: unknown }).name;
-    return typeof clientName === "string" ? clientName : "-";
-  }
-
-  return "-";
+  return getRecordDisplayName(invoice.client);
 };
 
 export const formatPickerDate = (value: Dayjs | null) =>

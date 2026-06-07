@@ -126,3 +126,51 @@ export function PdfMeta({ rows }: PdfMetaProps) {
     </View>
   );
 }
+
+interface PdfSimpleTableColumn<T> {
+  key: string;
+  label: string;
+  style: any;
+  render: (row: T) => ReactNode;
+}
+
+interface PdfSimpleTableProps<T> {
+  columns: PdfSimpleTableColumn<T>[];
+  rows: T[];
+  getRowKey: (row: T, index: number) => string;
+}
+
+export function PdfSimpleTable<T>({
+  columns,
+  rows,
+  getRowKey,
+}: PdfSimpleTableProps<T>) {
+  return (
+    <View style={pdfStyles.table}>
+      <View style={[pdfStyles.row, pdfStyles.headerRow]}>
+        {columns.map((column) => (
+          <Text key={column.key} style={[pdfStyles.cell, column.style]}>
+            {column.label}
+          </Text>
+        ))}
+      </View>
+
+      {rows.map((row, index) => (
+        <View
+          key={getRowKey(row, index)}
+          style={
+            index === rows.length - 1
+              ? [pdfStyles.row, pdfStyles.lastRow]
+              : pdfStyles.row
+          }
+        >
+          {columns.map((column) => (
+            <Text key={column.key} style={[pdfStyles.cell, column.style]}>
+              {column.render(row)}
+            </Text>
+          ))}
+        </View>
+      ))}
+    </View>
+  );
+}

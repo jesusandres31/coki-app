@@ -1,32 +1,22 @@
-import { pdf } from "@react-pdf/renderer";
+import {
+  createPdfBlob,
+  createPdfObjectUrl,
+  openPdfInViewer,
+  openPdfTab,
+} from "src/components/common/pdf";
 import { DeliveryListPdfDocument } from "./DeliveryListPdfDocument";
 import { DeliveryListPdfModel } from "./model";
 
-const PDF_URL_REVOKE_DELAY_MS = 60_000;
-
 export const createDeliveryPdfBlob = async (report: DeliveryListPdfModel) =>
-  pdf(<DeliveryListPdfDocument report={report} />).toBlob();
+  createPdfBlob(<DeliveryListPdfDocument report={report} />);
 
 export const createDeliveryPdfObjectUrl = async (report: DeliveryListPdfModel) =>
-  URL.createObjectURL(await createDeliveryPdfBlob(report));
+  createPdfObjectUrl(<DeliveryListPdfDocument report={report} />);
 
-export const openDeliveryPdfTab = () => window.open("about:blank", "_blank");
+export const openDeliveryPdfTab = openPdfTab;
 
 export const openDeliveryPdfInViewer = async (
   report: DeliveryListPdfModel,
   popup: Window,
-) => {
-  const pdfObjectUrl = await createDeliveryPdfObjectUrl(report);
-
-  if (popup.closed) {
-    URL.revokeObjectURL(pdfObjectUrl);
-    throw new Error("PopupClosed");
-  }
-
-  popup.location.replace(pdfObjectUrl);
-
-  window.setTimeout(() => {
-    URL.revokeObjectURL(pdfObjectUrl);
-  }, PDF_URL_REVOKE_DELAY_MS);
-};
+) => openPdfInViewer(<DeliveryListPdfDocument report={report} />, popup);
 

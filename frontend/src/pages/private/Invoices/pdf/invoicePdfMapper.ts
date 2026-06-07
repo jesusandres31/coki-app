@@ -4,6 +4,8 @@ import {
   ProductsResponse,
   VInvoicesResponse,
 } from "src/types/pocketbase-types";
+import { getRecordDisplayName, parseJsonValue, toNumber } from "src/utils/data";
+import { getInvoiceStateLabel } from "src/utils/invoiceState";
 import { InvoicePdfItem, InvoicePdfModel } from "./model";
 
 interface InvoiceProductRow {
@@ -23,30 +25,7 @@ interface BuildInvoicePdfModelArgs {
   measureUnits: MeasureunitsResponse[];
 }
 
-const stateLabelByName: Record<string, string> = {
-  open: "Confirmada",
-  draft: "Borrador",
-  void: "Cancelada",
-};
-
-const parseJsonValue = <T,>(value: unknown): T | null => {
-  if (value == null) return null;
-  if (typeof value === "string") {
-    try {
-      return JSON.parse(value) as T;
-    } catch {
-      return null;
-    }
-  }
-  if (typeof value === "object") return value as T;
-  return null;
-};
-
 const clampDiscount = (value: number) => Math.min(100, Math.max(0, value));
-const toNumber = (value: unknown) => {
-  const numberValue = Number(value);
-  return Number.isFinite(numberValue) ? numberValue : 0;
-};
 
 const getItemTotal = (item: {
   amount: number;
@@ -57,37 +36,6 @@ const getItemTotal = (item: {
     0,
     item.amount * item.unitPrice * (1 - clampDiscount(item.discount) / 100),
   );
-
-const getStateLabel = (stateValue: unknown) => {
-  if (typeof stateValue === "string") {
-    const parsedState = parseJsonValue<{ name?: string }>(stateValue);
-    const stateName = (parsedState?.name || stateValue).toLowerCase();
-    return stateLabelByName[stateName] || stateName || "-";
-  }
-
-  if (stateValue && typeof stateValue === "object" && "name" in stateValue) {
-    const stateName = String((stateValue as { name?: unknown }).name || "")
-      .toLowerCase()
-      .trim();
-    return stateLabelByName[stateName] || stateName || "-";
-  }
-
-  return "-";
-};
-
-const getClientName = (clientValue: unknown) => {
-  if (typeof clientValue === "string") {
-    const parsedClient = parseJsonValue<{ name?: string }>(clientValue);
-    return parsedClient?.name || clientValue || "-";
-  }
-
-  if (clientValue && typeof clientValue === "object" && "name" in clientValue) {
-    const clientName = (clientValue as { name?: unknown }).name;
-    return typeof clientName === "string" ? clientName : "-";
-  }
-
-  return "-";
-};
 
 const mapInvoiceItems = (
   invoiceProducts: InvoiceProductRow[],
@@ -159,8 +107,8 @@ export const buildInvoicePdfModel = ({
     date: dayjs(invoice.date).isValid()
       ? dayjs(invoice.date).format("DD/MM/YYYY")
       : String(invoice.date || "-"),
-    clientName: getClientName(invoice.client),
-    stateLabel: getStateLabel(
+    clientName: getRecordDisplayName(invoice.client),
+    stateLabel: getInvoiceStateLabel(
       (invoice as VInvoicesResponse & { state?: unknown }).state,
     ),
     discountPercent,
