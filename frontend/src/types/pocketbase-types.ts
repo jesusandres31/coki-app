@@ -137,7 +137,7 @@ export type InvoicesRecord = {
 	deleted_by?: RecordIdString
 	discount?: number
 	id: string
-	state: RecordIdString
+	state?: RecordIdString
 	total?: number
 	updated: IsoAutoDateString
 	updated_by?: RecordIdString
@@ -180,17 +180,17 @@ export type MeasureunitsRecord = {
 export type PaymentAccountMovementTypesRecord = {
 	created: IsoAutoDateString
 	id: string
-	name?: string
+	name: string
 	updated: IsoAutoDateString
 }
 
 export type PaymentAccountMovementsRecord = {
-	amount?: number
-	client?: RecordIdString
+	amount: number
+	client: RecordIdString
 	created: IsoAutoDateString
 	description?: string
 	id: string
-	type?: RecordIdString
+	type: RecordIdString
 	updated: IsoAutoDateString
 }
 

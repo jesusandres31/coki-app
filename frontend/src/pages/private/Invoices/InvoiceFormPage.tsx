@@ -394,6 +394,14 @@ const parseJsonValue = <T,>(value: unknown): T | null => {
   return null;
 };
 
+const extractApiMessage = (error: unknown): string | undefined => {
+  if (!error || typeof error !== "object") return undefined;
+  if ("message" in error && typeof error.message === "string") {
+    return error.message;
+  }
+  return undefined;
+};
+
 const normalizeSearchValue = (value: string) =>
   value
     .normalize("NFD")
@@ -1284,9 +1292,16 @@ export default function InvoiceFormPage() {
             type: "success",
           }),
         );
-        handleGoTo(`${AppRoutes.Invoices}/${created.invoice.id}`);
-      } catch {
-        // Error feedback is already handled by RTK middleware.
+        handleGoTo(AppRoutes.Invoices);
+      } catch (error) {
+        dispatch(
+          setSnackbar({
+            message:
+              extractApiMessage(error) ||
+              "No se pudo crear la factura o registrar el pago.",
+            type: "error",
+          }),
+        );
       }
     },
   });

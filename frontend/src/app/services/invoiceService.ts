@@ -550,7 +550,7 @@ export const invoiceApi = mainApi.injectEndpoints({
     createInvoice: build.mutation<CreateInvoiceRes, CreateInvoiceReq>({
       queryFn: async (_arg) => {
         // 1. Resolve invoice state record by name
-        const stateName = _arg.state ?? "open";
+        const stateName = (_arg.state ?? "open").trim();
         const stateRecord = await typedPb
           .collection("invoicestates")
           .getFirstListItem(`name = "${escapePbFilterValue(stateName)}"`);
@@ -592,7 +592,7 @@ export const invoiceApi = mainApi.injectEndpoints({
 
         // 5. Account movements (only for "open" invoices with a positive total)
         const paymentMovements: PaymentAccountMovementsResponse[] = [];
-        const shouldUpdateAccount = stateName === "open";
+        const shouldUpdateAccount = String(stateRecord.name || "") === "open";
 
         if (shouldUpdateAccount && invoiceTotal > 0) {
           const debtMovement = await createAccountMovement(
@@ -605,7 +605,7 @@ export const invoiceApi = mainApi.injectEndpoints({
 
           const paidAmount = _arg.paidNow
             ? invoiceTotal
-            : Math.max(0, _arg.paidAmount ?? 0);
+            : Math.min(invoiceTotal, Math.max(0, _arg.paidAmount ?? 0));
 
           if (paidAmount > 0) {
             const paymentMovement = await createAccountMovement(
@@ -631,6 +631,17 @@ export const invoiceApi = mainApi.injectEndpoints({
     updateInvoice: build.mutation<InvoicesResponse, UpdateInvoiceReq>({
       queryFn: async (_arg, _api, _options) => {
         const currentInvoice = await typedPb.collection("invoices").getOne(_arg.id);
+        const requestedState =
+          typeof _arg.data.state === "string" ? _arg.data.state.trim() : "";
+        const currentState =
+          typeof currentInvoice.state === "string"
+            ? currentInvoice.state.trim()
+            : "";
+        const fallbackState = requestedState || currentState
+          ? null
+          : await typedPb
+              .collection("invoicestates")
+              .getFirstListItem(`name = "open"`);
 
         const invoiceDiscountPercent =
           _arg.data.discount === undefined
@@ -708,6 +719,7 @@ export const invoiceApi = mainApi.injectEndpoints({
 
         const res = await typedPb.collection("invoices").update(_arg.id, {
           ..._arg.data,
+          state: requestedState || currentState || fallbackState?.id,
           discount: invoiceDiscountPercent,
           total,
         });
