@@ -270,8 +270,8 @@ const getCreateItemTotal = (item: InvoiceProductInput) =>
   Math.max(
     0,
     item.amount *
-    item.unitPrice *
-    (1 - Math.max(0, Math.min(100, item.discount)) / 100),
+      item.unitPrice *
+      (1 - Math.max(0, Math.min(100, item.discount)) / 100),
   );
 
 const clampDiscount = (value: number) => Math.min(100, Math.max(0, value));
@@ -387,11 +387,11 @@ const readableDisabledFieldSx = (theme: Theme) => ({
     opacity: 1,
   },
   "& .MuiPickersInputBase-root.Mui-disabled .MuiPickersSectionList-sectionSeparator":
-  {
-    color: theme.palette.text.primary,
-    WebkitTextFillColor: theme.palette.text.primary,
-    opacity: 1,
-  },
+    {
+      color: theme.palette.text.primary,
+      WebkitTextFillColor: theme.palette.text.primary,
+      opacity: 1,
+    },
   "& .MuiInputBase-root.Mui-disabled": {
     backgroundColor: theme.palette.action.hover,
     borderRadius: 1,
@@ -578,16 +578,16 @@ function ProductsTable({
     `${rowId}:${field}`;
   const setFieldRef =
     (rowId: string, field: ProductTableEditableField) =>
-      (element: HTMLElement | null) => {
-        const key = getFieldKey(rowId, field);
+    (element: HTMLElement | null) => {
+      const key = getFieldKey(rowId, field);
 
-        if (element) {
-          fieldRefs.current.set(key, element);
-          return;
-        }
+      if (element) {
+        fieldRefs.current.set(key, element);
+        return;
+      }
 
-        fieldRefs.current.delete(key);
-      };
+      fieldRefs.current.delete(key);
+    };
   const focusField = (rowIndex: number, fieldIndex: number) => {
     const targetRow = rows[rowIndex];
     const targetField = productTableEditableFields[fieldIndex];
@@ -616,69 +616,69 @@ function ProductsTable({
   };
   const handleFieldKeyDown =
     (rowIndex: number, field: ProductTableEditableField) =>
-      (event: KeyboardEvent<HTMLInputElement>) => {
-        if (controlsDisabled) return;
+    (event: KeyboardEvent<HTMLInputElement>) => {
+      if (controlsDisabled) return;
 
-        const fieldIndex = productTableEditableFields.indexOf(field);
+      const fieldIndex = productTableEditableFields.indexOf(field);
 
-        if (event.key === "Tab" && !event.shiftKey && field === "discount") {
-          event.preventDefault();
-          focusAddProductButton();
-          return;
-        }
+      if (event.key === "Tab" && !event.shiftKey && field === "discount") {
+        event.preventDefault();
+        focusAddProductButton();
+        return;
+      }
 
-        if (
-          field === "product" &&
-          ["ArrowUp", "ArrowDown", "Enter"].includes(event.key)
-        ) {
-          return;
-        }
+      if (
+        field === "product" &&
+        ["ArrowUp", "ArrowDown", "Enter"].includes(event.key)
+      ) {
+        return;
+      }
 
-        if (event.key === "Enter") {
-          event.preventDefault();
-          focusNextField(rowIndex, fieldIndex);
-          return;
-        }
+      if (event.key === "Enter") {
+        event.preventDefault();
+        focusNextField(rowIndex, fieldIndex);
+        return;
+      }
 
-        if (event.key === "Delete" && event.ctrlKey) {
-          event.preventDefault();
-          if (canRemoveRow?.(rows[rowIndex]?.id || "")) {
-            onRemoveRow?.(rows[rowIndex].id);
-            requestAnimationFrame(() =>
-              focusField(Math.max(0, rowIndex - 1), fieldIndex),
-            );
-          }
-          return;
-        }
-
-        if (event.key === "ArrowRight") {
-          event.preventDefault();
-          focusField(
-            rowIndex,
-            Math.min(fieldIndex + 1, productTableEditableFields.length - 1),
+      if (event.key === "Delete" && event.ctrlKey) {
+        event.preventDefault();
+        if (canRemoveRow?.(rows[rowIndex]?.id || "")) {
+          onRemoveRow?.(rows[rowIndex].id);
+          requestAnimationFrame(() =>
+            focusField(Math.max(0, rowIndex - 1), fieldIndex),
           );
-          return;
         }
+        return;
+      }
 
-        if (event.key === "ArrowLeft") {
-          event.preventDefault();
-          focusField(rowIndex, Math.max(fieldIndex - 1, 0));
-          return;
-        }
+      if (event.key === "ArrowRight") {
+        event.preventDefault();
+        focusField(
+          rowIndex,
+          Math.min(fieldIndex + 1, productTableEditableFields.length - 1),
+        );
+        return;
+      }
 
-        if (field === "product") return;
+      if (event.key === "ArrowLeft") {
+        event.preventDefault();
+        focusField(rowIndex, Math.max(fieldIndex - 1, 0));
+        return;
+      }
 
-        if (event.key === "ArrowDown") {
-          event.preventDefault();
-          focusField(Math.min(rowIndex + 1, rows.length - 1), fieldIndex);
-          return;
-        }
+      if (field === "product") return;
 
-        if (event.key === "ArrowUp") {
-          event.preventDefault();
-          focusField(Math.max(rowIndex - 1, 0), fieldIndex);
-        }
-      };
+      if (event.key === "ArrowDown") {
+        event.preventDefault();
+        focusField(Math.min(rowIndex + 1, rows.length - 1), fieldIndex);
+        return;
+      }
+
+      if (event.key === "ArrowUp") {
+        event.preventDefault();
+        focusField(Math.max(rowIndex - 1, 0), fieldIndex);
+      }
+    };
 
   useEffect(() => {
     const previousRowsLength = previousRowsLengthRef.current;
@@ -715,10 +715,10 @@ function ProductsTable({
         <TableHead>
           <TableRow>
             <TableCell sx={{ width: "31%" }}>Producto</TableCell>
-            <TableCell sx={{ width: "12%" }}>Cantidad</TableCell>
-            <TableCell sx={{ width: "8%" }}>Unidad</TableCell>
-            <TableCell sx={{ width: "14%" }}>Precio unit.</TableCell>
-            <TableCell sx={{ width: "8%" }}>Descuento (%)</TableCell>
+            <TableCell sx={{ width: "8%" }}>Cantidad</TableCell>
+            <TableCell sx={{ width: "3%" }}>Unidad</TableCell>
+            <TableCell sx={{ width: "5%" }}>Precio unit.</TableCell>
+            <TableCell sx={{ width: "8%" }}>Descuento</TableCell>
             <TableCell
               align="right"
               sx={{
@@ -866,6 +866,11 @@ function ProductsTable({
                       )
                     }
                     inputProps={{ min: 0, max: 100, step: "0.01" }}
+                    InputProps={{
+                      endAdornment: (
+                        <InputAdornment position="end">%</InputAdornment>
+                      ),
+                    }}
                     inputRef={setFieldRef(row.id, "discount")}
                     onKeyDown={handleFieldKeyDown(rowIndex, "discount")}
                     disabled={controlsDisabled}
@@ -970,6 +975,9 @@ function InvoiceTotalsSummary({
           }
           disabled={disabled}
           inputProps={{ min: 0, max: 100, step: "0.01" }}
+          InputProps={{
+            endAdornment: <InputAdornment position="end">%</InputAdornment>,
+          }}
           sx={{
             "& input": {
               textAlign: "right",
@@ -1411,19 +1419,19 @@ export default function InvoiceFormPage() {
     const detailRows =
       Array.isArray(rawInvoiceProducts) && rawInvoiceProducts.length > 0
         ? rawInvoiceProducts.map((item, i) => ({
-          id: item.id || `row-${i}`,
-          product:
-            String(
-              item.product_id ??
-              (typeof item.product === "string"
-                ? item.product
-                : item.product?.id) ??
-              "",
-            ) || "",
-          amount: Math.max(1, Number(item.amount ?? 1)),
-          unitPrice: Math.max(0, Number(item.unit_price ?? 0)),
-          discount: Math.min(100, Math.max(0, Number(item.discount ?? 0))),
-        }))
+            id: item.id || `row-${i}`,
+            product:
+              String(
+                item.product_id ??
+                  (typeof item.product === "string"
+                    ? item.product
+                    : item.product?.id) ??
+                  "",
+              ) || "",
+            amount: Math.max(1, Number(item.amount ?? 1)),
+            unitPrice: Math.max(0, Number(item.unit_price ?? 0)),
+            discount: Math.min(100, Math.max(0, Number(item.discount ?? 0))),
+          }))
         : [buildEmptyRow()];
 
     editFormik.setValues({
@@ -1900,10 +1908,10 @@ export default function InvoiceFormPage() {
         activeFormik.values.rows.map((row) =>
           row.id === id
             ? {
-              ...row,
-              product: productId,
-              unitPrice,
-            }
+                ...row,
+                product: productId,
+                unitPrice,
+              }
             : row,
         ),
       );

@@ -93,7 +93,12 @@ export default function CustomCollapse({
                     detailRows &&
                     detailRows.length > 0 ? (
                     <Box sx={{ width: "100%" }}>
-                      <Table size="small">
+                      <Table
+                        size="small"
+                        sx={{
+                          tableLayout: "fixed",
+                        }}
+                      >
                         <TableHead>
                           <TableRow>
                             {detailCol.columns &&
@@ -102,6 +107,10 @@ export default function CustomCollapse({
                                   size="small"
                                   key={`${column.id}-${i}`}
                                   align={column.align ?? "right"}
+                                  sx={{
+                                    width: column.width ?? column.minWidth,
+                                    minWidth: column.minWidth,
+                                  }}
                                 >
                                   {column.label}
                                 </TableCell>
@@ -136,6 +145,8 @@ export default function CustomCollapse({
                                         align={column.align ?? "right"}
                                         sx={{
                                           borderColor: "divider",
+                                          width: column.width ?? column.minWidth,
+                                          minWidth: column.minWidth,
                                         }}
                                       >
                                         {renderValue(value)}

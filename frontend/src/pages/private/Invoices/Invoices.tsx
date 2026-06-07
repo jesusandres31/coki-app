@@ -229,6 +229,7 @@ export default function Invoices() {
             id: "product",
             label: "Producto",
             align: "left",
+            width: "42%",
             minWidth: 180,
             render: (item: any) => {
               const productId = String(item?.product || item?.product_id || "");
@@ -238,12 +239,14 @@ export default function Invoices() {
           {
             id: "amount",
             label: "Cantidad",
-            minWidth: 120,
+            width: 90,
+            minWidth: 80,
           },
           {
             id: "measure_unit",
             label: "Unidad",
-            minWidth: 110,
+            width: 90,
+            minWidth: 80,
             render: (item: any) =>
               productMeasureUnitByProductId.get(
                 String(item?.product || item?.product_id || ""),
@@ -252,19 +255,23 @@ export default function Invoices() {
           {
             id: "unit_price",
             label: "Precio Unit.",
-            minWidth: 130,
+            width: 120,
+            minWidth: 110,
             render: (item: any) => formatMoney(item?.unit_price),
           },
           {
             id: "discount",
             label: "Desc. %",
-            minWidth: 100,
+            width: 90,
+            minWidth: 80,
             render: (item: any) => formatPercent(item?.discount),
           },
           {
             id: "total",
             label: "Total",
-            minWidth: 120,
+            align: "left",
+            width: 120,
+            minWidth: 110,
             render: (item: any) => formatMoney(item?.total),
           },
         ],
