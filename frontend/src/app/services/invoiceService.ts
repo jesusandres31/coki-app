@@ -207,6 +207,7 @@ const buildInvoiceSoftDeletePayload = (deletedAt: string) =>
   ({
     deleted: deletedAt,
   }) as Update<"invoices" | "invoices_products">;
+const hasDeletedValue = (value: unknown) => Boolean(String(value || "").trim());
 
 // ---------------------------------------------------------------------------
 // Private helper: create a payment_account_movement and update client balance.
@@ -245,6 +246,64 @@ const createAccountMovement = async (
     .update(clientId, { balance: nextBalance });
 
   return movement;
+};
+
+const getOpenInvoiceState = () =>
+  typedPb
+    .collection("invoicestates")
+    .getFirstListItem(`name = "open"`);
+
+const isOpenInvoiceState = async (stateId: string | undefined) => {
+  if (!stateId) return false;
+
+  const openState = await getOpenInvoiceState();
+  return stateId === openState.id;
+};
+
+const applyClientBalanceDelta = async (
+  clientId: string,
+  delta: number,
+  description: string,
+) => {
+  if (!clientId) return;
+
+  const roundedDelta = Number(delta.toFixed(2));
+  if (roundedDelta === 0) return;
+
+  await createAccountMovement(
+    clientId,
+    roundedDelta > 0 ? "debt" : "payment",
+    Math.abs(roundedDelta),
+    description,
+  );
+};
+
+const syncInvoiceBalanceChange = async (
+  invoiceId: string,
+  previousClientId: string,
+  nextClientId: string,
+  previousTotal: number,
+  nextTotal: number,
+) => {
+  if (previousClientId === nextClientId) {
+    await applyClientBalanceDelta(
+      nextClientId,
+      nextTotal - previousTotal,
+      `Ajuste factura ${invoiceId}`,
+    );
+    return;
+  }
+
+  await applyClientBalanceDelta(
+    previousClientId,
+    -previousTotal,
+    `Cambio de cliente factura ${invoiceId}`,
+  );
+  await applyClientBalanceDelta(
+    nextClientId,
+    nextTotal,
+    `Cambio de cliente factura ${invoiceId}`,
+  );
 };
 
 export const invoiceApi = mainApi.injectEndpoints({
@@ -507,9 +566,7 @@ export const invoiceApi = mainApi.injectEndpoints({
       queryFn: async (_arg) => {
         const clientId = escapePbFilterValue(_arg.clientId);
         const productId = escapePbFilterValue(_arg.productId);
-        const openState = await typedPb
-          .collection("invoicestates")
-          .getFirstListItem(`name = "open"`);
+        const openState = await getOpenInvoiceState();
         const excludeInvoiceId = _arg.excludeInvoiceId
           ? escapePbFilterValue(_arg.excludeInvoiceId)
           : "";
@@ -639,9 +696,13 @@ export const invoiceApi = mainApi.injectEndpoints({
             : "";
         const fallbackState = requestedState || currentState
           ? null
-          : await typedPb
-              .collection("invoicestates")
-              .getFirstListItem(`name = "open"`);
+          : await getOpenInvoiceState();
+        const nextState = requestedState || currentState || fallbackState?.id;
+        const currentInvoiceIsActive = !hasDeletedValue(currentInvoice.deleted);
+        const previousStateIsOpen =
+          currentInvoiceIsActive && (await isOpenInvoiceState(currentState));
+        const nextStateIsOpen =
+          currentInvoiceIsActive && (await isOpenInvoiceState(nextState));
 
         const invoiceDiscountPercent =
           _arg.data.discount === undefined
@@ -719,18 +780,51 @@ export const invoiceApi = mainApi.injectEndpoints({
 
         const res = await typedPb.collection("invoices").update(_arg.id, {
           ..._arg.data,
-          state: requestedState || currentState || fallbackState?.id,
+          state: nextState,
           discount: invoiceDiscountPercent,
           total,
         });
+
+        if (previousStateIsOpen && nextStateIsOpen) {
+          await syncInvoiceBalanceChange(
+            _arg.id,
+            String(currentInvoice.client || ""),
+            String(res.client || ""),
+            Number(currentInvoice.total ?? 0),
+            Number(res.total ?? 0),
+          );
+        } else if (previousStateIsOpen && !nextStateIsOpen) {
+          await applyClientBalanceDelta(
+            String(currentInvoice.client || ""),
+            -Number(currentInvoice.total ?? 0),
+            `Cambio de estado factura ${_arg.id}`,
+          );
+        } else if (!previousStateIsOpen && nextStateIsOpen) {
+          await applyClientBalanceDelta(
+            String(res.client || ""),
+            Number(res.total ?? 0),
+            `Cambio de estado factura ${_arg.id}`,
+          );
+        }
+
         return { data: res };
       },
-      invalidatesTags: [invoiceTag, invoiceProductsTag, invoicesViewTag],
+      invalidatesTags: [
+        invoiceTag,
+        invoiceProductsTag,
+        invoicesViewTag,
+        paymentAccountMovementsTag,
+        clientsTag,
+      ],
     }),
     deleteInvoice: build.mutation<void, string>({
       queryFn: async (_arg) => {
         const deletedAt = new Date().toISOString();
         const invoiceSoftDeletePayload = buildInvoiceSoftDeletePayload(deletedAt);
+        const currentInvoice = await typedPb.collection("invoices").getOne(_arg);
+        const shouldSyncAccount =
+          !hasDeletedValue(currentInvoice.deleted) &&
+          (await isOpenInvoiceState(String(currentInvoice.state || "")));
         const existingItems = await typedPb
           .collection("invoices_products")
           .getFullList({
@@ -749,9 +843,23 @@ export const invoiceApi = mainApi.injectEndpoints({
           invoiceSoftDeletePayload,
         );
 
+        if (shouldSyncAccount) {
+          await applyClientBalanceDelta(
+            String(currentInvoice.client || ""),
+            -Number(currentInvoice.total ?? 0),
+            `Anulacion factura ${_arg}`,
+          );
+        }
+
         return { data: undefined };
       },
-      invalidatesTags: [invoiceTag, invoiceProductsTag, invoicesViewTag],
+      invalidatesTags: [
+        invoiceTag,
+        invoiceProductsTag,
+        invoicesViewTag,
+        paymentAccountMovementsTag,
+        clientsTag,
+      ],
     }),
     updateClient: build.mutation<ClientsResponse, UpdateClientReq>({
       queryFn: async (_arg) => {
