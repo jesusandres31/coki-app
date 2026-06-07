@@ -2,19 +2,10 @@ import { useEffect, useMemo, useState } from "react";
 import {
   AddRounded,
   AddCardRounded,
-  DeleteRounded,
-  EditRounded,
-  OpenInNewRounded,
 } from "@mui/icons-material";
-import {
-  Button,
-  Dialog,
-  DialogActions,
-  DialogContent,
-  DialogContentText,
-  DialogTitle,
-} from "@mui/material";
+import { Button } from "@mui/material";
 import DataGrid from "src/components/common/DataGrid/DataGrid";
+import DeleteEntityDialog from "src/components/common/DeleteEntityDialog";
 import { getListArgsInitialState } from "src/constants";
 import {
   useDeleteClientMutation,
@@ -33,6 +24,7 @@ import { Column, DataGridRowAction, GetList } from "src/types";
 import { formatMoney } from "src/utils/format";
 import { clientsBreadcrumbFlow } from "./breadcrumbFlow";
 import PaymentMovementDialog from "../Payments/PaymentMovementDialog";
+import { buildCrudRowActions } from "../crudListUtils";
 
 export default function Clients() {
   const dispatch = useAppDispatch();
@@ -120,25 +112,12 @@ export default function Clients() {
         icon: <AddCardRounded fontSize="small" color="primary" />,
         onClick: (item) => setClientForPaymentMovement(item as ClientsResponse),
       },
-      {
-        id: "open",
-        label: "Abrir cliente",
-        icon: <OpenInNewRounded fontSize="small" color="primary" />,
-        onClick: (item) => handleGoTo(`${AppRoutes.Clients}/${item.id}`),
-      },
-      {
-        id: "edit",
-        label: "Editar cliente",
-        icon: <EditRounded fontSize="small" color="info" />,
-        onClick: (item) =>
-          handleGoTo(`${AppRoutes.Clients}/${item.id}?mode=edit`),
-      },
-      {
-        id: "delete",
-        label: "Eliminar cliente",
-        icon: <DeleteRounded fontSize="small" color="error" />,
-        onClick: (item) => setClientToDelete(item as ClientsResponse),
-      },
+      ...buildCrudRowActions<ClientsResponse>({
+        entityLabel: "cliente",
+        baseRoute: AppRoutes.Clients,
+        handleGoTo,
+        onDelete: setClientToDelete,
+      }),
     ],
     [handleGoTo],
   );
@@ -171,37 +150,14 @@ export default function Clients() {
         client={clientForPaymentMovement}
         onClose={() => setClientForPaymentMovement(null)}
       />
-      <Dialog
+      <DeleteEntityDialog
         open={Boolean(clientToDelete)}
-        onClose={isDeleting ? undefined : () => setClientToDelete(null)}
-      >
-        <DialogTitle>Eliminar cliente</DialogTitle>
-        <DialogContent>
-          <DialogContentText>
-            ¿Seguro que querés eliminar este cliente?
-          </DialogContentText>
-        </DialogContent>
-        <DialogActions>
-          <Button
-            variant="text"
-            color="inherit"
-            sx={{ color: "text.secondary" }}
-            onClick={() => setClientToDelete(null)}
-            disabled={isDeleting}
-          >
-            Cancelar
-          </Button>
-          <Button
-            color="error"
-            variant="contained"
-            onClick={() => void handleDelete()}
-            loading={isDeleting}
-            disabled={isDeleting}
-          >
-            Eliminar
-          </Button>
-        </DialogActions>
-      </Dialog>
+        title="Eliminar cliente"
+        message="¿Seguro que querés eliminar este cliente?"
+        isDeleting={isDeleting}
+        onClose={() => setClientToDelete(null)}
+        onConfirm={() => void handleDelete()}
+      />
     </>
   );
 }

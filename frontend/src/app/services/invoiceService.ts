@@ -307,6 +307,14 @@ const syncInvoiceBalanceChange = async (
   );
 };
 
+const getActiveNameSortedFullList = async <T,>(
+  collection: "measureunits" | "products",
+) =>
+  typedPb.collection(collection).getFullList({
+    filter: `deleted = ""`,
+    sort: "+name",
+  }) as Promise<T[]>;
+
 export const invoiceApi = mainApi.injectEndpoints({
   endpoints: (build) => ({
     getInvoicesList: build.query<ListResult<InvoicesResponse>, GetList>({
@@ -491,20 +499,16 @@ export const invoiceApi = mainApi.injectEndpoints({
     }),
     getProducts: build.query<ProductsResponse[], void>({
       queryFn: async () => {
-        const res = await typedPb.collection("products").getFullList({
-          filter: `deleted = ""`,
-          sort: "+name",
-        });
+        const res =
+          await getActiveNameSortedFullList<ProductsResponse>("products");
         return { data: res };
       },
       providesTags: [productsTag],
     }),
     getMeasureUnits: build.query<MeasureunitsResponse[], void>({
       queryFn: async () => {
-        const res = await typedPb.collection("measureunits").getFullList({
-          filter: `deleted = ""`,
-          sort: "+name",
-        });
+        const res =
+          await getActiveNameSortedFullList<MeasureunitsResponse>("measureunits");
         return { data: res };
       },
       providesTags: [measureUnitsTag],

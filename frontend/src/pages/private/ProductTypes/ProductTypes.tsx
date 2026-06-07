@@ -1,19 +1,8 @@
 import { useEffect, useMemo, useState } from "react";
-import {
-  AddRounded,
-  DeleteRounded,
-  EditRounded,
-  OpenInNewRounded,
-} from "@mui/icons-material";
-import {
-  Button,
-  Dialog,
-  DialogActions,
-  DialogContent,
-  DialogContentText,
-  DialogTitle,
-} from "@mui/material";
+import { AddRounded } from "@mui/icons-material";
+import { Button } from "@mui/material";
 import DataGrid from "src/components/common/DataGrid/DataGrid";
+import DeleteEntityDialog from "src/components/common/DeleteEntityDialog";
 import { getListArgsInitialState } from "src/constants";
 import {
   useDeleteProductTypeMutation,
@@ -26,6 +15,7 @@ import { AppRoutes } from "src/config";
 import { Column, DataGridRowAction, GetList } from "src/types";
 import { ProductTypesResponse } from "src/types/pocketbase-types";
 import { productTypesBreadcrumbFlow } from "./breadcrumbFlow";
+import { buildCrudRowActions } from "../crudListUtils";
 
 export default function ProductTypes() {
   const dispatch = useAppDispatch();
@@ -85,27 +75,13 @@ export default function ProductTypes() {
   );
 
   const rowActions: DataGridRowAction[] = useMemo(
-    () => [
-      {
-        id: "open",
-        label: "Abrir tipo de producto",
-        icon: <OpenInNewRounded fontSize="small" color="primary" />,
-        onClick: (item) => handleGoTo(`${AppRoutes.ConfigProductTypes}/${item.id}`),
-      },
-      {
-        id: "edit",
-        label: "Editar tipo de producto",
-        icon: <EditRounded fontSize="small" color="info" />,
-        onClick: (item) =>
-          handleGoTo(`${AppRoutes.ConfigProductTypes}/${item.id}?mode=edit`),
-      },
-      {
-        id: "delete",
-        label: "Eliminar tipo de producto",
-        icon: <DeleteRounded fontSize="small" color="error" />,
-        onClick: (item) => setProductTypeToDelete(item as ProductTypesResponse),
-      },
-    ],
+    () =>
+      buildCrudRowActions<ProductTypesResponse>({
+        entityLabel: "tipo de producto",
+        baseRoute: AppRoutes.ConfigProductTypes,
+        handleGoTo,
+        onDelete: setProductTypeToDelete,
+      }),
     [handleGoTo],
   );
 
@@ -132,37 +108,14 @@ export default function ProductTypes() {
           </Button>
         }
       />
-      <Dialog
+      <DeleteEntityDialog
         open={Boolean(productTypeToDelete)}
-        onClose={isDeleting ? undefined : () => setProductTypeToDelete(null)}
-      >
-        <DialogTitle>Eliminar tipo de producto</DialogTitle>
-        <DialogContent>
-          <DialogContentText>
-            ¿Seguro que querés eliminar este tipo de producto?
-          </DialogContentText>
-        </DialogContent>
-        <DialogActions>
-          <Button
-            variant="text"
-            color="inherit"
-            sx={{ color: "text.secondary" }}
-            onClick={() => setProductTypeToDelete(null)}
-            disabled={isDeleting}
-          >
-            Cancelar
-          </Button>
-          <Button
-            color="error"
-            variant="contained"
-            onClick={() => void handleDelete()}
-            loading={isDeleting}
-            disabled={isDeleting}
-          >
-            Eliminar
-          </Button>
-        </DialogActions>
-      </Dialog>
+        title="Eliminar tipo de producto"
+        message="¿Seguro que querés eliminar este tipo de producto?"
+        isDeleting={isDeleting}
+        onClose={() => setProductTypeToDelete(null)}
+        onConfirm={() => void handleDelete()}
+      />
     </>
   );
 }

@@ -4,10 +4,11 @@ import {
   getShortInvoiceId,
   PdfHeader,
   PdfMeta,
+  PdfSimpleTable,
   pdfStyles,
 } from "src/components/common/pdf";
 import { formatMoney, formatPercent } from "src/utils/format";
-import { InvoicePdfModel } from "./model";
+import { InvoicePdfItem, InvoicePdfModel } from "./model";
 
 interface InvoicePdfDocumentProps {
   invoice: InvoicePdfModel;
@@ -63,6 +64,16 @@ export function InvoicePdfDocument({ invoice }: InvoicePdfDocumentProps) {
     ? styles.unitPriceCell
     : styles.unitPriceCellWithoutDiscount;
   const shortInvoiceId = getShortInvoiceId(invoice.invoiceId);
+  const discountColumns = hasItemDiscounts
+    ? [
+        {
+          key: "discount",
+          label: "Desc. %",
+          style: styles.discountCell,
+          render: (item: InvoicePdfItem) => formatPercent(item.discount),
+        },
+      ]
+    : [];
   const documentTitle = buildInvoicePdfTitle({
     clientName: invoice.clientName,
     date: invoice.date,
@@ -84,52 +95,43 @@ export function InvoicePdfDocument({ invoice }: InvoicePdfDocumentProps) {
           ]}
         />
 
-        <View style={pdfStyles.table}>
-          <View style={[pdfStyles.row, pdfStyles.headerRow]}>
-            <Text style={[pdfStyles.cell, productCellStyle]}>Producto</Text>
-            <Text style={[pdfStyles.cell, styles.qtyCell]}>Cant.</Text>
-            <Text style={[pdfStyles.cell, unitCellStyle]}>Unidad</Text>
-            <Text style={[pdfStyles.cell, unitPriceCellStyle]}>
-              Precio Unit.
-            </Text>
-            {hasItemDiscounts ? (
-              <Text style={[pdfStyles.cell, styles.discountCell]}>Desc. %</Text>
-            ) : null}
-            <Text style={[pdfStyles.cell, styles.totalCell]}>Total</Text>
-          </View>
-
-          {invoice.items.map((item, index) => (
-            <View
-              key={item.id}
-              style={
-                index === invoice.items.length - 1
-                  ? [pdfStyles.row, pdfStyles.lastRow]
-                  : pdfStyles.row
-              }
-            >
-              <Text style={[pdfStyles.cell, productCellStyle]}>
-                {item.productName}
-              </Text>
-              <Text style={[pdfStyles.cell, styles.qtyCell]}>
-                {item.amount}
-              </Text>
-              <Text style={[pdfStyles.cell, unitCellStyle]}>
-                {item.measureUnitName}
-              </Text>
-              <Text style={[pdfStyles.cell, unitPriceCellStyle]}>
-                {formatMoney(item.unitPrice)}
-              </Text>
-              {hasItemDiscounts ? (
-                <Text style={[pdfStyles.cell, styles.discountCell]}>
-                  {formatPercent(item.discount)}
-                </Text>
-              ) : null}
-              <Text style={[pdfStyles.cell, styles.totalCell]}>
-                {formatMoney(item.total)}
-              </Text>
-            </View>
-          ))}
-        </View>
+        <PdfSimpleTable
+          rows={invoice.items}
+          getRowKey={(item) => item.id}
+          columns={[
+            {
+              key: "product",
+              label: "Producto",
+              style: productCellStyle,
+              render: (item) => item.productName,
+            },
+            {
+              key: "amount",
+              label: "Cant.",
+              style: styles.qtyCell,
+              render: (item) => item.amount,
+            },
+            {
+              key: "unit",
+              label: "Unidad",
+              style: unitCellStyle,
+              render: (item) => item.measureUnitName,
+            },
+            {
+              key: "unitPrice",
+              label: "Precio Unit.",
+              style: unitPriceCellStyle,
+              render: (item) => formatMoney(item.unitPrice),
+            },
+            ...discountColumns,
+            {
+              key: "total",
+              label: "Total",
+              style: styles.totalCell,
+              render: (item) => formatMoney(item.total),
+            },
+          ]}
+        />
 
         <View style={pdfStyles.summary}>
           {hasInvoiceDiscount ? (

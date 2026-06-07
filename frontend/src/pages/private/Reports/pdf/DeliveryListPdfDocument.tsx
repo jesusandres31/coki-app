@@ -6,7 +6,8 @@ import {
   PdfSimpleTable,
   pdfStyles,
 } from "src/components/common/pdf";
-import { DeliveryListPdfModel } from "./model";
+import { DeliveryListPdfItem, DeliveryListPdfModel } from "./model";
+import { buildProductUnitPdfColumns } from "./reportPdfUtils";
 
 interface DeliveryListPdfDocumentProps {
   report: DeliveryListPdfModel;
@@ -23,13 +24,6 @@ const styles = StyleSheet.create({
   amountCell: {
     width: "25%",
     textAlign: "right",
-  },
-  totalRow: {
-    marginTop: 12,
-    flexDirection: "row",
-    justifyContent: "flex-end",
-    gap: 8,
-    fontWeight: 700,
   },
 });
 
@@ -52,18 +46,10 @@ export function DeliveryListPdfDocument({ report }: DeliveryListPdfDocumentProps
           rows={report.items}
           getRowKey={(item) => item.id}
           columns={[
-            {
-              key: "product",
-              label: "Producto",
-              style: styles.productCell,
-              render: (item) => item.productName,
-            },
-            {
-              key: "unit",
-              label: "Unidad",
-              style: styles.unitCell,
-              render: (item) => item.measureUnitName,
-            },
+            ...buildProductUnitPdfColumns<DeliveryListPdfItem>(
+              styles.productCell,
+              styles.unitCell,
+            ),
             {
               key: "amount",
               label: "Cantidad",
@@ -73,7 +59,7 @@ export function DeliveryListPdfDocument({ report }: DeliveryListPdfDocumentProps
           ]}
         />
 
-        <View style={styles.totalRow}>
+        <View style={pdfStyles.reportTotalRow}>
           <Text>Total:</Text>
           <Text>{report.totalAmount}</Text>
         </View>

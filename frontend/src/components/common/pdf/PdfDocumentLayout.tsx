@@ -91,6 +91,13 @@ export const pdfStyles = StyleSheet.create({
     fontWeight: 700,
     fontSize: 12,
   },
+  reportTotalRow: {
+    marginTop: 12,
+    flexDirection: "row",
+    justifyContent: "flex-end",
+    gap: 8,
+    fontWeight: 700,
+  },
 });
 
 interface PdfHeaderProps {
@@ -127,7 +134,7 @@ export function PdfMeta({ rows }: PdfMetaProps) {
   );
 }
 
-interface PdfSimpleTableColumn<T> {
+export interface PdfSimpleTableColumn<T> {
   key: string;
   label: string;
   style: any;

@@ -5,7 +5,8 @@ import {
   PdfSimpleTable,
   pdfStyles,
 } from "src/components/common/pdf";
-import { PriceListPdfModel } from "./model";
+import { PriceListPdfItem, PriceListPdfModel } from "./model";
+import { buildProductUnitPdfColumns } from "./reportPdfUtils";
 
 interface PriceListPdfDocumentProps {
   report: PriceListPdfModel;
@@ -23,13 +24,6 @@ const styles = StyleSheet.create({
     width: "26%",
     textAlign: "right",
   },
-  totalRow: {
-    marginTop: 12,
-    flexDirection: "row",
-    justifyContent: "flex-end",
-    gap: 8,
-    fontWeight: 700,
-  },
 });
 
 export function PriceListPdfDocument({ report }: PriceListPdfDocumentProps) {
@@ -45,18 +39,10 @@ export function PriceListPdfDocument({ report }: PriceListPdfDocumentProps) {
           rows={report.items}
           getRowKey={(item) => item.id}
           columns={[
-            {
-              key: "product",
-              label: "Producto",
-              style: styles.productCell,
-              render: (item) => item.productName,
-            },
-            {
-              key: "unit",
-              label: "Unidad",
-              style: styles.unitCell,
-              render: (item) => item.measureUnitName,
-            },
+            ...buildProductUnitPdfColumns<PriceListPdfItem>(
+              styles.productCell,
+              styles.unitCell,
+            ),
             {
               key: "price",
               label: "Precio",
@@ -66,7 +52,7 @@ export function PriceListPdfDocument({ report }: PriceListPdfDocumentProps) {
           ]}
         />
 
-        <View style={styles.totalRow}>
+        <View style={pdfStyles.reportTotalRow}>
           <Text>Total de productos:</Text>
           <Text>{report.totalItems}</Text>
         </View>

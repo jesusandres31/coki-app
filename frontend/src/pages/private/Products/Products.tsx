@@ -1,19 +1,8 @@
 import { useEffect, useMemo, useState } from "react";
-import {
-  AddRounded,
-  DeleteRounded,
-  EditRounded,
-  OpenInNewRounded,
-} from "@mui/icons-material";
-import {
-  Button,
-  Dialog,
-  DialogActions,
-  DialogContent,
-  DialogContentText,
-  DialogTitle,
-} from "@mui/material";
+import { AddRounded } from "@mui/icons-material";
+import { Button } from "@mui/material";
 import DataGrid from "src/components/common/DataGrid/DataGrid";
+import DeleteEntityDialog from "src/components/common/DeleteEntityDialog";
 import { getListArgsInitialState } from "src/constants";
 import {
   useDeleteProductMutation,
@@ -29,6 +18,7 @@ import { ProductsResponse } from "src/types/pocketbase-types";
 import { formatMoney } from "src/utils/format";
 import { Column, DataGridRowAction, GetList } from "src/types";
 import { productsBreadcrumbFlow } from "./breadcrumbFlow";
+import { buildCrudRowActions } from "../crudListUtils";
 
 export default function Products() {
   const dispatch = useAppDispatch();
@@ -137,26 +127,13 @@ export default function Products() {
   );
 
   const rowActions: DataGridRowAction[] = useMemo(
-    () => [
-      {
-        id: "open",
-        label: "Abrir producto",
-        icon: <OpenInNewRounded fontSize="small" color="primary" />,
-        onClick: (item) => handleGoTo(`${AppRoutes.Products}/${item.id}`),
-      },
-      {
-        id: "edit",
-        label: "Editar producto",
-        icon: <EditRounded fontSize="small" color="info" />,
-        onClick: (item) => handleGoTo(`${AppRoutes.Products}/${item.id}?mode=edit`),
-      },
-      {
-        id: "delete",
-        label: "Eliminar producto",
-        icon: <DeleteRounded fontSize="small" color="error" />,
-        onClick: (item) => setProductToDelete(item as ProductsResponse),
-      },
-    ],
+    () =>
+      buildCrudRowActions<ProductsResponse>({
+        entityLabel: "producto",
+        baseRoute: AppRoutes.Products,
+        handleGoTo,
+        onDelete: setProductToDelete,
+      }),
     [handleGoTo],
   );
 
@@ -183,37 +160,14 @@ export default function Products() {
           </Button>
         }
       />
-      <Dialog
+      <DeleteEntityDialog
         open={Boolean(productToDelete)}
-        onClose={isDeleting ? undefined : () => setProductToDelete(null)}
-      >
-        <DialogTitle>Eliminar producto</DialogTitle>
-        <DialogContent>
-          <DialogContentText>
-            ¿Seguro que querés eliminar este producto?
-          </DialogContentText>
-        </DialogContent>
-        <DialogActions>
-          <Button
-            variant="text"
-            color="inherit"
-            sx={{ color: "text.secondary" }}
-            onClick={() => setProductToDelete(null)}
-            disabled={isDeleting}
-          >
-            Cancelar
-          </Button>
-          <Button
-            color="error"
-            variant="contained"
-            onClick={() => void handleDelete()}
-            loading={isDeleting}
-            disabled={isDeleting}
-          >
-            Eliminar
-          </Button>
-        </DialogActions>
-      </Dialog>
+        title="Eliminar producto"
+        message="¿Seguro que querés eliminar este producto?"
+        isDeleting={isDeleting}
+        onClose={() => setProductToDelete(null)}
+        onConfirm={() => void handleDelete()}
+      />
     </>
   );
 }
