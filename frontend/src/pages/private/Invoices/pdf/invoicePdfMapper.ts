@@ -6,6 +6,7 @@ import {
 } from "src/types/pocketbase-types";
 import { getRecordDisplayName, parseJsonValue, toNumber } from "src/utils/data";
 import { getInvoiceStateLabel } from "src/utils/invoiceState";
+import { buildMeasureUnitNameById } from "src/utils/measureUnits";
 import { InvoicePdfItem, InvoicePdfModel } from "./model";
 
 interface InvoiceProductRow {
@@ -42,9 +43,7 @@ const mapInvoiceItems = (
   products: ProductsResponse[],
   measureUnits: MeasureunitsResponse[],
 ) => {
-  const measureUnitById = new Map(
-    measureUnits.map((unit) => [unit.id, String(unit.name || "-")]),
-  );
+  const measureUnitById = buildMeasureUnitNameById(measureUnits);
   const productById = new Map(
     products.map((product) => [product.id, product] as const),
   );

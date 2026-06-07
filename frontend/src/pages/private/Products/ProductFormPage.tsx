@@ -17,6 +17,7 @@ import { resetBreadcrumbs, setBreadcrumbs, setSnackbar } from "src/slices/uiSlic
 import { Input } from "src/types";
 import { MeasureunitsResponse, ProductTypesResponse } from "src/types/pocketbase-types";
 import { FORM_MSG, FORM_VLDN } from "src/utils/FormUtils";
+import { getMeasureUnitDisplayName } from "src/utils/measureUnits";
 import {
   buildDeleteHeaderAction,
   buildNameInput,
@@ -176,7 +177,7 @@ export default function ProductFormPage() {
       loading: isMeasureUnitsFetching,
       startValue: selectedMeasureUnit || undefined,
       getOptionLabel: (option) =>
-        String((option as MeasureunitsResponse).name || ""),
+        getMeasureUnitDisplayName(option as MeasureunitsResponse),
     },
     {
       required: false,

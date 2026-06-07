@@ -16,6 +16,7 @@ import {
   InvoicesResponse,
 } from "src/types/pocketbase-types";
 import { formatDate, formatMoney, formatPercent } from "src/utils/format";
+import { buildMeasureUnitNameById } from "src/utils/measureUnits";
 import { useRouter } from "src/hooks";
 import { AppRoutes } from "src/config";
 import { useAppDispatch } from "src/app/store";
@@ -64,8 +65,7 @@ export default function Invoices() {
   );
 
   const measureUnitNameById = useMemo(
-    () =>
-      new Map(measureUnits.map((unit) => [unit.id, String(unit.name || "-")])),
+    () => buildMeasureUnitNameById(measureUnits),
     [measureUnits],
   );
 

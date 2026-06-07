@@ -61,6 +61,7 @@ import {
   setSnackbar,
 } from "src/slices/uiSlice";
 import { formatMoney, formatPercent } from "src/utils/format";
+import { buildMeasureUnitNameById } from "src/utils/measureUnits";
 import { invoiceBreadcrumbFlow } from "./breadcrumbFlow";
 import {
   buildInvoicePdfModel,
@@ -1207,8 +1208,7 @@ export default function InvoiceFormPage() {
   );
 
   const measureUnitById = useMemo(
-    () =>
-      new Map(measureUnits.map((unit) => [unit.id, String(unit.name || "-")])),
+    () => buildMeasureUnitNameById(measureUnits),
     [measureUnits],
   );
 

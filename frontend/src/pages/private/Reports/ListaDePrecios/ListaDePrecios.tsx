@@ -30,6 +30,7 @@ import { setSnackbar } from "src/slices/uiSlice";
 import { GetList } from "src/types";
 import { ProductsResponse } from "src/types/pocketbase-types";
 import { formatMoney } from "src/utils/format";
+import { buildMeasureUnitNameById } from "src/utils/measureUnits";
 import { openPriceListPdfInViewer, openPriceListPdfTab } from "../pdf";
 import { getProductTypeIds, roundPrice, toNumber } from "../reportUtils";
 
@@ -102,8 +103,7 @@ export default function ListaDePrecios() {
   const productTypes = productTypesList?.items || [];
 
   const measureUnitNameById = useMemo(
-    () =>
-      new Map(measureUnits.map((unit) => [unit.id, String(unit.name || "-")])),
+    () => buildMeasureUnitNameById(measureUnits),
     [measureUnits],
   );
 

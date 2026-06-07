@@ -16,6 +16,7 @@ import { useRouter } from "src/hooks";
 import { AppRoutes } from "src/config";
 import { ProductsResponse } from "src/types/pocketbase-types";
 import { formatMoney } from "src/utils/format";
+import { buildMeasureUnitNameById } from "src/utils/measureUnits";
 import { Column, DataGridRowAction, GetList } from "src/types";
 import { productsBreadcrumbFlow } from "./breadcrumbFlow";
 import { buildCrudRowActions } from "../crudListUtils";
@@ -73,8 +74,7 @@ export default function Products() {
   };
 
   const measureUnitById = useMemo(
-    () =>
-      new Map(measureUnits.map((item) => [item.id, String(item.name || "-")])),
+    () => buildMeasureUnitNameById(measureUnits),
     [measureUnits],
   );
   const productTypeNameById = useMemo(

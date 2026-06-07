@@ -30,6 +30,7 @@ import { useAppDispatch } from "src/app/store";
 import { TableLoadingSkeleton } from "src/components/common";
 import { setSnackbar } from "src/slices/uiSlice";
 import { formatDate } from "src/utils/format";
+import { buildMeasureUnitNameById } from "src/utils/measureUnits";
 import {
   formatPickerDate,
   formatQuantity,
@@ -86,8 +87,7 @@ export default function ListaDeRepartoPorDias() {
   const { data: measureUnits = [] } = useGetMeasureUnitsQuery();
 
   const measureUnitNameById = useMemo(
-    () =>
-      new Map(measureUnits.map((unit) => [unit.id, String(unit.name || "-")])),
+    () => buildMeasureUnitNameById(measureUnits),
     [measureUnits],
   );
   const productById = useMemo(
