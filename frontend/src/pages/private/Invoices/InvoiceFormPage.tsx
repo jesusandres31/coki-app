@@ -997,10 +997,20 @@ function InvoiceTotalsSummary({
         alignItems="baseline"
         spacing={1}
       >
-        <Typography variant="subtitle2" color="text.primary">
+        <Typography
+          variant="h6"
+          color="text.primary"
+          fontWeight={700}
+          sx={{ fontSize: "1.30rem" }}
+        >
           Total
         </Typography>
-        <Typography variant="h6" fontWeight={700} textAlign="left">
+        <Typography
+          variant="h6"
+          fontWeight={700}
+          textAlign="left"
+          sx={{ fontSize: "1.30rem" }}
+        >
           {formatMoney(total)}
         </Typography>
       </Stack>
@@ -1030,49 +1040,13 @@ function ClientBalanceSummary({
       spacing={1.5}
       sx={{
         width: "100%",
-        borderTop: "1px solid #E5E7EB",
+        borderTop: "1px solid #EEF0F3",
         pt: 1.5,
+        color: "text.secondary",
       }}
     >
-      <Stack spacing={1}>
-        {[
-          { label: "Saldo actual", value: formatMoney(currentBalance) },
-          { label: "Total factura", value: formatMoney(invoiceTotal) },
-          { label: "Pago aplicado", value: formatMoney(paidAmount) },
-        ].map((row) => (
-          <Stack
-            key={row.label}
-            direction="row"
-            justifyContent="space-between"
-            alignItems="center"
-            spacing={1}
-          >
-            <Typography variant="body2" color="text.secondary">
-              {row.label}
-            </Typography>
-            <Typography variant="body2" color="text.primary" fontWeight={600}>
-              {row.value}
-            </Typography>
-          </Stack>
-        ))}
-        <Divider />
-        <Stack
-          direction="row"
-          justifyContent="space-between"
-          alignItems="baseline"
-          spacing={1}
-        >
-          <Typography variant="subtitle2" color="text.primary">
-            Saldo resultante
-          </Typography>
-          <Typography variant="subtitle1" color="text.primary" fontWeight={700}>
-            {formatMoney(resultingBalance)}
-          </Typography>
-        </Stack>
-      </Stack>
-
       <FormControlLabel
-        sx={{ pl: 1 }}
+        sx={{}}
         control={
           <Checkbox
             size="small"
@@ -1083,11 +1057,11 @@ function ClientBalanceSummary({
             disabled={disabled || invoiceTotal <= 0}
           />
         }
-        label="Entrega algo"
+        label="Registrar pago"
       />
-
       {hasPayment && (
         <TextField
+          variant="standard"
           size="small"
           fullWidth
           label="Importe entregado"
@@ -1103,6 +1077,47 @@ function ClientBalanceSummary({
           disabled={disabled}
         />
       )}
+
+      <Stack spacing={1} sx={{ pt: 1.5 }}>
+        {[
+          { label: "Saldo actual", value: formatMoney(currentBalance) },
+          { label: "Total factura", value: formatMoney(invoiceTotal) },
+          { label: "Pago aplicado", value: formatMoney(paidAmount) },
+        ].map((row) => (
+          <Stack
+            key={row.label}
+            direction="row"
+            justifyContent="space-between"
+            alignItems="center"
+            spacing={1}
+          >
+            <Typography variant="body2" color="text.secondary">
+              {row.label}
+            </Typography>
+            <Typography variant="body2" color="text.secondary" fontWeight={500}>
+              {row.value}
+            </Typography>
+          </Stack>
+        ))}
+        <Divider />
+        <Stack
+          direction="row"
+          justifyContent="space-between"
+          alignItems="baseline"
+          spacing={1}
+        >
+          <Typography variant="subtitle2" color="text.secondary">
+            Saldo resultante
+          </Typography>
+          <Typography
+            variant="subtitle1"
+            color="text.secondary"
+            fontWeight={600}
+          >
+            {formatMoney(resultingBalance)}
+          </Typography>
+        </Stack>
+      </Stack>
     </Stack>
   );
 }
