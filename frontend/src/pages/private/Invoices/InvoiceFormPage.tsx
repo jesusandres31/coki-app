@@ -20,6 +20,7 @@ import {
   TableHead,
   TableRow,
   Autocomplete,
+  Checkbox,
   Dialog,
   DialogActions,
   DialogContent,
@@ -27,8 +28,6 @@ import {
   DialogTitle,
   FormControlLabel,
   InputAdornment,
-  Radio,
-  RadioGroup,
   Switch,
   TextField,
   Typography,
@@ -187,7 +186,7 @@ const productTableEditableFields: ProductTableEditableField[] = [
 ];
 
 const invoiceProductsActionColumnWidth = 56;
-const invoiceProductsTotalColumnWidth = 50;
+const invoiceProductsTotalColumnWidth = 112;
 
 const invoiceProductsTotalColumnSx = {
   width: invoiceProductsTotalColumnWidth,
@@ -204,14 +203,15 @@ const invoiceProductsActionColumnSx = {
   maxWidth: invoiceProductsActionColumnWidth,
   boxSizing: "border-box",
 };
-const productRowHelperTextMinHeight = 18;
+const productRowHelperTextMinHeight = 14;
 const productRowHelperTextSx = {
   minHeight: productRowHelperTextMinHeight,
   whiteSpace: "nowrap",
   overflow: "hidden",
   textOverflow: "ellipsis",
   lineHeight: `${productRowHelperTextMinHeight}px`,
-  mt: 0.25,
+  fontSize: "0.68rem",
+  mt: 0.125,
 };
 const productRowHelperTextProps = {
   sx: productRowHelperTextSx,
@@ -316,14 +316,15 @@ const validateInvoiceForm = (values: InvoiceFormValues) => {
 };
 
 const getPaymentPayload = (values: InvoiceFormValues, invoiceTotal: number) => {
-  if (values.paymentMode === "full") {
-    return { paidNow: true, paidAmount: invoiceTotal };
-  }
-
   if (values.paymentMode === "partial") {
+    const paidAmount = Math.min(
+      invoiceTotal,
+      Math.max(0, Number(values.partialPaymentAmount || 0)),
+    );
+
     return {
-      paidNow: false,
-      paidAmount: Math.max(0, Number(values.partialPaymentAmount || 0)),
+      paidNow: paidAmount >= invoiceTotal && invoiceTotal > 0,
+      paidAmount,
     };
   }
 
@@ -522,7 +523,7 @@ function ProductsTable({
   const previousRowsLengthRef = useRef(rows.length);
   const controlsDisabled = !editable || inputsDisabled;
   const bodyCellSx = {
-    py: 0.75,
+    py: 0.5,
     verticalAlign: "middle",
   };
   const editableBodyCellSx = {
@@ -541,6 +542,9 @@ function ProductsTable({
     display: "flex",
     alignItems: "center",
     justifyContent: "flex-end",
+    overflow: "hidden",
+    textOverflow: "ellipsis",
+    whiteSpace: "nowrap",
   };
   const rowActionButtonSx = {
     height: 32,
@@ -550,7 +554,7 @@ function ProductsTable({
   };
   const rowHelperSpacerSx = {
     minHeight: productRowHelperTextMinHeight,
-    mt: 0.25,
+    mt: 0.125,
   };
   const singleLineHelperTextProps = productRowHelperTextProps;
   const getFieldKey = (rowId: string, field: ProductTableEditableField) =>
@@ -702,14 +706,21 @@ function ProductsTable({
         borderRadius: 1,
       }}
     >
-      <Table size="small" stickyHeader sx={{ minWidth: editable ? 980 : 920 }}>
+      <Table
+        size="small"
+        stickyHeader
+        sx={{
+          minWidth: editable ? 860 : 800,
+          tableLayout: "fixed",
+        }}
+      >
         <TableHead>
           <TableRow>
-            <TableCell sx={{ width: "31%" }}>Producto</TableCell>
-            <TableCell sx={{ width: "8%" }}>Cantidad</TableCell>
-            <TableCell sx={{ width: "3%" }}>Unidad</TableCell>
-            <TableCell sx={{ width: "10%" }}>Precio unit.</TableCell>
-            <TableCell sx={{ width: "8%" }}>Descuento</TableCell>
+            <TableCell sx={{ width: "35%" }}>Producto</TableCell>
+            <TableCell sx={{ width: "10%" }}>Cantidad</TableCell>
+            <TableCell sx={{ width: "7%" }}>Unidad</TableCell>
+            <TableCell sx={{ width: "16%" }}>Precio unit.</TableCell>
+            <TableCell sx={{ width: "12%" }}>Descuento</TableCell>
             <TableCell
               align="right"
               sx={{
@@ -1008,12 +1019,11 @@ function ClientBalanceSummary({
 }: ClientBalanceSummaryProps) {
   const normalizedPartialPaymentAmount = Math.max(0, partialPaymentAmount);
   const paidAmount =
-    paymentMode === "full"
-      ? invoiceTotal
-      : paymentMode === "partial"
-        ? normalizedPartialPaymentAmount
-        : 0;
+    paymentMode === "partial"
+      ? Math.min(invoiceTotal, normalizedPartialPaymentAmount)
+      : 0;
   const resultingBalance = currentBalance + invoiceTotal - paidAmount;
+  const hasPayment = paymentMode === "partial";
 
   return (
     <Stack
@@ -1061,34 +1071,22 @@ function ClientBalanceSummary({
         </Stack>
       </Stack>
 
-      <RadioGroup
-        value={paymentMode}
-        onChange={(event) =>
-          onPaymentModeChange(event.target.value as InvoicePaymentMode)
+      <FormControlLabel
+        sx={{ pl: 1 }}
+        control={
+          <Checkbox
+            size="small"
+            checked={hasPayment}
+            onChange={(event) =>
+              onPaymentModeChange(event.target.checked ? "partial" : "none")
+            }
+            disabled={disabled || invoiceTotal <= 0}
+          />
         }
-        sx={{ gap: 0.25, pl: 1 }}
-      >
-        <FormControlLabel
-          value="none"
-          control={<Radio size="small" />}
-          label="No paga ahora"
-          disabled={disabled}
-        />
-        <FormControlLabel
-          value="full"
-          control={<Radio size="small" />}
-          label="Paga la totalidad"
-          disabled={disabled || invoiceTotal <= 0}
-        />
-        <FormControlLabel
-          value="partial"
-          control={<Radio size="small" />}
-          label="Entrega una parte"
-          disabled={disabled || invoiceTotal <= 0}
-        />
-      </RadioGroup>
+        label="Entrega algo"
+      />
 
-      {paymentMode === "partial" && (
+      {hasPayment && (
         <TextField
           size="small"
           fullWidth
@@ -2045,7 +2043,12 @@ export default function InvoiceFormPage() {
                   }
                   onPaymentModeChange={(mode) => {
                     activeFormik.setFieldValue("paymentMode", mode);
-                    if (mode !== "partial") {
+                    if (mode === "partial") {
+                      activeFormik.setFieldValue(
+                        "partialPaymentAmount",
+                        summaryTotal,
+                      );
+                    } else {
                       activeFormik.setFieldValue("partialPaymentAmount", 0);
                     }
                   }}
@@ -2249,7 +2252,12 @@ export default function InvoiceFormPage() {
                     }
                     onPaymentModeChange={(mode) => {
                       activeFormik.setFieldValue("paymentMode", mode);
-                      if (mode !== "partial") {
+                      if (mode === "partial") {
+                        activeFormik.setFieldValue(
+                          "partialPaymentAmount",
+                          summaryTotal,
+                        );
+                      } else {
                         activeFormik.setFieldValue("partialPaymentAmount", 0);
                       }
                     }}

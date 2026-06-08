@@ -38,18 +38,23 @@ export const pbSort = (
   orderBy: string | undefined,
 ) => (order && orderBy ? `${order === "asc" ? "+" : "-"}${orderBy}` : "");
 
+export const activeRecordFilter = `deleted = ""`;
+
+export const withActiveRecordFilter = (filter?: string) =>
+  filter ? `(${filter}) && ${activeRecordFilter}` : activeRecordFilter;
+
 export const pbFilter = (filter: string | undefined, props: string[]) => {
-  if (!filter) return `deleted = ""`;
+  if (!filter) return activeRecordFilter;
   const safeFilter = filter
     .replace(/\\/g, "\\\\")
     .replace(/"/g, '\\"')
     .trim();
 
-  if (!safeFilter) return `deleted = ""`;
+  if (!safeFilter) return activeRecordFilter;
 
-  return `(${props
-    .map((prop) => `${prop} ~ "${safeFilter}"`)
-    .join(" || ")}) && deleted = ""`;
+  return withActiveRecordFilter(
+    props.map((prop) => `${prop} ~ "${safeFilter}"`).join(" || "),
+  );
 };
 
 // flags
