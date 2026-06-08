@@ -677,8 +677,6 @@ function ProductsTable({
       return;
     }
 
-    if (document.activeElement !== addProductButtonRef?.current) return;
-
     requestAnimationFrame(() => {
       focusField(rows.length - 1, 0);
       requestAnimationFrame(() => {
@@ -686,7 +684,7 @@ function ProductsTable({
         window.setTimeout(() => focusField(rows.length - 1, 0), 0);
       });
     });
-  }, [addProductButtonRef, editable, inputsDisabled, rows.length]);
+  }, [editable, inputsDisabled, rows.length]);
 
   return (
     <TableContainer
