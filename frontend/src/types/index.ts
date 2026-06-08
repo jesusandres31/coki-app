@@ -82,6 +82,7 @@ export interface Input {
   InputProps?: {
     inputComponent: React.ComponentType<any>;
     startAdornment?: JSX.Element;
+    endAdornment?: JSX.Element;
   };
   options?: DataItem[];
   fetchItemsFunc?: FetchItemsFunc;

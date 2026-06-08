@@ -3,6 +3,7 @@ import {
   Box,
   Card,
   Container,
+  CircularProgress,
   Divider,
   FormControlLabel,
   Stack,
@@ -155,7 +156,16 @@ export default function GeneralSettings() {
                   />
                 }
                 label={
-                  Boolean(appConfig.retrieve_last_price) ? "Activo" : "Inactivo"
+                  <Stack direction="row" spacing={1} alignItems="center">
+                    <Box component="span">
+                      {Boolean(appConfig.retrieve_last_price)
+                        ? "Activo"
+                        : "Inactivo"}
+                    </Box>
+                    {isUpdating ? (
+                      <CircularProgress color="inherit" size={16} />
+                    ) : null}
+                  </Stack>
                 }
                 labelPlacement="start"
                 sx={{ m: 0 }}

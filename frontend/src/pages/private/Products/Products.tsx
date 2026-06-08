@@ -42,14 +42,18 @@ export default function Products() {
   const { data, error, isFetching } = useGetProductsListQuery(queryArgs);
   const [deleteProduct, { isLoading: isDeleting }] =
     useDeleteProductMutation();
-  const { data: measureUnits = [] } = useGetMeasureUnitsQuery();
-  const { data: productTypesList } = useGetProductTypesListQuery({
-    page: 1,
-    perPage: 500,
-    order: "asc",
-    orderBy: "name",
-  });
+  const { data: measureUnits = [], isFetching: isFetchingMeasureUnits } =
+    useGetMeasureUnitsQuery();
+  const { data: productTypesList, isFetching: isFetchingProductTypes } =
+    useGetProductTypesListQuery({
+      page: 1,
+      perPage: 500,
+      order: "asc",
+      orderBy: "name",
+    });
   const productTypes = productTypesList?.items || [];
+  const isLoadingProductGridData =
+    isFetching || isFetchingMeasureUnits || isFetchingProductTypes;
 
   const handleDelete = async () => {
     if (!productToDelete) return;
@@ -142,7 +146,7 @@ export default function Products() {
       <DataGrid
         data={data}
         error={error}
-        isFetching={isFetching}
+        isFetching={isLoadingProductGridData}
         columns={columns}
         hasSearch
         searchPlaceholder="Buscar producto"

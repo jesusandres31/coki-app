@@ -54,9 +54,17 @@ export default function Invoices() {
   }, [dispatch]);
 
   const { data, error, isFetching } = useGetInvoicesListQuery(queryArgs);
-  const { data: clients = [] } = useGetClientsQuery();
-  const { data: products = [] } = useGetProductsQuery();
-  const { data: measureUnits = [] } = useGetMeasureUnitsQuery();
+  const { data: clients = [], isFetching: isFetchingClients } =
+    useGetClientsQuery();
+  const { data: products = [], isFetching: isFetchingProducts } =
+    useGetProductsQuery();
+  const { data: measureUnits = [], isFetching: isFetchingMeasureUnits } =
+    useGetMeasureUnitsQuery();
+  const isLoadingInvoiceGridData =
+    isFetching ||
+    isFetchingClients ||
+    isFetchingProducts ||
+    isFetchingMeasureUnits;
 
   const clientNameById = useMemo(
     () =>
@@ -252,7 +260,7 @@ export default function Invoices() {
     <DataGrid
       data={invoicesData}
       error={error}
-      isFetching={isFetching}
+      isFetching={isLoadingInvoiceGridData}
       columns={columns}
       detailColumns={detailColumns}
       // hasCheckbox

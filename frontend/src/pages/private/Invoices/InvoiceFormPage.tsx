@@ -50,6 +50,7 @@ import {
 } from "src/app/services/invoiceService";
 import { ErrorMsg, Loading } from "src/components/common";
 import EntityFormContainer from "src/components/common/Forms/EntityFormContainer";
+import { withLoadingInputProps } from "src/components/common/Inputs/loadingInputProps";
 import PageContainer from "src/components/common/PageContainer/PageContainer";
 import { SEARCH } from "src/constants";
 import { AppRoutes } from "src/config";
@@ -110,6 +111,7 @@ interface DebouncedAutocompleteProps {
   helperText?: string;
   helperTextNoWrap?: boolean;
   prioritizeStartsWith?: boolean;
+  loading?: boolean;
 }
 
 interface ProductTableRowData {
@@ -130,7 +132,9 @@ interface ProductsTableProps {
   inputsDisabled?: boolean;
   rowErrors?: InvoiceProductRowErrors[];
   productOptions: NamedOption[];
+  productsLoading?: boolean;
   showCatalogPriceHint?: boolean;
+  priceLoadingRowIds?: Set<string>;
   addProductButtonRef?: RefObject<HTMLButtonElement>;
   onRowChange?: (
     id: string,
@@ -432,6 +436,7 @@ function DebouncedAutocomplete({
   helperText,
   helperTextNoWrap = false,
   prioritizeStartsWith = false,
+  loading = false,
 }: DebouncedAutocompleteProps) {
   const [inputValue, setInputValue] = useState("");
   const [debouncedInputValue, setDebouncedInputValue] = useState("");
@@ -486,6 +491,8 @@ function DebouncedAutocomplete({
       getOptionKey={(option) => option.id}
       onInputChange={(_event, value) => setInputValue(value)}
       onChange={(_event, value) => onChange(value?.id || "")}
+      loading={loading}
+      loadingText="Cargando..."
       noOptionsText="Sin resultados"
       renderInput={(params) => (
         <TextField
@@ -501,6 +508,7 @@ function DebouncedAutocomplete({
           FormHelperTextProps={
             helperTextNoWrap ? productRowHelperTextProps : undefined
           }
+          InputProps={withLoadingInputProps(params.InputProps, loading)}
         />
       )}
     />
@@ -513,7 +521,9 @@ function ProductsTable({
   inputsDisabled = false,
   rowErrors = [],
   productOptions,
+  productsLoading = false,
   showCatalogPriceHint = false,
+  priceLoadingRowIds = new Set<string>(),
   addProductButtonRef,
   onRowChange,
   onRemoveRow,
@@ -745,6 +755,7 @@ function ProductsTable({
         <TableBody>
           {rows.map((row, rowIndex) => {
             const rowError = rowErrors[rowIndex] || {};
+            const isPriceLoading = priceLoadingRowIds.has(row.id);
 
             return (
               <TableRow key={row.id}>
@@ -757,6 +768,7 @@ function ProductsTable({
                       prioritizeStartsWith
                       variant="standard"
                       disabled={inputsDisabled}
+                      loading={productsLoading}
                       inputRef={setFieldRef(row.id, "product")}
                       onKeyDown={handleFieldKeyDown(rowIndex, "product")}
                       error={Boolean(rowError.product)}
@@ -837,9 +849,13 @@ function ProductsTable({
                         )
                       }
                       inputProps={{ min: 0, step: "0.01" }}
+                      InputProps={withLoadingInputProps(
+                        undefined,
+                        isPriceLoading,
+                      )}
                       inputRef={setFieldRef(row.id, "unitPrice")}
                       onKeyDown={handleFieldKeyDown(rowIndex, "unitPrice")}
-                      disabled={controlsDisabled}
+                      disabled={controlsDisabled || isPriceLoading}
                       error={Boolean(rowError.unitPrice)}
                       helperText={
                         rowError.unitPrice ||
@@ -1168,14 +1184,15 @@ export default function InvoiceFormPage() {
     };
   }, [dispatch]);
 
-  const { data: clients = [] } = useGetClientsQuery(undefined, {
-    skip: !isNewMode && !isEditMode,
-  });
+  const { data: clients = [], isFetching: isClientsFetching } =
+    useGetClientsQuery(undefined, {
+      skip: !isNewMode && !isEditMode,
+    });
   const { data: appConfig } = useGetConfigQuery();
   const { data: measureUnits = [] } = useGetMeasureUnitsQuery(undefined, {
     skip: !isNewMode && !isDetailRoute,
   });
-  const { data: products = [], isLoading: isProductsLoading } =
+  const { data: products = [], isFetching: isProductsFetching } =
     useGetProductsQuery(undefined, { skip: !isNewMode && !isDetailRoute });
   const {
     data: invoice,
@@ -1190,6 +1207,12 @@ export default function InvoiceFormPage() {
   const [deleteInvoice, { isLoading: isDeleting }] = useDeleteInvoiceMutation();
   const [triggerGetLastProductPriceForClient] =
     useLazyGetLastProductPriceForClientQuery();
+  const [priceLoadingRowIds, setPriceLoadingRowIds] = useState<Set<string>>(
+    () => new Set(),
+  );
+  const priceRequestKeyByRowIdRef = useRef(new Map<string, number>());
+  const priceRequestSeqRef = useRef(0);
+  const latestRowsRef = useRef<InvoiceProductInput[]>([]);
 
   useEffect(() => {
     if (!isNewMode && !isEditMode) return;
@@ -1591,6 +1614,11 @@ export default function InvoiceFormPage() {
 
   const activeFormik = isNewMode ? newFormik : editFormik;
   const isEditable = isNewMode || isEditMode;
+
+  useEffect(() => {
+    latestRowsRef.current = activeFormik.values.rows;
+  }, [activeFormik.values.rows]);
+
   const activeErrors = activeFormik.errors;
   const clientError =
     isEditable && typeof activeErrors.client === "string"
@@ -1717,36 +1745,71 @@ export default function InvoiceFormPage() {
     if (field === "product") {
       const productId = String(value);
       const selected = productById.get(productId);
-      let unitPrice = selected ? selected.unitPrice : 0;
-
-      if (retrieveLastPriceEnabled && selectedInvoiceClientId && productId) {
-        try {
-          const lastPrice = await triggerGetLastProductPriceForClient({
-            clientId: selectedInvoiceClientId,
-            productId,
-            excludeInvoiceId: invoiceId,
-          }).unwrap();
-
-          if (lastPrice) {
-            unitPrice = Math.max(0, Number(lastPrice.unitPrice || 0));
-          }
-        } catch {
-          unitPrice = selected ? selected.unitPrice : 0;
-        }
-      }
+      const fallbackUnitPrice = selected ? selected.unitPrice : 0;
+      const shouldRetrieveLastPrice = Boolean(
+        retrieveLastPriceEnabled && selectedInvoiceClientId && productId,
+      );
+      const requestKey = priceRequestSeqRef.current + 1;
+      priceRequestSeqRef.current = requestKey;
 
       activeFormik.setFieldValue(
         "rows",
-        activeFormik.values.rows.map((row) =>
+        latestRowsRef.current.map((row) =>
           row.id === id
             ? {
                 ...row,
                 product: productId,
-                unitPrice,
+                unitPrice: fallbackUnitPrice,
               }
             : row,
         ),
       );
+
+      if (!shouldRetrieveLastPrice) return;
+
+      priceRequestKeyByRowIdRef.current.set(id, requestKey);
+      setPriceLoadingRowIds((current) => new Set(current).add(id));
+
+      try {
+        const lastPrice = await triggerGetLastProductPriceForClient({
+          clientId: selectedInvoiceClientId,
+          productId,
+          excludeInvoiceId: invoiceId,
+        }).unwrap();
+
+        if (
+          priceRequestKeyByRowIdRef.current.get(id) !== requestKey ||
+          latestRowsRef.current.find((row) => row.id === id)?.product !==
+            productId
+        ) {
+          return;
+        }
+
+        if (lastPrice) {
+          activeFormik.setFieldValue(
+            "rows",
+            latestRowsRef.current.map((row) =>
+              row.id === id
+                ? {
+                    ...row,
+                    unitPrice: Math.max(0, Number(lastPrice.unitPrice || 0)),
+                  }
+                : row,
+            ),
+          );
+        }
+      } catch {
+        // Keep the catalog price already shown while RTK middleware reports errors.
+      } finally {
+        if (priceRequestKeyByRowIdRef.current.get(id) === requestKey) {
+          priceRequestKeyByRowIdRef.current.delete(id);
+          setPriceLoadingRowIds((current) => {
+            const next = new Set(current);
+            next.delete(id);
+            return next;
+          });
+        }
+      }
       return;
     }
 
@@ -1940,6 +2003,7 @@ export default function InvoiceFormPage() {
                   valueId={activeFormik.values.client}
                   label="Cliente"
                   placeholder="Seleccionar cliente"
+                  loading={isClientsFetching}
                   error={Boolean(clientError)}
                   helperText={clientError}
                   onChange={(value) =>
@@ -1992,7 +2056,7 @@ export default function InvoiceFormPage() {
                   color="primary"
                   startIcon={<AddRounded />}
                   onClick={canAddProductRow ? handleAddRow : undefined}
-                  disabled={!canAddProductRow || isProductsLoading}
+                  disabled={!canAddProductRow || isProductsFetching}
                   tabIndex={canAddProductRow ? 0 : -1}
                   aria-hidden={!isEditable}
                   sx={{
@@ -2021,7 +2085,9 @@ export default function InvoiceFormPage() {
                   rowErrors={canEditProducts ? productRowErrors : []}
                   addProductButtonRef={mobileAddProductButtonRef}
                   productOptions={productOptions}
+                  productsLoading={isProductsFetching}
                   showCatalogPriceHint={retrieveLastPriceEnabled}
+                  priceLoadingRowIds={priceLoadingRowIds}
                   onRowChange={handleRowChange}
                   onRemoveRow={handleRemoveRow}
                   canRemoveRow={() => activeFormik.values.rows.length > 1}
@@ -2125,6 +2191,7 @@ export default function InvoiceFormPage() {
                       valueId={activeFormik.values.client}
                       label="Cliente"
                       placeholder="Seleccionar cliente"
+                      loading={isClientsFetching}
                       error={Boolean(clientError)}
                       helperText={clientError}
                       onChange={(value) =>
@@ -2189,7 +2256,7 @@ export default function InvoiceFormPage() {
                   color="primary"
                   startIcon={<AddRounded />}
                   onClick={canAddProductRow ? handleAddRow : undefined}
-                  disabled={!canAddProductRow || isProductsLoading}
+                  disabled={!canAddProductRow || isProductsFetching}
                   tabIndex={canAddProductRow ? 0 : -1}
                   aria-hidden={!isEditable}
                   sx={{
@@ -2208,7 +2275,9 @@ export default function InvoiceFormPage() {
                 rowErrors={canEditProducts ? productRowErrors : []}
                 addProductButtonRef={desktopAddProductButtonRef}
                 productOptions={productOptions}
+                productsLoading={isProductsFetching}
                 showCatalogPriceHint={retrieveLastPriceEnabled}
+                priceLoadingRowIds={priceLoadingRowIds}
                 onRowChange={handleRowChange}
                 onRemoveRow={handleRemoveRow}
                 canRemoveRow={() => activeFormik.values.rows.length > 1}

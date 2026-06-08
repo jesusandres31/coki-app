@@ -24,6 +24,8 @@ import {
   useGetProductTypesListQuery,
   useGetProductsQuery,
 } from "src/app/services/invoiceService";
+import { TableLoadingSkeleton } from "src/components/common";
+import { withLoadingInputProps } from "src/components/common/Inputs/loadingInputProps";
 import { useAppDispatch } from "src/app/store";
 import { getListArgsInitialState } from "src/constants";
 import { setSnackbar } from "src/slices/uiSlice";
@@ -81,8 +83,10 @@ export default function ListaDePrecios() {
   >(null);
   const [editingPriceDraft, setEditingPriceDraft] = useState("");
 
-  const { data: products = [] } = useGetProductsQuery();
-  const { data: measureUnits = [] } = useGetMeasureUnitsQuery();
+  const { data: products = [], isFetching: isFetchingProducts } =
+    useGetProductsQuery();
+  const { data: measureUnits = [], isFetching: isFetchingMeasureUnits } =
+    useGetMeasureUnitsQuery();
 
   const productTypesQueryArgs = useMemo<GetList>(
     () => ({
@@ -101,6 +105,8 @@ export default function ListaDePrecios() {
     isFetching: isFetchingPriceListTypes,
   } = useGetProductTypesListQuery(productTypesQueryArgs);
   const productTypes = productTypesList?.items || [];
+  const isLoadingPriceListData =
+    isFetchingProducts || isFetchingMeasureUnits || isFetchingPriceListTypes;
 
   const measureUnitNameById = useMemo(
     () => buildMeasureUnitNameById(measureUnits),
@@ -436,7 +442,11 @@ export default function ListaDePrecios() {
             onClick={() => void handlePrintPriceList()}
             loading={isPrintingPriceList}
             loadingPosition="start"
-            disabled={priceListRows.length === 0 || isPrintingPriceList}
+            disabled={
+              priceListRows.length === 0 ||
+              isPrintingPriceList ||
+              isLoadingPriceListData
+            }
           >
             Imprimir lista
           </Button>
@@ -456,6 +466,7 @@ export default function ListaDePrecios() {
                   setIncludeAllPriceListProducts(event.target.checked)
                 }
                 size="small"
+                disabled={isLoadingPriceListData}
               />
             }
             label="Incluir todos los productos"
@@ -468,9 +479,10 @@ export default function ListaDePrecios() {
             startIcon={<RestartAltRounded />}
             onClick={handleResetPriceListFilters}
             disabled={
-              includeAllPriceListProducts &&
-              selectedPriceListTypeIds.length === 0 &&
-              selectedPriceListProductIds.length === 0
+              isLoadingPriceListData ||
+              (includeAllPriceListProducts &&
+                selectedPriceListTypeIds.length === 0 &&
+                selectedPriceListProductIds.length === 0)
             }
           >
             Restablecer filtros
@@ -484,6 +496,7 @@ export default function ListaDePrecios() {
             size="small"
             options={productTypeOptions}
             value={selectedPriceTypeOptions}
+            disabled={isLoadingPriceListData}
             onChange={(_event, value) => {
               setSelectedPriceListTypeIds(value.map((item) => item.id));
               if (value.length > 0) {
@@ -500,6 +513,10 @@ export default function ListaDePrecios() {
                 {...params}
                 label="Filtrar por tipos de producto"
                 placeholder="Seleccionar tipos"
+                InputProps={withLoadingInputProps(
+                  params.InputProps,
+                  isFetchingPriceListTypes,
+                )}
               />
             )}
           />
@@ -509,6 +526,7 @@ export default function ListaDePrecios() {
             size="small"
             options={productOptions}
             value={selectedPriceProductOptions}
+            disabled={isLoadingPriceListData}
             renderTags={(value, getTagProps) => {
               const visibleItems = value.slice(0, 2);
               const hiddenCount = value.length - visibleItems.length;
@@ -542,12 +560,17 @@ export default function ListaDePrecios() {
             isOptionEqualToValue={(option, value) => option.id === value.id}
             getOptionLabel={(option) => option.name}
             getOptionKey={(option) => option.id}
+            loading={isFetchingProducts}
             noOptionsText="Sin productos disponibles"
             renderInput={(params) => (
               <TextField
                 {...params}
                 label="Agregar productos manuales"
                 placeholder="Seleccionar productos"
+                InputProps={withLoadingInputProps(
+                  params.InputProps,
+                  isFetchingProducts,
+                )}
               />
             )}
           />
@@ -595,7 +618,7 @@ export default function ListaDePrecios() {
               variant="outlined"
               color="inherit"
               onClick={() => setIsPercentEditorOpen(true)}
-              disabled={priceListRows.length === 0}
+              disabled={priceListRows.length === 0 || isLoadingPriceListData}
             >
               Modificar precio por porcentaje
             </Button>
@@ -663,158 +686,169 @@ export default function ListaDePrecios() {
             </Alert>
           )}
 
-        <TableContainer
-          sx={{
-            border: "1px solid",
-            borderColor: "divider",
-            borderRadius: 1,
-            flex: 1,
-            minHeight: { xs: 220, sm: 240, md: 280 },
-            maxHeight: { xs: 340, md: "none" },
-            overflowY: "auto",
-            overflowX: "auto",
-          }}
-        >
-          <Table size="small" stickyHeader sx={{ minWidth: 760 }}>
-            <TableHead>
-              <TableRow>
-                <TableCell>Producto</TableCell>
-                <TableCell>Tipo</TableCell>
-                <TableCell>Unidad</TableCell>
-                <TableCell
-                  align="right"
-                  sx={{
-                    ...priceColumnSx,
-                    zIndex: 3,
-                    backgroundColor: "#F8FAFC",
-                  }}
-                >
-                  Precio
-                </TableCell>
-              </TableRow>
-            </TableHead>
-            <TableBody>
-              {priceListRows.length > 0 ? (
-                priceListRows.map((row) => (
-                  <TableRow key={row.id}>
-                    <TableCell>{row.productName}</TableCell>
-                    <TableCell>{row.productTypesText}</TableCell>
-                    <TableCell>{row.measureUnitName}</TableCell>
-                    <TableCell
-                      align="right"
-                      role={
-                        editingPriceProductId === row.id ? undefined : "button"
-                      }
-                      tabIndex={editingPriceProductId === row.id ? -1 : 0}
-                      onClick={
-                        editingPriceProductId === row.id
-                          ? undefined
-                          : () => handleOpenPriceEditor(row)
-                      }
-                      onKeyDown={
-                        editingPriceProductId === row.id
-                          ? undefined
-                          : (event) => {
-                              if (event.key === "Enter" || event.key === " ") {
-                                event.preventDefault();
-                                handleOpenPriceEditor(row);
-                              }
-                            }
-                      }
-                      title={
-                        editingPriceProductId === row.id
-                          ? undefined
-                          : "Click para editar el precio en esta sesión"
-                      }
-                      sx={{
-                        ...priceColumnSx,
-                        py: 0.75,
-                        zIndex: 1,
-                        backgroundColor: "action.hover",
-                        cursor:
-                          editingPriceProductId === row.id ? "text" : "pointer",
-                        transition: "background-color 120ms ease",
-                        "&:hover": {
-                          backgroundColor:
-                            editingPriceProductId === row.id
-                              ? "action.hover"
-                              : "action.selected",
-                        },
-                        "&:focus-visible": {
-                          outline: "2px solid",
-                          outlineColor: "primary.main",
-                          outlineOffset: "-2px",
-                        },
-                      }}
-                    >
-                      <Box
-                        sx={{
-                          width: 120,
-                          minWidth: 120,
-                          maxWidth: 120,
-                          height: 24,
-                          ml: "auto",
-                          display: "flex",
-                          alignItems: "center",
-                          justifyContent: "flex-end",
-                        }}
-                      >
-                        {editingPriceProductId === row.id ? (
-                          <TextField
-                            autoFocus
-                            size="small"
-                            type="number"
-                            variant="standard"
-                            value={editingPriceDraft}
-                            onChange={(event) =>
-                              setEditingPriceDraft(event.target.value)
-                            }
-                            onBlur={() => handleCommitPriceEditor(row.id)}
-                            onKeyDown={(event) => {
-                              if (event.key === "Enter") {
-                                event.preventDefault();
-                                handleCommitPriceEditor(row.id);
-                              }
-                              if (event.key === "Escape") {
-                                event.preventDefault();
-                                handleClosePriceEditor();
-                              }
-                            }}
-                            inputProps={{ min: 0, step: "0.01" }}
-                            sx={{
-                              width: "100%",
-                              "& .MuiInputBase-root": {
-                                height: 24,
-                              },
-                              "& .MuiInputBase-input": {
-                                py: 0,
-                                textAlign: "right",
-                              },
-                            }}
-                          />
-                        ) : (
-                          <Typography
-                            variant="body2"
-                            fontWeight={row.hasManualPrice ? 700 : 500}
-                            sx={{ width: "100%", textAlign: "right" }}
-                          >
-                            {formatMoney(row.unitPrice)}
-                          </Typography>
-                        )}
-                      </Box>
-                    </TableCell>
-                  </TableRow>
-                ))
-              ) : (
+        {isLoadingPriceListData ? (
+          <TableLoadingSkeleton columns={4} rows={7} />
+        ) : (
+          <TableContainer
+            sx={{
+              border: "1px solid",
+              borderColor: "divider",
+              borderRadius: 1,
+              flex: 1,
+              minHeight: { xs: 220, sm: 240, md: 280 },
+              maxHeight: { xs: 340, md: "none" },
+              overflowY: "auto",
+              overflowX: "auto",
+            }}
+          >
+            <Table size="small" stickyHeader sx={{ minWidth: 760 }}>
+              <TableHead>
                 <TableRow>
-                  <TableCell colSpan={4} align="center">
-                    No hay productos para los filtros seleccionados.
+                  <TableCell>Producto</TableCell>
+                  <TableCell>Tipo</TableCell>
+                  <TableCell>Unidad</TableCell>
+                  <TableCell
+                    align="right"
+                    sx={{
+                      ...priceColumnSx,
+                      zIndex: 3,
+                      backgroundColor: "#F8FAFC",
+                    }}
+                  >
+                    Precio
                   </TableCell>
                 </TableRow>
-              )}
-            </TableBody>
-          </Table>
-        </TableContainer>
+              </TableHead>
+              <TableBody>
+                {priceListRows.length > 0 ? (
+                  priceListRows.map((row) => (
+                    <TableRow key={row.id}>
+                      <TableCell>{row.productName}</TableCell>
+                      <TableCell>{row.productTypesText}</TableCell>
+                      <TableCell>{row.measureUnitName}</TableCell>
+                      <TableCell
+                        align="right"
+                        role={
+                          editingPriceProductId === row.id
+                            ? undefined
+                            : "button"
+                        }
+                        tabIndex={editingPriceProductId === row.id ? -1 : 0}
+                        onClick={
+                          editingPriceProductId === row.id
+                            ? undefined
+                            : () => handleOpenPriceEditor(row)
+                        }
+                        onKeyDown={
+                          editingPriceProductId === row.id
+                            ? undefined
+                            : (event) => {
+                                if (
+                                  event.key === "Enter" ||
+                                  event.key === " "
+                                ) {
+                                  event.preventDefault();
+                                  handleOpenPriceEditor(row);
+                                }
+                              }
+                        }
+                        title={
+                          editingPriceProductId === row.id
+                            ? undefined
+                            : "Click para editar el precio en esta sesión"
+                        }
+                        sx={{
+                          ...priceColumnSx,
+                          py: 0.75,
+                          zIndex: 1,
+                          backgroundColor: "action.hover",
+                          cursor:
+                            editingPriceProductId === row.id
+                              ? "text"
+                              : "pointer",
+                          transition: "background-color 120ms ease",
+                          "&:hover": {
+                            backgroundColor:
+                              editingPriceProductId === row.id
+                                ? "action.hover"
+                                : "action.selected",
+                          },
+                          "&:focus-visible": {
+                            outline: "2px solid",
+                            outlineColor: "primary.main",
+                            outlineOffset: "-2px",
+                          },
+                        }}
+                      >
+                        <Box
+                          sx={{
+                            width: 120,
+                            minWidth: 120,
+                            maxWidth: 120,
+                            height: 24,
+                            ml: "auto",
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "flex-end",
+                          }}
+                        >
+                          {editingPriceProductId === row.id ? (
+                            <TextField
+                              autoFocus
+                              size="small"
+                              type="number"
+                              variant="standard"
+                              value={editingPriceDraft}
+                              onChange={(event) =>
+                                setEditingPriceDraft(event.target.value)
+                              }
+                              onBlur={() => handleCommitPriceEditor(row.id)}
+                              onKeyDown={(event) => {
+                                if (event.key === "Enter") {
+                                  event.preventDefault();
+                                  handleCommitPriceEditor(row.id);
+                                }
+                                if (event.key === "Escape") {
+                                  event.preventDefault();
+                                  handleClosePriceEditor();
+                                }
+                              }}
+                              inputProps={{ min: 0, step: "0.01" }}
+                              sx={{
+                                width: "100%",
+                                "& .MuiInputBase-root": {
+                                  height: 24,
+                                },
+                                "& .MuiInputBase-input": {
+                                  py: 0,
+                                  textAlign: "right",
+                                },
+                              }}
+                            />
+                          ) : (
+                            <Typography
+                              variant="body2"
+                              fontWeight={row.hasManualPrice ? 700 : 500}
+                              sx={{ width: "100%", textAlign: "right" }}
+                            >
+                              {formatMoney(row.unitPrice)}
+                            </Typography>
+                          )}
+                        </Box>
+                      </TableCell>
+                    </TableRow>
+                  ))
+                ) : (
+                  <TableRow>
+                    <TableCell colSpan={4} align="center">
+                      No hay productos para los filtros seleccionados.
+                    </TableCell>
+                  </TableRow>
+                )}
+              </TableBody>
+            </Table>
+          </TableContainer>
+        )}
 
         <Stack
           direction={{ xs: "column", sm: "row" }}

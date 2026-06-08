@@ -1,13 +1,13 @@
 import {
   AutocompleteInputChangeReason,
   AutocompleteRenderInputParams,
-  CircularProgress,
   SxProps,
   TextField,
   TextFieldVariants,
   Theme,
   debounce,
 } from "@mui/material";
+import { withLoadingInputProps } from "src/components/common/Inputs/loadingInputProps";
 import { Key, useCallback, useEffect, useState } from "react";
 import { STYLE } from "src/constants";
 import { uiInitialState } from "src/slices/uiSlice";
@@ -70,17 +70,7 @@ export const renderAutocompleteInput = ({
     size="small"
     variant={variant}
     disabled={input.disabled}
-    InputProps={{
-      ...params.InputProps,
-      endAdornment: (
-        <>
-          {loading ? (
-            <CircularProgress size={20} sx={{ color: "common.black" }} />
-          ) : null}
-          {params.InputProps.endAdornment}
-        </>
-      ),
-    }}
+    InputProps={withLoadingInputProps(params.InputProps, loading)}
   />
 );
 

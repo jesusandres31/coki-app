@@ -24,6 +24,7 @@ import { Input } from "src/types";
 import { handleSetFormikValue } from "src/utils/FormUtils";
 import CustomAutocomplete from "src/components/common/Modals/Inputs/CustomAutocomplete";
 import CustomMultipleAutocomplete from "src/components/common/Modals/Inputs/CustomMultipleAutocomplete";
+import { withLoadingInputProps } from "src/components/common/Inputs/loadingInputProps";
 import PageContainer from "src/components/common/PageContainer/PageContainer";
 
 type EntityPageMode = "new" | "review" | "edit";
@@ -232,7 +233,10 @@ export default function EntityFormContainer({
                               max: effectiveInput.max,
                               min: effectiveInput.min,
                             }}
-                            InputProps={effectiveInput.InputProps}
+                            InputProps={withLoadingInputProps(
+                              effectiveInput.InputProps,
+                              effectiveInput.loading,
+                            )}
                             disabled={effectiveInput.disabled}
                           />
                         )}

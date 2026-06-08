@@ -13,6 +13,7 @@ import { Input } from "src/types";
 import { handleSetFormikValue } from "src/utils/FormUtils";
 import { FormikProps } from "formik";
 import CustomAutocomplete from "./Inputs/CustomAutocomplete";
+import { withLoadingInputProps } from "src/components/common/Inputs/loadingInputProps";
 
 interface CreateOrUpdateModalProps {
   open: boolean;
@@ -101,7 +102,10 @@ export default function CreateOrUpdateModal({
                       max: input.max,
                       min: input.min,
                     }}
-                    InputProps={input.InputProps}
+                    InputProps={withLoadingInputProps(
+                      input.InputProps,
+                      input.loading,
+                    )}
                     disabled={input.disabled}
                   />
                 )}

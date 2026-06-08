@@ -83,8 +83,12 @@ export default function ListaDeRepartoPorDias() {
     skip: !deliveryDateRange,
   });
 
-  const { data: products = [] } = useGetProductsQuery();
-  const { data: measureUnits = [] } = useGetMeasureUnitsQuery();
+  const { data: products = [], isFetching: isFetchingProducts } =
+    useGetProductsQuery();
+  const { data: measureUnits = [], isFetching: isFetchingMeasureUnits } =
+    useGetMeasureUnitsQuery();
+  const isLoadingDeliveryData =
+    isFetchingDelivery || isFetchingProducts || isFetchingMeasureUnits;
 
   const measureUnitNameById = useMemo(
     () => buildMeasureUnitNameById(measureUnits),
@@ -312,7 +316,11 @@ export default function ListaDeRepartoPorDias() {
             onClick={() => void handlePrintDeliveryList()}
             loading={isPrintingDelivery}
             loadingPosition="start"
-            disabled={deliveryProducts.length === 0 || isPrintingDelivery}
+            disabled={
+              deliveryProducts.length === 0 ||
+              isPrintingDelivery ||
+              isLoadingDeliveryData
+            }
           >
             Imprimir lista
           </Button>
@@ -380,7 +388,7 @@ export default function ListaDeRepartoPorDias() {
           </Alert>
         )}
 
-        {isFetchingDelivery ? (
+        {isLoadingDeliveryData ? (
           <TableLoadingSkeleton columns={3} rows={7} />
         ) : (
           <TableContainer

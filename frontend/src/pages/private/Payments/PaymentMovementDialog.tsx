@@ -20,6 +20,7 @@ import {
   useGetClientsQuery,
   useGetPaymentAccountMovementTypesQuery,
 } from "src/app/services/invoiceService";
+import { withLoadingInputProps } from "src/components/common/Inputs/loadingInputProps";
 import { useAppDispatch } from "src/app/store";
 import { setSnackbar } from "src/slices/uiSlice";
 import { ClientsResponse } from "src/types/pocketbase-types";
@@ -64,10 +65,14 @@ export default function PaymentMovementDialog({
   allowClientSelect = false,
 }: PaymentMovementDialogProps) {
   const dispatch = useAppDispatch();
-  const { data: clients = [] } = useGetClientsQuery();
-  const { data: movementTypes = [] } = useGetPaymentAccountMovementTypesQuery();
+  const { data: clients = [], isFetching: isFetchingClients } =
+    useGetClientsQuery();
+  const { data: movementTypes = [], isFetching: isFetchingMovementTypes } =
+    useGetPaymentAccountMovementTypesQuery();
   const [createPaymentAccountMovement, { isLoading: isCreating }] =
     useCreatePaymentAccountMovementMutation();
+  const isLoadingPaymentDialogData =
+    isFetchingMovementTypes || (allowClientSelect && isFetchingClients);
 
   const clientsById = useMemo(
     () => new Map(clients.map((item) => [item.id, item])),
@@ -217,6 +222,7 @@ export default function PaymentMovementDialog({
               size="small"
               options={clients}
               value={selectedClient}
+              loading={isFetchingClients}
               onChange={(_, value) => {
                 formik.setFieldValue("clientId", value?.id || "");
                 formik.setErrors({});
@@ -236,6 +242,10 @@ export default function PaymentMovementDialog({
                   name="clientId"
                   error={!!formik.errors.clientId}
                   helperText={formik.errors.clientId || " "}
+                  InputProps={withLoadingInputProps(
+                    params.InputProps,
+                    isFetchingClients,
+                  )}
                 />
               )}
             />
@@ -278,6 +288,11 @@ export default function PaymentMovementDialog({
             helperText={formik.errors.typeId || " "}
             size="small"
             fullWidth
+            disabled={isFetchingMovementTypes}
+            InputProps={withLoadingInputProps(
+              undefined,
+              isFetchingMovementTypes,
+            )}
           >
             {sortedMovementTypes.map((type) => {
               const typeName = String(type.name || "");
@@ -352,7 +367,7 @@ export default function PaymentMovementDialog({
           variant="contained"
           onClick={() => void formik.submitForm()}
           loading={isCreating}
-          disabled={isCreating}
+          disabled={isCreating || isLoadingPaymentDialogData}
         >
           Registrar
         </Button>
