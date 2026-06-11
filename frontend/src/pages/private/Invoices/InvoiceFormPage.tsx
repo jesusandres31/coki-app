@@ -4,7 +4,13 @@ import { useParams, useSearchParams } from "react-router-dom";
 import dayjs, { Dayjs } from "dayjs";
 import { useFormik } from "formik";
 import type { FormikErrors } from "formik";
-import { AddRounded, DeleteRounded, PrintRounded } from "@mui/icons-material";
+import { NumericFormat } from "react-number-format";
+import {
+  AddRounded,
+  DeleteRounded,
+  EditRounded,
+  PrintRounded,
+} from "@mui/icons-material";
 import {
   Box,
   Button,
@@ -30,6 +36,7 @@ import {
   InputAdornment,
   Switch,
   TextField,
+  Tooltip,
   Typography,
 } from "@mui/material";
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
@@ -72,11 +79,12 @@ import { getShortInvoiceId } from "src/components/common/pdf";
 
 type InvoicePageMode = "new" | "review" | "edit";
 type InvoicePaymentMode = "none" | "full" | "partial";
+type InvoiceAmountInput = number | "";
 
 interface InvoiceProductInput {
   id: string;
   product: string;
-  amount: number;
+  amount: InvoiceAmountInput;
   unitPrice: number;
   discount: number;
 }
@@ -119,7 +127,7 @@ interface ProductTableRowData {
   productId: string;
   productName: string;
   measureUnitName: string;
-  amount: number;
+  amount: InvoiceAmountInput;
   unitPrice: number;
   catalogUnitPrice?: number;
   discount: number;
@@ -136,11 +144,14 @@ interface ProductsTableProps {
   showCatalogPriceHint?: boolean;
   priceLoadingRowIds?: Set<string>;
   addProductButtonRef?: RefObject<HTMLButtonElement>;
+  focusRowId?: string;
   onRowChange?: (
     id: string,
     field: keyof Omit<InvoiceProductInput, "id">,
     value: string | number,
   ) => void;
+  onEditRow?: (id: string) => void;
+  onFocusRow?: () => void;
   onRemoveRow?: (id: string) => void;
   canRemoveRow?: (id: string) => boolean;
 }
@@ -190,6 +201,7 @@ const productTableEditableFields: ProductTableEditableField[] = [
 ];
 
 const invoiceProductsActionColumnWidth = 56;
+const invoiceProductsEditableActionColumnWidth = 88;
 const invoiceProductsTotalColumnWidth = 112;
 
 const invoiceProductsTotalColumnSx = {
@@ -202,9 +214,6 @@ const invoiceProductsTotalColumnSx = {
 const invoiceProductsActionColumnSx = {
   position: "sticky",
   right: 0,
-  width: invoiceProductsActionColumnWidth,
-  minWidth: invoiceProductsActionColumnWidth,
-  maxWidth: invoiceProductsActionColumnWidth,
   boxSizing: "border-box",
 };
 const productRowHelperTextMinHeight = 14;
@@ -254,7 +263,7 @@ const buildEmptyRow = (): InvoiceProductInput => ({
 const getCreateItemTotal = (item: InvoiceProductInput) =>
   Math.max(
     0,
-    item.amount *
+    Number(item.amount || 0) *
       item.unitPrice *
       (1 - Math.max(0, Math.min(100, item.discount)) / 100),
   );
@@ -265,7 +274,8 @@ const hasInvalidInvoiceRows = (rows: InvoiceProductInput[]) =>
   rows.some(
     (row) =>
       !row.product ||
-      row.amount <= 0 ||
+      row.amount === "" ||
+      row.amount < 0 ||
       row.unitPrice < 0 ||
       row.discount < 0 ||
       row.discount > 100,
@@ -274,7 +284,8 @@ const hasInvalidInvoiceRows = (rows: InvoiceProductInput[]) =>
 const isCompleteInvoiceRow = (row: InvoiceProductInput | undefined) =>
   Boolean(row) &&
   Boolean(row?.product) &&
-  Number(row?.amount || 0) > 0 &&
+  row?.amount !== "" &&
+  Number(row?.amount || 0) >= 0 &&
   Number(row?.unitPrice || 0) >= 0 &&
   Number(row?.discount || 0) >= 0 &&
   Number(row?.discount || 0) <= 100;
@@ -297,8 +308,10 @@ const validateInvoiceForm = (values: InvoiceFormValues) => {
       errors.product = "Seleccioná un producto.";
     }
 
-    if (row.amount <= 0) {
+    if (row.amount === "") {
       errors.amount = "Ingresá cantidad.";
+    } else if (row.amount < 0) {
+      errors.amount = "Cantidad inválida.";
     }
 
     if (row.unitPrice < 0) {
@@ -525,12 +538,18 @@ function ProductsTable({
   showCatalogPriceHint = false,
   priceLoadingRowIds = new Set<string>(),
   addProductButtonRef,
+  focusRowId = "",
   onRowChange,
+  onEditRow,
+  onFocusRow,
   onRemoveRow,
   canRemoveRow,
 }: ProductsTableProps) {
   const fieldRefs = useRef(new Map<string, HTMLElement>());
   const previousRowsLengthRef = useRef(rows.length);
+  const [amountDecimalRowIds, setAmountDecimalRowIds] = useState<Set<string>>(
+    () => new Set(),
+  );
   const controlsDisabled = !editable || inputsDisabled;
   const bodyCellSx = {
     py: 0.5,
@@ -567,6 +586,17 @@ function ProductsTable({
     mt: 0.125,
   };
   const singleLineHelperTextProps = productRowHelperTextProps;
+  const showActionColumn = editable;
+  const actionColumnWidth =
+    editable && onEditRow
+      ? invoiceProductsEditableActionColumnWidth
+      : invoiceProductsActionColumnWidth;
+  const actionColumnSx = {
+    ...invoiceProductsActionColumnSx,
+    width: actionColumnWidth,
+    minWidth: actionColumnWidth,
+    maxWidth: actionColumnWidth,
+  };
   const getFieldKey = (rowId: string, field: ProductTableEditableField) =>
     `${rowId}:${field}`;
   const setFieldRef =
@@ -604,6 +634,17 @@ function ProductsTable({
   };
   const focusAddProductButton = () => {
     addProductButtonRef?.current?.focus();
+  };
+  const updateAmountDecimalIntent = (rowId: string, shouldShow: boolean) => {
+    setAmountDecimalRowIds((current) => {
+      const next = new Set(current);
+      if (shouldShow) {
+        next.add(rowId);
+      } else {
+        next.delete(rowId);
+      }
+      return next;
+    });
   };
   const focusNextField = (rowIndex: number, fieldIndex: number) => {
     if (fieldIndex < productTableEditableFields.length - 1) {
@@ -667,6 +708,10 @@ function ProductsTable({
 
       if (field === "product") return;
 
+      if (field === "amount" && [",", "."].includes(event.key)) {
+        updateAmountDecimalIntent(rows[rowIndex]?.id || "", true);
+      }
+
       if (event.key === "ArrowDown") {
         event.preventDefault();
         focusField(Math.min(rowIndex + 1, rows.length - 1), fieldIndex);
@@ -695,6 +740,18 @@ function ProductsTable({
       });
     });
   }, [editable, inputsDisabled, rows.length]);
+
+  useEffect(() => {
+    if (!focusRowId || !editable || inputsDisabled) return;
+
+    const rowIndex = rows.findIndex((row) => row.id === focusRowId);
+    if (rowIndex < 0) return;
+
+    requestAnimationFrame(() => {
+      focusField(rowIndex, 0);
+      onFocusRow?.();
+    });
+  }, [editable, focusRowId, inputsDisabled, rows, onFocusRow]);
 
   return (
     <TableContainer
@@ -738,11 +795,11 @@ function ProductsTable({
             >
               Total
             </TableCell>
-            {editable && (
+            {showActionColumn && (
               <TableCell
                 align="center"
                 sx={{
-                  ...invoiceProductsActionColumnSx,
+                  ...actionColumnSx,
                   zIndex: 4,
                   backgroundColor: "#F8FAFC",
                 }}
@@ -756,6 +813,13 @@ function ProductsTable({
           {rows.map((row, rowIndex) => {
             const rowError = rowErrors[rowIndex] || {};
             const isPriceLoading = priceLoadingRowIds.has(row.id);
+            const isKgUnit =
+              row.measureUnitName.trim().toLowerCase().replace(".", "") ===
+              "kg";
+            const shouldShowAmountDecimals =
+              isKgUnit ||
+              amountDecimalRowIds.has(row.id) ||
+              (row.amount !== "" && !Number.isInteger(row.amount));
 
             return (
               <TableRow key={row.id}>
@@ -794,23 +858,31 @@ function ProductsTable({
                 </TableCell>
 
                 <TableCell sx={editableBodyCellSx}>
-                  <TextField
+                  <NumericFormat
+                    customInput={TextField}
                     fullWidth
                     size="small"
                     variant="standard"
-                    type="number"
-                    value={row.amount <= 0 ? "" : row.amount}
-                    onChange={(e) =>
-                      onRowChange?.(
+                    value={row.amount}
+                    decimalSeparator=","
+                    allowedDecimalSeparators={[",", "."]}
+                    decimalScale={2}
+                    fixedDecimalScale={shouldShowAmountDecimals}
+                    allowNegative={false}
+                    onValueChange={(values) => {
+                      const amount =
+                        values.value === "" ? "" : (values.floatValue ?? 0);
+                      onRowChange?.(row.id, "amount", amount);
+                      if (isKgUnit) return;
+
+                      updateAmountDecimalIntent(
                         row.id,
-                        "amount",
-                        e.target.value === ""
-                          ? 0
-                          : Math.max(1, Number(e.target.value || 1)),
-                      )
-                    }
-                    inputProps={{ min: 1, step: 1 }}
-                    inputRef={setFieldRef(row.id, "amount")}
+                        values.formattedValue.includes(",") ||
+                          (amount !== "" && !Number.isInteger(amount)),
+                      );
+                    }}
+                    inputProps={{ inputMode: "decimal" }}
+                    getInputRef={setFieldRef(row.id, "amount")}
                     onKeyDown={handleFieldKeyDown(rowIndex, "amount")}
                     disabled={controlsDisabled}
                     error={Boolean(rowError.amount)}
@@ -912,34 +984,66 @@ function ProductsTable({
                   </Box>
                 </TableCell>
 
-                {editable && (
+                {showActionColumn && (
                   <TableCell
                     align="center"
                     sx={{
-                      ...invoiceProductsActionColumnSx,
+                      ...actionColumnSx,
                       ...editableBodyCellSx,
                       zIndex: 2,
                       backgroundColor: "transparent",
                     }}
                   >
                     <Box>
-                      <Box sx={rowActionButtonSx}>
-                        <IconButton
-                          size="small"
-                          color="error"
-                          onClick={() => onRemoveRow?.(row.id)}
-                          disabled={inputsDisabled || !canRemoveRow?.(row.id)}
-                          sx={{
-                            width: 30,
-                            height: 30,
-                            border: "1px solid",
-                            borderColor: "divider",
-                            borderRadius: 1.25,
-                            p: 0.5,
-                          }}
-                        >
-                          <DeleteRounded />
-                        </IconButton>
+                      <Box sx={{ ...rowActionButtonSx, gap: 0.5 }}>
+                        {onEditRow && (
+                          <Tooltip title="Editar producto">
+                            <span>
+                              <IconButton
+                                size="small"
+                                color="primary"
+                                onClick={() => onEditRow(row.id)}
+                                disabled={inputsDisabled && editable}
+                                sx={{
+                                  width: 30,
+                                  height: 30,
+                                  border: "1px solid",
+                                  borderColor: "divider",
+                                  borderRadius: 1.25,
+                                  p: 0.5,
+                                }}
+                                aria-label="Editar producto"
+                              >
+                                <EditRounded />
+                              </IconButton>
+                            </span>
+                          </Tooltip>
+                        )}
+                        {editable && (
+                          <Tooltip title="Eliminar producto">
+                            <span>
+                              <IconButton
+                                size="small"
+                                color="error"
+                                onClick={() => onRemoveRow?.(row.id)}
+                                disabled={
+                                  inputsDisabled || !canRemoveRow?.(row.id)
+                                }
+                                sx={{
+                                  width: 30,
+                                  height: 30,
+                                  border: "1px solid",
+                                  borderColor: "divider",
+                                  borderRadius: 1.25,
+                                  p: 0.5,
+                                }}
+                                aria-label="Eliminar producto"
+                              >
+                                <DeleteRounded />
+                              </IconButton>
+                            </span>
+                          </Tooltip>
+                        )}
                       </Box>
                       <Box sx={rowHelperSpacerSx} />
                     </Box>
@@ -1153,6 +1257,7 @@ export default function InvoiceFormPage() {
   const [isInvoiceDeleted, setIsInvoiceDeleted] = useState(false);
   const [retrieveLastPriceEnabled, setRetrieveLastPriceEnabled] =
     useState(false);
+  const [focusedProductRowId, setFocusedProductRowId] = useState("");
   const mobileAddProductButtonRef = useRef<HTMLButtonElement>(null);
   const desktopAddProductButtonRef = useRef<HTMLButtonElement>(null);
 
@@ -1314,7 +1419,7 @@ export default function InvoiceFormPage() {
           state: "open",
           items: values.rows.map((row) => ({
             product: row.product,
-            amount: row.amount,
+            amount: Number(row.amount),
             unitPrice: row.unitPrice,
             discount: row.discount,
           })),
@@ -1412,7 +1517,7 @@ export default function InvoiceFormPage() {
           items: normalizedRows.map((row) => ({
             id: row.id,
             product: row.product,
-            amount: row.amount,
+            amount: Number(row.amount),
             unitPrice: row.unitPrice,
             discount: row.discount,
           })),
@@ -1453,7 +1558,7 @@ export default function InvoiceFormPage() {
                     : item.product?.id) ??
                   "",
               ) || "",
-            amount: Math.max(1, Number(item.amount ?? 1)),
+            amount: Math.max(0, Number(item.amount ?? 0)),
             unitPrice: Math.max(0, Number(item.unit_price ?? 0)),
             discount: Math.min(100, Math.max(0, Number(item.discount ?? 0))),
           }))
@@ -1735,6 +1840,10 @@ export default function InvoiceFormPage() {
     );
   };
 
+  const handleEditProductRow = (id: string) => {
+    setFocusedProductRowId(id);
+  };
+
   const handleRowChange = async (
     id: string,
     field: keyof Omit<InvoiceProductInput, "id">,
@@ -1820,7 +1929,7 @@ export default function InvoiceFormPage() {
 
         return {
           ...row,
-          [field]: Number(value),
+          [field]: field === "amount" && value === "" ? "" : Number(value),
         };
       }),
     );
@@ -2088,7 +2197,10 @@ export default function InvoiceFormPage() {
                   productsLoading={isProductsFetching}
                   showCatalogPriceHint={retrieveLastPriceEnabled}
                   priceLoadingRowIds={priceLoadingRowIds}
+                  focusRowId={focusedProductRowId}
                   onRowChange={handleRowChange}
+                  onEditRow={handleEditProductRow}
+                  onFocusRow={() => setFocusedProductRowId("")}
                   onRemoveRow={handleRemoveRow}
                   canRemoveRow={() => activeFormik.values.rows.length > 1}
                 />
@@ -2278,7 +2390,10 @@ export default function InvoiceFormPage() {
                 productsLoading={isProductsFetching}
                 showCatalogPriceHint={retrieveLastPriceEnabled}
                 priceLoadingRowIds={priceLoadingRowIds}
+                focusRowId={focusedProductRowId}
                 onRowChange={handleRowChange}
+                onEditRow={handleEditProductRow}
+                onFocusRow={() => setFocusedProductRowId("")}
                 onRemoveRow={handleRemoveRow}
                 canRemoveRow={() => activeFormik.values.rows.length > 1}
               />
