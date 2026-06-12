@@ -15,6 +15,56 @@ interface InvoicePdfDocumentProps {
 }
 
 const styles = StyleSheet.create({
+  page: {
+    paddingTop: 20,
+    paddingBottom: 20,
+    paddingHorizontal: 22,
+    fontSize: 9,
+  },
+  header: {
+    marginBottom: 7,
+    gap: 8,
+  },
+  headerTitle: {
+    fontSize: 12,
+  },
+  headerAside: {
+    fontSize: 8,
+    width: 160,
+  },
+  meta: {
+    marginBottom: 9,
+    paddingVertical: 6,
+    paddingHorizontal: 8,
+    gap: 2,
+  },
+  metaRow: {
+    gap: 8,
+  },
+  tableCell: {
+    paddingVertical: 3.5,
+    paddingHorizontal: 5,
+    fontSize: 8.5,
+  },
+  tableHeaderCell: {
+    paddingVertical: 4,
+    fontSize: 8.5,
+    fontWeight: 700,
+  },
+  tableRow: {
+    minHeight: 15,
+  },
+  summary: {
+    marginTop: 9,
+    minWidth: 190,
+    gap: 2,
+    fontSize: 9,
+  },
+  grandTotal: {
+    paddingTop: 4,
+    marginTop: 1,
+    fontSize: 11,
+  },
   productCell: {
     width: "31%",
   },
@@ -82,13 +132,18 @@ export function InvoicePdfDocument({ invoice }: InvoicePdfDocumentProps) {
 
   return (
     <Document title={documentTitle}>
-      <Page size="A4" style={pdfStyles.page}>
+      <Page size="A4" style={[pdfStyles.page, styles.page]}>
         <PdfHeader
           title="Resumen de pedido"
           aside={`ID: ${shortInvoiceId}\nDocumento no válido como factura`}
+          style={styles.header}
+          titleStyle={styles.headerTitle}
+          asideStyle={styles.headerAside}
         />
 
         <PdfMeta
+          style={styles.meta}
+          rowStyle={styles.metaRow}
           rows={[
             { label: "Cliente", value: invoice.clientName },
             { label: "Fecha", value: invoice.date },
@@ -98,6 +153,9 @@ export function InvoicePdfDocument({ invoice }: InvoicePdfDocumentProps) {
         <PdfSimpleTable
           rows={invoice.items}
           getRowKey={(item) => item.id}
+          rowStyle={styles.tableRow}
+          cellStyle={styles.tableCell}
+          headerCellStyle={styles.tableHeaderCell}
           columns={[
             {
               key: "product",
@@ -133,7 +191,7 @@ export function InvoicePdfDocument({ invoice }: InvoicePdfDocumentProps) {
           ]}
         />
 
-        <View style={pdfStyles.summary}>
+        <View style={[pdfStyles.summary, styles.summary]}>
           {hasInvoiceDiscount ? (
             <View style={pdfStyles.summaryRow}>
               <Text>Subtotal</Text>
@@ -146,7 +204,13 @@ export function InvoicePdfDocument({ invoice }: InvoicePdfDocumentProps) {
               <Text>{formatPercent(invoice.discountPercent)}</Text>
             </View>
           ) : null}
-          <View style={[pdfStyles.summaryRow, pdfStyles.grandTotal]}>
+          <View
+            style={[
+              pdfStyles.summaryRow,
+              pdfStyles.grandTotal,
+              styles.grandTotal,
+            ]}
+          >
             <Text>Total</Text>
             <Text>{formatMoney(invoice.total)}</Text>
           </View>

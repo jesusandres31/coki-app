@@ -8,7 +8,7 @@ export const pdfStyles = StyleSheet.create({
     paddingHorizontal: 28,
     fontSize: 9,
     fontFamily: "Helvetica",
-    color: "#111827",
+    color: "#000000",
   },
   header: {
     width: "100%",
@@ -25,7 +25,7 @@ export const pdfStyles = StyleSheet.create({
   },
   headerAside: {
     width: 180,
-    color: "#6B7280",
+    color: "#111827",
     fontSize: 8,
     textAlign: "right",
   },
@@ -43,7 +43,7 @@ export const pdfStyles = StyleSheet.create({
     gap: 12,
   },
   metaLabel: {
-    color: "#6B7280",
+    color: "#111827",
   },
   metaValue: {
     fontWeight: 600,
@@ -103,13 +103,24 @@ export const pdfStyles = StyleSheet.create({
 interface PdfHeaderProps {
   title: string;
   aside?: string;
+  style?: any;
+  titleStyle?: any;
+  asideStyle?: any;
 }
 
-export function PdfHeader({ title, aside }: PdfHeaderProps) {
+export function PdfHeader({
+  title,
+  aside,
+  style,
+  titleStyle,
+  asideStyle,
+}: PdfHeaderProps) {
   return (
-    <View style={pdfStyles.header}>
-      <Text style={pdfStyles.headerTitle}>{title}</Text>
-      {aside ? <Text style={pdfStyles.headerAside}>{aside}</Text> : null}
+    <View style={[pdfStyles.header, style]}>
+      <Text style={[pdfStyles.headerTitle, titleStyle]}>{title}</Text>
+      {aside ? (
+        <Text style={[pdfStyles.headerAside, asideStyle]}>{aside}</Text>
+      ) : null}
     </View>
   );
 }
@@ -119,15 +130,25 @@ interface PdfMetaProps {
     label: string;
     value: ReactNode;
   }[];
+  style?: any;
+  rowStyle?: any;
+  labelStyle?: any;
+  valueStyle?: any;
 }
 
-export function PdfMeta({ rows }: PdfMetaProps) {
+export function PdfMeta({
+  rows,
+  style,
+  rowStyle,
+  labelStyle,
+  valueStyle,
+}: PdfMetaProps) {
   return (
-    <View style={pdfStyles.metaContainer}>
+    <View style={[pdfStyles.metaContainer, style]}>
       {rows.map((row) => (
-        <View key={row.label} style={pdfStyles.metaRow}>
-          <Text style={pdfStyles.metaLabel}>{row.label}</Text>
-          <Text style={pdfStyles.metaValue}>{row.value}</Text>
+        <View key={row.label} style={[pdfStyles.metaRow, rowStyle]}>
+          <Text style={[pdfStyles.metaLabel, labelStyle]}>{row.label}</Text>
+          <Text style={[pdfStyles.metaValue, valueStyle]}>{row.value}</Text>
         </View>
       ))}
     </View>
@@ -145,18 +166,33 @@ interface PdfSimpleTableProps<T> {
   columns: PdfSimpleTableColumn<T>[];
   rows: T[];
   getRowKey: (row: T, index: number) => string;
+  style?: any;
+  rowStyle?: any;
+  headerRowStyle?: any;
+  cellStyle?: any;
+  headerCellStyle?: any;
 }
 
 export function PdfSimpleTable<T>({
   columns,
   rows,
   getRowKey,
+  style,
+  rowStyle,
+  headerRowStyle,
+  cellStyle,
+  headerCellStyle,
 }: PdfSimpleTableProps<T>) {
   return (
-    <View style={pdfStyles.table}>
-      <View style={[pdfStyles.row, pdfStyles.headerRow]}>
+    <View style={[pdfStyles.table, style]}>
+      <View
+        style={[pdfStyles.row, pdfStyles.headerRow, rowStyle, headerRowStyle]}
+      >
         {columns.map((column) => (
-          <Text key={column.key} style={[pdfStyles.cell, column.style]}>
+          <Text
+            key={column.key}
+            style={[pdfStyles.cell, cellStyle, headerCellStyle, column.style]}
+          >
             {column.label}
           </Text>
         ))}
@@ -167,12 +203,15 @@ export function PdfSimpleTable<T>({
           key={getRowKey(row, index)}
           style={
             index === rows.length - 1
-              ? [pdfStyles.row, pdfStyles.lastRow]
-              : pdfStyles.row
+              ? [pdfStyles.row, rowStyle, pdfStyles.lastRow]
+              : [pdfStyles.row, rowStyle]
           }
         >
           {columns.map((column) => (
-            <Text key={column.key} style={[pdfStyles.cell, column.style]}>
+            <Text
+              key={column.key}
+              style={[pdfStyles.cell, cellStyle, column.style]}
+            >
               {column.render(row)}
             </Text>
           ))}
