@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { KeyboardEvent, Ref, RefObject } from "react";
 import { useParams, useSearchParams } from "react-router-dom";
 import dayjs, { Dayjs } from "dayjs";
@@ -72,6 +72,11 @@ import {
   buildMeasureUnitNameById,
   isKgMeasureUnitName,
 } from "src/utils/measureUnits";
+import {
+  buildSessionStorageKey,
+  parseSessionStorageJson,
+  useSessionStorageDraft,
+} from "src/utils/sessionStorageDraft";
 import { invoiceBreadcrumbFlow } from "./breadcrumbFlow";
 import {
   buildInvoicePdfModel,
@@ -209,6 +214,7 @@ const invoiceProductsEditableActionColumnWidth = 88;
 const invoiceProductsTotalColumnWidth = 112;
 const invoiceDecimalScale = 3;
 const invoiceDecimalStep = "0.001";
+const invoiceDraftStoragePrefix = "coki:invoice-draft";
 
 const invoiceProductsTotalColumnSx = {
   width: invoiceProductsTotalColumnWidth,
@@ -436,16 +442,48 @@ const readableDisabledFieldSx = (theme: Theme) => ({
 });
 
 const parseJsonValue = <T,>(value: unknown): T | null => {
-  if (value == null) return null;
-  if (typeof value === "string") {
-    try {
-      return JSON.parse(value) as T;
-    } catch {
-      return null;
-    }
-  }
-  if (typeof value === "object") return value as T;
-  return null;
+  return parseSessionStorageJson<T>(value);
+};
+
+const buildInvoiceFormValuesFromInvoice = (invoice: {
+  client?: unknown;
+  date?: unknown;
+  discount?: unknown;
+  invoice_products?: unknown;
+}): InvoiceFormValues => {
+  const parsedClient = parseJsonValue<{ id?: string; name?: string }>(
+    invoice.client,
+  );
+
+  const rawInvoiceProducts =
+    parseJsonValue<InvoiceProductRow[]>(invoice.invoice_products) || [];
+
+  const rows =
+    Array.isArray(rawInvoiceProducts) && rawInvoiceProducts.length > 0
+      ? rawInvoiceProducts.map((item, i) => ({
+          id: item.id || `row-${i}`,
+          product:
+            String(
+              item.product_id ??
+                (typeof item.product === "string"
+                  ? item.product
+                  : item.product?.id) ??
+                "",
+            ) || "",
+          amount: Math.max(0, Number(item.amount ?? 0)),
+          unitPrice: Math.max(0, Number(item.unit_price ?? 0)),
+          discount: Math.min(100, Math.max(0, Number(item.discount ?? 0))),
+        }))
+      : [buildEmptyRow()];
+
+  return {
+    client: parsedClient?.id || "",
+    date: String(invoice.date || "").slice(0, 10),
+    discount: Number(invoice.discount ?? 0),
+    paymentMode: "none",
+    partialPaymentAmount: 0,
+    rows,
+  };
 };
 
 const extractApiMessage = (error: unknown): string | undefined => {
@@ -1308,6 +1346,19 @@ export default function InvoiceFormPage() {
 
   const isNewMode = mode === "new";
   const isEditMode = mode === "edit";
+  const invoiceDraftKey = useMemo(() => {
+    if (isNewMode) {
+      return buildSessionStorageKey(invoiceDraftStoragePrefix, "new");
+    }
+
+    if (isEditMode && invoiceId) {
+      return buildSessionStorageKey(
+        invoiceDraftStoragePrefix,
+        `edit:${invoiceId}`,
+      );
+    }
+    return "";
+  }, [invoiceId, isEditMode, isNewMode]);
 
   useEffect(() => {
     if (isNewMode) {
@@ -1469,6 +1520,7 @@ export default function InvoiceFormPage() {
           }),
         );
         setInvoiceConfirmationAction(null);
+        clearActiveInvoiceDraft();
         handleGoTo(AppRoutes.Invoices);
       } catch (error) {
         dispatch(
@@ -1568,6 +1620,7 @@ export default function InvoiceFormPage() {
           }),
         );
         setInvoiceConfirmationAction(null);
+        clearActiveInvoiceDraft();
         setSearchParams({ mode: "review" });
       } catch {
         // Error feedback is already handled by RTK middleware.
@@ -1575,42 +1628,37 @@ export default function InvoiceFormPage() {
     },
   });
 
+  const hydrateInvoiceDraft = useCallback(
+    (draft: InvoiceFormValues) => {
+      if (isNewMode) {
+        newFormik.setValues(draft, true);
+        return;
+      }
+
+      editFormik.setValues(draft, true);
+    },
+    [editFormik, isNewMode, newFormik],
+  );
+
+  const getInvoiceDraftFallback = useCallback(() => {
+    if (!isEditMode || !invoice) return null;
+
+    return buildInvoiceFormValuesFromInvoice(invoice);
+  }, [invoice, isEditMode]);
+
+  const { clearDraft: clearActiveInvoiceDraft } =
+    useSessionStorageDraft<InvoiceFormValues>({
+      key: invoiceDraftKey,
+      value: isNewMode ? newFormik.values : editFormik.values,
+      ready: isNewMode || Boolean(invoice),
+      onHydrate: hydrateInvoiceDraft,
+      getFallbackValue: getInvoiceDraftFallback,
+    });
+
   useEffect(() => {
     if (!invoice || isNewMode || isEditMode) return;
 
-    const parsedClient = parseJsonValue<{ id?: string; name?: string }>(
-      invoice.client,
-    );
-
-    const rawInvoiceProducts =
-      parseJsonValue<InvoiceProductRow[]>(invoice.invoice_products) || [];
-
-    const detailRows =
-      Array.isArray(rawInvoiceProducts) && rawInvoiceProducts.length > 0
-        ? rawInvoiceProducts.map((item, i) => ({
-            id: item.id || `row-${i}`,
-            product:
-              String(
-                item.product_id ??
-                  (typeof item.product === "string"
-                    ? item.product
-                    : item.product?.id) ??
-                  "",
-              ) || "",
-            amount: Math.max(0, Number(item.amount ?? 0)),
-            unitPrice: Math.max(0, Number(item.unit_price ?? 0)),
-            discount: Math.min(100, Math.max(0, Number(item.discount ?? 0))),
-          }))
-        : [buildEmptyRow()];
-
-    editFormik.setValues({
-      client: parsedClient?.id || "",
-      date: String(invoice.date).slice(0, 10),
-      discount: Number(invoice.discount ?? 0),
-      paymentMode: "none",
-      partialPaymentAmount: 0,
-      rows: detailRows,
-    });
+    editFormik.setValues(buildInvoiceFormValuesFromInvoice(invoice));
   }, [invoice, isEditMode, isNewMode]);
 
   const invoiceProducts: InvoiceProductRow[] = useMemo(() => {
@@ -1799,6 +1847,7 @@ export default function InvoiceFormPage() {
         }),
       );
       setDeleteDialogOpen(false);
+      clearActiveInvoiceDraft();
       handleGoTo(AppRoutes.Invoices);
     } catch {
       setIsInvoiceDeleted(false);
@@ -2049,6 +2098,7 @@ export default function InvoiceFormPage() {
   };
 
   const handleCancelEdit = () => {
+    clearActiveInvoiceDraft();
     setSearchParams({ mode: "review" });
   };
 
@@ -2169,7 +2219,10 @@ export default function InvoiceFormPage() {
           mode={pageMode}
           inputs={[]}
           formik={activeFormik}
-          onBack={() => handleGoTo(AppRoutes.Invoices)}
+          onBack={() => {
+            clearActiveInvoiceDraft();
+            handleGoTo(AppRoutes.Invoices);
+          }}
           onEdit={
             !isNewMode ? () => setSearchParams({ mode: "edit" }) : undefined
           }
