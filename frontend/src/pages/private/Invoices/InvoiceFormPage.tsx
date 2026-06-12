@@ -53,6 +53,7 @@ import {
   useGetMeasureUnitsQuery,
   useGetProductsQuery,
   useLazyGetLastProductPriceForClientQuery,
+  useUpdateProductMutation,
   useUpdateInvoiceMutation,
 } from "src/app/services/invoiceService";
 import { ErrorMsg, Loading } from "src/components/common";
@@ -84,6 +85,9 @@ import {
   openInvoicePdfTab,
 } from "./pdf";
 import { getShortInvoiceId } from "src/components/common/pdf";
+import ProductCatalogPriceDialog, {
+  ProductCatalogPriceDialogProduct,
+} from "./components/ProductCatalogPriceDialog";
 
 type InvoicePageMode = "new" | "review" | "edit";
 type InvoicePaymentMode = "none" | "full" | "partial";
@@ -164,6 +168,9 @@ interface ProductsTableProps {
   onEditRow?: (id: string) => void;
   onFocusRow?: () => void;
   onRemoveRow?: (id: string) => void;
+  onEditCatalogPrice?: (
+    product: ProductCatalogPriceDialogProduct & { rowId: string },
+  ) => void;
   canRemoveRow?: (id: string) => boolean;
 }
 
@@ -667,6 +674,7 @@ function ProductsTable({
   onEditRow,
   onFocusRow,
   onRemoveRow,
+  onEditCatalogPrice,
   canRemoveRow,
 }: ProductsTableProps) {
   const fieldRefs = useRef(new Map<string, HTMLElement>());
@@ -938,6 +946,8 @@ function ProductsTable({
             const rowError = rowErrors[rowIndex] || {};
             const isPriceLoading = priceLoadingRowIds.has(row.id);
             const isKgUnit = isKgMeasureUnitName(row.measureUnitName);
+            const canEditCatalogPrice =
+              editable && Boolean(row.productId) && Boolean(onEditCatalogPrice);
             const shouldShowAmountDecimals =
               isKgUnit ||
               amountDecimalRowIds.has(row.id) ||
@@ -1053,9 +1063,50 @@ function ProductsTable({
                       error={Boolean(rowError.unitPrice)}
                       helperText={
                         rowError.unitPrice ||
-                        (editable && showCatalogPriceHint && row.productId
-                          ? `Precio Gral.: ${formatMoney(row.catalogUnitPrice ?? 0)}`
-                          : " ")
+                        (editable && showCatalogPriceHint && row.productId ? (
+                          <Tooltip title="Editar precio general">
+                            <Typography
+                              component="button"
+                              type="button"
+                              variant="caption"
+                              onClick={() => {
+                                if (!canEditCatalogPrice) return;
+
+                                onEditCatalogPrice?.({
+                                  id: row.productId,
+                                  rowId: row.id,
+                                  name: row.productName,
+                                  measureUnitName: row.measureUnitName,
+                                  unitPrice: row.catalogUnitPrice ?? 0,
+                                });
+                              }}
+                              sx={{
+                                appearance: "none",
+                                border: 0,
+                                background: "transparent",
+                                color: "text.secondary",
+                                cursor: canEditCatalogPrice
+                                  ? "pointer"
+                                  : "default",
+                                font: "inherit",
+                                lineHeight: "inherit",
+                                m: 0,
+                                p: 0,
+                                textAlign: "left",
+                                "&:hover": canEditCatalogPrice
+                                  ? {
+                                      color: "primary.main",
+                                      textDecoration: "underline",
+                                    }
+                                  : undefined,
+                              }}
+                            >
+                              {`Precio Gral.: ${formatMoney(row.catalogUnitPrice ?? 0)}`}
+                            </Typography>
+                          </Tooltip>
+                        ) : (
+                          " "
+                        ))
                       }
                       FormHelperTextProps={singleLineHelperTextProps}
                       sx={readableDisabledFieldSx}
@@ -1381,6 +1432,10 @@ export default function InvoiceFormPage() {
   const [invoiceConfirmationAction, setInvoiceConfirmationAction] =
     useState<InvoiceConfirmationAction | null>(null);
   const [isInvoiceDeleted, setIsInvoiceDeleted] = useState(false);
+  const [catalogPriceProduct, setCatalogPriceProduct] =
+    useState<(ProductCatalogPriceDialogProduct & { rowId: string }) | null>(
+      null,
+    );
   const [retrieveLastPriceEnabled, setRetrieveLastPriceEnabled] =
     useState(false);
   const [focusedProductRowId, setFocusedProductRowId] = useState("");
@@ -1449,6 +1504,8 @@ export default function InvoiceFormPage() {
   const [createInvoice, { isLoading: isCreating }] = useCreateInvoiceMutation();
   const [updateInvoice, { isLoading: isUpdating }] = useUpdateInvoiceMutation();
   const [deleteInvoice, { isLoading: isDeleting }] = useDeleteInvoiceMutation();
+  const [updateProduct, { isLoading: isUpdatingProduct }] =
+    useUpdateProductMutation();
   const [triggerGetLastProductPriceForClient] =
     useLazyGetLastProductPriceForClientQuery();
   const [priceLoadingRowIds, setPriceLoadingRowIds] = useState<Set<string>>(
@@ -2055,6 +2112,48 @@ export default function InvoiceFormPage() {
     );
   };
 
+  const handleUpdateCatalogPrice = async (unitPrice: number) => {
+    if (!catalogPriceProduct) return;
+
+    try {
+      await updateProduct({
+        id: catalogPriceProduct.id,
+        data: {
+          unit_price: unitPrice,
+        },
+      }).unwrap();
+
+      activeFormik.setFieldValue(
+        "rows",
+        activeFormik.values.rows.map((row) =>
+          row.id === catalogPriceProduct.rowId
+            ? {
+                ...row,
+                unitPrice,
+              }
+            : row,
+        ),
+      );
+
+      dispatch(
+        setSnackbar({
+          message: "Precio general actualizado satisfactoriamente.",
+          type: "success",
+        }),
+      );
+      setCatalogPriceProduct(null);
+    } catch (error) {
+      dispatch(
+        setSnackbar({
+          message:
+            extractApiMessage(error) ||
+            "No se pudo actualizar el precio general.",
+          type: "error",
+        }),
+      );
+    }
+  };
+
   const handleEditProductRow = (id: string) => {
     setFocusedProductRowId(id);
   };
@@ -2421,6 +2520,7 @@ export default function InvoiceFormPage() {
                   onEditRow={handleEditProductRow}
                   onFocusRow={() => setFocusedProductRowId("")}
                   onRemoveRow={handleRemoveRow}
+                  onEditCatalogPrice={setCatalogPriceProduct}
                   canRemoveRow={() => activeFormik.values.rows.length > 1}
                 />
               </Box>
@@ -2614,6 +2714,7 @@ export default function InvoiceFormPage() {
                 onEditRow={handleEditProductRow}
                 onFocusRow={() => setFocusedProductRowId("")}
                 onRemoveRow={handleRemoveRow}
+                onEditCatalogPrice={setCatalogPriceProduct}
                 canRemoveRow={() => activeFormik.values.rows.length > 1}
               />
             </Stack>
@@ -2714,6 +2815,13 @@ export default function InvoiceFormPage() {
           </Box>
         </EntityFormContainer>
       </LocalizationProvider>
+      <ProductCatalogPriceDialog
+        open={Boolean(catalogPriceProduct)}
+        product={catalogPriceProduct}
+        loading={isUpdatingProduct}
+        onClose={() => setCatalogPriceProduct(null)}
+        onConfirm={(unitPrice) => void handleUpdateCatalogPrice(unitPrice)}
+      />
       <Dialog
         open={Boolean(invoiceConfirmationDialog)}
         onClose={
