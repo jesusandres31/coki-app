@@ -134,6 +134,7 @@ interface DebouncedAutocompleteProps {
   helperText?: string;
   helperTextNoWrap?: boolean;
   prioritizeStartsWith?: boolean;
+  selectBestMatchOnBlur?: boolean;
   loading?: boolean;
 }
 
@@ -531,6 +532,7 @@ function DebouncedAutocomplete({
   helperText,
   helperTextNoWrap = false,
   prioritizeStartsWith = false,
+  selectBestMatchOnBlur = false,
   loading = false,
 }: DebouncedAutocompleteProps) {
   const [inputValue, setInputValue] = useState("");
@@ -581,6 +583,8 @@ function DebouncedAutocomplete({
       inputValue={inputValue}
       disabled={disabled}
       openOnFocus
+      autoHighlight={selectBestMatchOnBlur}
+      autoSelect={selectBestMatchOnBlur}
       isOptionEqualToValue={(option, value) => option.id === value.id}
       getOptionLabel={(option) => option.name}
       getOptionKey={(option) => option.id}
@@ -677,6 +681,7 @@ function ProductsTable({
   onEditCatalogPrice,
   canRemoveRow,
 }: ProductsTableProps) {
+  const tableContainerRef = useRef<HTMLDivElement>(null);
   const fieldRefs = useRef(new Map<string, HTMLElement>());
   const previousRowsLengthRef = useRef(rows.length);
   const [amountDecimalRowIds, setAmountDecimalRowIds] = useState<Set<string>>(
@@ -743,6 +748,35 @@ function ProductsTable({
 
       fieldRefs.current.delete(key);
     };
+  const scrollFieldIntoView = (
+    rowId: string,
+    field: ProductTableEditableField,
+  ) => {
+    const container = tableContainerRef.current;
+    const element = fieldRefs.current.get(getFieldKey(rowId, field));
+    if (!container || !element) return;
+
+    const target = element.closest("tr") || element;
+    const containerRect = container.getBoundingClientRect();
+    const targetRect = target.getBoundingClientRect();
+    const topPadding = 48;
+    const bottomPadding = 12;
+
+    if (targetRect.top < containerRect.top + topPadding) {
+      container.scrollBy({
+        top: targetRect.top - containerRect.top - topPadding,
+        behavior: "smooth",
+      });
+      return;
+    }
+
+    if (targetRect.bottom > containerRect.bottom - bottomPadding) {
+      container.scrollBy({
+        top: targetRect.bottom - containerRect.bottom + bottomPadding,
+        behavior: "smooth",
+      });
+    }
+  };
   const focusField = (rowIndex: number, fieldIndex: number) => {
     const targetRow = rows[rowIndex];
     const targetField = productTableEditableFields[fieldIndex];
@@ -752,6 +786,8 @@ function ProductsTable({
       getFieldKey(targetRow.id, targetField),
     );
     if (!element) return;
+
+    scrollFieldIntoView(targetRow.id, targetField);
 
     if (element instanceof HTMLInputElement) {
       element.focus({ preventScroll: true });
@@ -887,6 +923,7 @@ function ProductsTable({
 
   return (
     <TableContainer
+      ref={tableContainerRef}
       sx={{
         width: "100%",
         height: "100%",
@@ -962,6 +999,7 @@ function ProductsTable({
                       valueId={row.productId}
                       placeholder="Seleccionar producto"
                       prioritizeStartsWith
+                      selectBestMatchOnBlur
                       variant="standard"
                       disabled={inputsDisabled}
                       loading={productsLoading}
