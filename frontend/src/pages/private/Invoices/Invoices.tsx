@@ -1,6 +1,10 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { Button } from "@mui/material";
-import { AddRounded, OpenInNewRounded } from "@mui/icons-material";
+import {
+  AddRounded,
+  OpenInNewRounded,
+  PrintRounded,
+} from "@mui/icons-material";
 import DataGrid from "src/components/common/DataGrid/DataGrid";
 import { getListArgsInitialState } from "src/constants";
 import {
@@ -14,14 +18,24 @@ import { Column, DataGridRowAction, DetailColumn, GetList } from "src/types";
 import {
   InvoicesProductsResponse,
   InvoicesResponse,
+  VInvoicesResponse,
 } from "src/types/pocketbase-types";
 import { formatDate, formatMoney, formatPercent } from "src/utils/format";
 import { buildMeasureUnitNameById } from "src/utils/measureUnits";
 import { useRouter } from "src/hooks";
 import { AppRoutes } from "src/config";
 import { useAppDispatch } from "src/app/store";
-import { resetBreadcrumbs, setBreadcrumbs } from "src/slices/uiSlice";
+import {
+  resetBreadcrumbs,
+  setBreadcrumbs,
+  setSnackbar,
+} from "src/slices/uiSlice";
 import { invoiceBreadcrumbFlow } from "./breadcrumbFlow";
+import {
+  buildInvoicePdfModel,
+  openInvoicePdfInViewer,
+  openInvoicePdfTab,
+} from "./pdf";
 
 interface InvoiceListRow extends InvoicesResponse {
   invoice_products?: InvoicesProductsResponse[];
@@ -42,6 +56,7 @@ export default function Invoices() {
     invoiceProductsLoadingByInvoiceId,
     setInvoiceProductsLoadingByInvoiceId,
   ] = useState<Record<string, boolean>>({});
+  const [printingInvoiceId, setPrintingInvoiceId] = useState("");
   const [triggerGetInvoiceProducts] =
     useLazyGetInvoiceProductsByInvoiceIdQuery();
 
@@ -144,6 +159,97 @@ export default function Invoices() {
       invoiceProductsByInvoiceId,
       invoiceProductsLoadingByInvoiceId,
       triggerGetInvoiceProducts,
+    ],
+  );
+
+  const getInvoiceProducts = useCallback(
+    async (invoiceId: string) => {
+      const cachedProducts = invoiceProductsByInvoiceId[invoiceId];
+      if (cachedProducts) return cachedProducts;
+
+      setInvoiceProductsLoadingByInvoiceId((prev) => ({
+        ...prev,
+        [invoiceId]: true,
+      }));
+
+      try {
+        const items = await triggerGetInvoiceProducts(invoiceId).unwrap();
+        setInvoiceProductsByInvoiceId((prev) => ({
+          ...prev,
+          [invoiceId]: items,
+        }));
+        return items;
+      } catch {
+        setInvoiceProductsByInvoiceId((prev) => ({
+          ...prev,
+          [invoiceId]: [],
+        }));
+        throw new Error("No se pudieron cargar los productos de la factura.");
+      } finally {
+        setInvoiceProductsLoadingByInvoiceId((prev) => ({
+          ...prev,
+          [invoiceId]: false,
+        }));
+      }
+    },
+    [invoiceProductsByInvoiceId, triggerGetInvoiceProducts],
+  );
+
+  const handlePrintInvoice = useCallback(
+    async (invoice: InvoiceListRow) => {
+      if (printingInvoiceId) return;
+
+      const popup = openInvoicePdfTab();
+
+      if (!popup) {
+        dispatch(
+          setSnackbar({
+            message:
+              "No se pudo abrir el PDF en una pestaña nueva. Verificá el bloqueo de popups.",
+            type: "error",
+          }),
+        );
+        return;
+      }
+
+      setPrintingInvoiceId(invoice.id);
+
+      try {
+        const invoiceProducts = await getInvoiceProducts(invoice.id);
+        const clientName = clientNameById.get(String(invoice.client || ""));
+        const invoicePdfModel = buildInvoicePdfModel({
+          invoice: {
+            ...invoice,
+            client: JSON.stringify({
+              id: invoice.client,
+              name: clientName || "-",
+            }),
+            invoice_products: JSON.stringify(invoiceProducts),
+          } as VInvoicesResponse,
+          products,
+          measureUnits,
+        });
+
+        await openInvoicePdfInViewer(invoicePdfModel, popup);
+      } catch {
+        popup.close();
+        dispatch(
+          setSnackbar({
+            message: "No se pudo generar o abrir el PDF de la factura.",
+            type: "error",
+          }),
+        );
+      } finally {
+        setPrintingInvoiceId("");
+      }
+    },
+    [
+      clientNameById,
+      dispatch,
+      getInvoiceProducts,
+      measureUnits,
+      printingInvoiceId,
+      products,
     ],
   );
 
@@ -252,8 +358,14 @@ export default function Invoices() {
         icon: <OpenInNewRounded fontSize="small" color="primary" />,
         onClick: (item) => handleGoTo(`${AppRoutes.Invoices}/${item.id}`),
       },
+      {
+        id: "print",
+        label: "Imprimir factura",
+        icon: <PrintRounded fontSize="small" sx={{ color: "text.primary" }} />,
+        onClick: (item) => void handlePrintInvoice(item as InvoiceListRow),
+      },
     ],
-    [handleGoTo],
+    [handleGoTo, handlePrintInvoice],
   );
 
   return (

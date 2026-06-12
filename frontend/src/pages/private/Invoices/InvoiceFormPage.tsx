@@ -3,7 +3,7 @@ import type { KeyboardEvent, Ref, RefObject } from "react";
 import { useParams, useSearchParams } from "react-router-dom";
 import dayjs, { Dayjs } from "dayjs";
 import { useFormik } from "formik";
-import type { FormikErrors } from "formik";
+import type { FormikErrors, FormikTouched } from "formik";
 import { NumericFormat } from "react-number-format";
 import {
   AddRounded,
@@ -80,6 +80,7 @@ import { getShortInvoiceId } from "src/components/common/pdf";
 type InvoicePageMode = "new" | "review" | "edit";
 type InvoicePaymentMode = "none" | "full" | "partial";
 type InvoiceAmountInput = number | "";
+type InvoiceConfirmationAction = "create" | "update";
 
 interface InvoiceProductInput {
   id: string;
@@ -203,6 +204,8 @@ const productTableEditableFields: ProductTableEditableField[] = [
 const invoiceProductsActionColumnWidth = 56;
 const invoiceProductsEditableActionColumnWidth = 88;
 const invoiceProductsTotalColumnWidth = 112;
+const invoiceDecimalScale = 3;
+const invoiceDecimalStep = "0.001";
 
 const invoiceProductsTotalColumnSx = {
   width: invoiceProductsTotalColumnWidth,
@@ -268,7 +271,17 @@ const getCreateItemTotal = (item: InvoiceProductInput) =>
       (1 - Math.max(0, Math.min(100, item.discount)) / 100),
   );
 
-const clampDiscount = (value: number) => Math.min(100, Math.max(0, value));
+const clampInvoiceDecimalPlaces = (value: number) => {
+  if (!Number.isFinite(value)) return 0;
+  const factor = 10 ** invoiceDecimalScale;
+  return Math.trunc((value + Number.EPSILON) * factor) / factor;
+};
+
+const clampDiscount = (value: number) =>
+  Math.min(100, Math.max(0, clampInvoiceDecimalPlaces(value)));
+
+const normalizeInvoiceDecimalInput = (value: string) =>
+  clampInvoiceDecimalPlaces(Math.max(0, Number(value || 0)));
 
 const hasInvalidInvoiceRows = (rows: InvoiceProductInput[]) =>
   rows.some(
@@ -360,6 +373,25 @@ const getPaymentValidationMessage = (
 
   return "";
 };
+
+const hasInvoiceFormErrors = (errors: FormikErrors<InvoiceFormValues>) =>
+  Object.keys(errors).length > 0;
+
+const buildInvoiceFormTouched = (
+  values: InvoiceFormValues,
+): FormikTouched<InvoiceFormValues> => ({
+  client: true,
+  date: true,
+  discount: true,
+  paymentMode: true,
+  partialPaymentAmount: true,
+  rows: values.rows.map(() => ({
+    product: true,
+    amount: true,
+    unitPrice: true,
+    discount: true,
+  })),
+});
 
 const getInvoiceRowErrors = (errors: FormikErrors<InvoiceFormValues>) =>
   Array.isArray(errors.rows) ? (errors.rows as InvoiceProductRowErrors[]) : [];
@@ -866,7 +898,7 @@ function ProductsTable({
                     value={row.amount}
                     decimalSeparator=","
                     allowedDecimalSeparators={[",", "."]}
-                    decimalScale={2}
+                    decimalScale={invoiceDecimalScale}
                     fixedDecimalScale={shouldShowAmountDecimals}
                     allowNegative={false}
                     onValueChange={(values) => {
@@ -917,10 +949,10 @@ function ProductsTable({
                         onRowChange?.(
                           row.id,
                           "unitPrice",
-                          Math.max(0, Number(e.target.value || 0)),
+                          normalizeInvoiceDecimalInput(e.target.value),
                         )
                       }
-                      inputProps={{ min: 0, step: "0.01" }}
+                      inputProps={{ min: 0, step: invoiceDecimalStep }}
                       InputProps={withLoadingInputProps(
                         undefined,
                         isPriceLoading,
@@ -955,7 +987,7 @@ function ProductsTable({
                         clampDiscount(Number(e.target.value || 0)),
                       )
                     }
-                    inputProps={{ min: 0, max: 100, step: "0.01" }}
+                    inputProps={{ min: 0, max: 100, step: invoiceDecimalStep }}
                     InputProps={{
                       endAdornment: (
                         <InputAdornment position="end">%</InputAdornment>
@@ -1096,7 +1128,7 @@ function InvoiceTotalsSummary({
             onDiscountChange?.(clampDiscount(Number(event.target.value || 0)))
           }
           disabled={disabled}
-          inputProps={{ min: 0, max: 100, step: "0.01" }}
+          inputProps={{ min: 0, max: 100, step: invoiceDecimalStep }}
           InputProps={{
             endAdornment: <InputAdornment position="end">%</InputAdornment>,
           }}
@@ -1186,9 +1218,11 @@ function ClientBalanceSummary({
           type="number"
           value={partialPaymentAmount || ""}
           onChange={(event) =>
-            onPartialPaymentAmountChange(Number(event.target.value || 0))
+            onPartialPaymentAmountChange(
+              normalizeInvoiceDecimalInput(event.target.value),
+            )
           }
-          inputProps={{ min: 0, step: "0.01" }}
+          inputProps={{ min: 0, step: invoiceDecimalStep }}
           InputProps={{
             startAdornment: <InputAdornment position="start">$</InputAdornment>,
           }}
@@ -1254,6 +1288,8 @@ export default function InvoiceFormPage() {
   );
   const [isPrinting, setIsPrinting] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [invoiceConfirmationAction, setInvoiceConfirmationAction] =
+    useState<InvoiceConfirmationAction | null>(null);
   const [isInvoiceDeleted, setIsInvoiceDeleted] = useState(false);
   const [retrieveLastPriceEnabled, setRetrieveLastPriceEnabled] =
     useState(false);
@@ -1411,7 +1447,7 @@ export default function InvoiceFormPage() {
         }
 
         const paymentPayload = getPaymentPayload(values, invoiceTotal);
-        const created = await createInvoice({
+        await createInvoice({
           client: values.client,
           date: normalizedDate,
           discount: values.discount,
@@ -1431,6 +1467,7 @@ export default function InvoiceFormPage() {
             type: "success",
           }),
         );
+        setInvoiceConfirmationAction(null);
         handleGoTo(AppRoutes.Invoices);
       } catch (error) {
         dispatch(
@@ -1529,6 +1566,7 @@ export default function InvoiceFormPage() {
             type: "success",
           }),
         );
+        setInvoiceConfirmationAction(null);
         setSearchParams({ mode: "review" });
       } catch {
         // Error feedback is already handled by RTK middleware.
@@ -1687,8 +1725,63 @@ export default function InvoiceFormPage() {
     newFormik.values.rows.length > 0 &&
     !hasInvalidRows;
 
+  const requestInvoiceConfirmation = async (
+    action: InvoiceConfirmationAction,
+  ) => {
+    const formik = action === "create" ? newFormik : editFormik;
+    const errors = await formik.validateForm();
+    formik.setTouched(buildInvoiceFormTouched(formik.values), false);
+
+    if (hasInvoiceFormErrors(errors)) {
+      dispatch(
+        setSnackbar({
+          message: "Revisá los campos marcados antes de confirmar la factura.",
+          type: "error",
+        }),
+      );
+      return;
+    }
+
+    if (action === "create") {
+      const invoiceSubtotal = formik.values.rows.reduce(
+        (acc, row) => acc + getCreateItemTotal(row),
+        0,
+      );
+      const invoiceTotal = Math.max(
+        0,
+        invoiceSubtotal * (1 - clampDiscount(formik.values.discount) / 100),
+      );
+      const paymentError = getPaymentValidationMessage(
+        formik.values,
+        invoiceTotal,
+      );
+
+      if (paymentError) {
+        dispatch(setSnackbar({ message: paymentError, type: "error" }));
+        return;
+      }
+    }
+
+    setInvoiceConfirmationAction(action);
+  };
+
   const handleCreateInvoice = () => {
-    void newFormik.submitForm();
+    void requestInvoiceConfirmation("create");
+  };
+
+  const handleUpdateInvoice = () => {
+    void requestInvoiceConfirmation("update");
+  };
+
+  const handleConfirmInvoiceAction = () => {
+    if (invoiceConfirmationAction === "create") {
+      void newFormik.submitForm();
+      return;
+    }
+
+    if (invoiceConfirmationAction === "update") {
+      void editFormik.submitForm();
+    }
   };
 
   const handleDeleteInvoice = async () => {
@@ -1764,6 +1857,25 @@ export default function InvoiceFormPage() {
   const pageTitle = isNewMode
     ? "Crear factura"
     : `Factura "${getShortInvoiceId(invoice?.id || "")}"`;
+  const invoiceConfirmationDialog =
+    invoiceConfirmationAction === "create"
+      ? {
+          title: "Crear factura",
+          message:
+            "¿Seguro que querés crear esta factura? Se registrará con los productos, descuentos y pagos configurados.",
+          confirmLabel: "Crear factura",
+          color: "success" as const,
+          loading: isCreating,
+        }
+      : invoiceConfirmationAction === "update"
+        ? {
+            title: "Guardar cambios",
+            message: `¿Seguro que querés actualizar la factura "${getShortInvoiceId(invoice?.id || "")}"? Los cambios reemplazarán los datos actuales.`,
+            confirmLabel: "Guardar cambios",
+            color: "success" as const,
+            loading: isUpdating,
+          }
+        : null;
 
   const reviewHeaderActions =
     !isNewMode && !isEditMode ? (
@@ -2061,7 +2173,7 @@ export default function InvoiceFormPage() {
             !isNewMode ? () => setSearchParams({ mode: "edit" }) : undefined
           }
           onCancelEdit={isEditMode ? handleCancelEdit : undefined}
-          onSubmit={isEditMode ? () => void editFormik.submitForm() : undefined}
+          onSubmit={isEditMode ? handleUpdateInvoice : undefined}
           loading={isUpdating}
           submitDisabled={isUpdating}
           submitLabel="Guardar"
@@ -2495,6 +2607,41 @@ export default function InvoiceFormPage() {
           </Box>
         </EntityFormContainer>
       </LocalizationProvider>
+      <Dialog
+        open={Boolean(invoiceConfirmationDialog)}
+        onClose={
+          invoiceConfirmationDialog?.loading
+            ? undefined
+            : () => setInvoiceConfirmationAction(null)
+        }
+      >
+        <DialogTitle>{invoiceConfirmationDialog?.title}</DialogTitle>
+        <DialogContent>
+          <DialogContentText>
+            {invoiceConfirmationDialog?.message}
+          </DialogContentText>
+        </DialogContent>
+        <DialogActions>
+          <Button
+            variant="text"
+            color="inherit"
+            sx={{ color: "text.secondary" }}
+            onClick={() => setInvoiceConfirmationAction(null)}
+            disabled={invoiceConfirmationDialog?.loading}
+          >
+            Cancelar
+          </Button>
+          <Button
+            color={invoiceConfirmationDialog?.color}
+            variant="contained"
+            onClick={handleConfirmInvoiceAction}
+            loading={invoiceConfirmationDialog?.loading}
+            disabled={invoiceConfirmationDialog?.loading}
+          >
+            {invoiceConfirmationDialog?.confirmLabel}
+          </Button>
+        </DialogActions>
+      </Dialog>
       <Dialog
         open={deleteDialogOpen}
         onClose={isDeleting ? undefined : () => setDeleteDialogOpen(false)}
