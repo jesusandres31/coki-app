@@ -112,6 +112,8 @@ interface InvoiceProductRow {
 interface NamedOption {
   id: string;
   name: string;
+  price?: number;
+  measureUnitName?: string;
 }
 
 interface DebouncedAutocompleteProps {
@@ -580,6 +582,55 @@ function DebouncedAutocomplete({
       loading={loading}
       loadingText="Cargando..."
       noOptionsText="Sin resultados"
+      renderOption={(props, option) => {
+        const { key, ...optionProps } = props;
+        const secondaryParts = [
+          option.measureUnitName,
+          option.price !== undefined ? formatMoney(option.price) : "",
+        ].filter(Boolean);
+
+        return (
+          <Box
+            key={key}
+            component="li"
+            {...optionProps}
+            sx={{
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "space-between",
+              gap: 1.5,
+              minWidth: 0,
+            }}
+          >
+            <Typography
+              component="span"
+              variant="body2"
+              sx={{
+                minWidth: 0,
+                overflow: "hidden",
+                textOverflow: "ellipsis",
+                whiteSpace: "nowrap",
+              }}
+            >
+              {option.name}
+            </Typography>
+            {secondaryParts.length > 0 && (
+              <Typography
+                component="span"
+                variant="caption"
+                color="text.secondary"
+                sx={{
+                  flex: "0 0 auto",
+                  fontSize: "0.72rem",
+                  whiteSpace: "nowrap",
+                }}
+              >
+                [{secondaryParts.join(" · ")}]
+              </Typography>
+            )}
+          </Box>
+        );
+      }}
       renderInput={(params) => (
         <TextField
           {...params}
@@ -1425,18 +1476,20 @@ export default function InvoiceFormPage() {
     () => new Map(clients.map((client) => [client.id, client])),
     [clients],
   );
+  const measureUnitById = useMemo(
+    () => buildMeasureUnitNameById(measureUnits),
+    [measureUnits],
+  );
+
   const productOptions = useMemo<NamedOption[]>(
     () =>
       products.map((item) => ({
         id: item.id,
         name: item.name,
+        price: Number(item.unit_price ?? 0),
+        measureUnitName: measureUnitById.get(String(item.measure_unit || "")),
       })),
-    [products],
-  );
-
-  const measureUnitById = useMemo(
-    () => buildMeasureUnitNameById(measureUnits),
-    [measureUnits],
+    [measureUnitById, products],
   );
 
   const newFormik = useFormik<InvoiceFormValues>({
