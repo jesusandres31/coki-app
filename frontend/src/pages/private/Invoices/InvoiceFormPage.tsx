@@ -68,7 +68,10 @@ import {
   setSnackbar,
 } from "src/slices/uiSlice";
 import { formatMoney, formatPercent } from "src/utils/format";
-import { buildMeasureUnitNameById } from "src/utils/measureUnits";
+import {
+  buildMeasureUnitNameById,
+  isKgMeasureUnitName,
+} from "src/utils/measureUnits";
 import { invoiceBreadcrumbFlow } from "./breadcrumbFlow";
 import {
   buildInvoicePdfModel,
@@ -845,9 +848,7 @@ function ProductsTable({
           {rows.map((row, rowIndex) => {
             const rowError = rowErrors[rowIndex] || {};
             const isPriceLoading = priceLoadingRowIds.has(row.id);
-            const isKgUnit =
-              row.measureUnitName.trim().toLowerCase().replace(".", "") ===
-              "kg";
+            const isKgUnit = isKgMeasureUnitName(row.measureUnitName);
             const shouldShowAmountDecimals =
               isKgUnit ||
               amountDecimalRowIds.has(row.id) ||
