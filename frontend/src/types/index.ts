@@ -80,7 +80,7 @@ export interface Input {
   min?: number;
   multiline?: boolean;
   InputProps?: {
-    inputComponent: React.ComponentType<any>;
+    inputComponent?: React.ComponentType<any>;
     startAdornment?: JSX.Element;
     endAdornment?: JSX.Element;
   };

@@ -5,6 +5,7 @@ import {
   DialogActions,
   DialogContent,
   DialogTitle,
+  InputAdornment,
   Stack,
   TextField,
 } from "@mui/material";
@@ -73,6 +74,9 @@ export default function ProductCatalogPriceDialog({
             allowedDecimalSeparators={[",", "."]}
             decimalScale={3}
             allowNegative={false}
+            InputProps={{
+              startAdornment: <InputAdornment position="start">$</InputAdornment>,
+            }}
             helperText={`Actual: ${formatMoney(product?.unitPrice ?? 0)}`}
             onValueChange={(values) => {
               setPrice(values.value === "" ? "" : (values.floatValue ?? 0));

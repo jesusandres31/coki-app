@@ -92,13 +92,14 @@ import ProductCatalogPriceDialog, {
 type InvoicePageMode = "new" | "review" | "edit";
 type InvoicePaymentMode = "none" | "full" | "partial";
 type InvoiceAmountInput = number | "";
+type InvoicePriceInput = number | "";
 type InvoiceConfirmationAction = "create" | "update";
 
 interface InvoiceProductInput {
   id: string;
   product: string;
   amount: InvoiceAmountInput;
-  unitPrice: number;
+  unitPrice: InvoicePriceInput;
   discount: number;
 }
 
@@ -144,7 +145,7 @@ interface ProductTableRowData {
   productName: string;
   measureUnitName: string;
   amount: InvoiceAmountInput;
-  unitPrice: number;
+  unitPrice: InvoicePriceInput;
   catalogUnitPrice?: number;
   discount: number;
   total: number;
@@ -286,7 +287,7 @@ const getCreateItemTotal = (item: InvoiceProductInput) =>
   Math.max(
     0,
     Number(item.amount || 0) *
-      item.unitPrice *
+      Number(item.unitPrice || 0) *
       (1 - Math.max(0, Math.min(100, item.discount)) / 100),
   );
 
@@ -302,12 +303,16 @@ const clampDiscount = (value: number) =>
 const normalizeInvoiceDecimalInput = (value: string) =>
   clampInvoiceDecimalPlaces(Math.max(0, Number(value || 0)));
 
+const normalizeOptionalInvoiceDecimalInput = (value: string) =>
+  value === "" ? "" : normalizeInvoiceDecimalInput(value);
+
 const hasInvalidInvoiceRows = (rows: InvoiceProductInput[]) =>
   rows.some(
     (row) =>
       !row.product ||
       row.amount === "" ||
       row.amount < 0 ||
+      row.unitPrice === "" ||
       row.unitPrice < 0 ||
       row.discount < 0 ||
       row.discount > 100,
@@ -318,6 +323,7 @@ const isCompleteInvoiceRow = (row: InvoiceProductInput | undefined) =>
   Boolean(row?.product) &&
   row?.amount !== "" &&
   Number(row?.amount || 0) >= 0 &&
+  row?.unitPrice !== "" &&
   Number(row?.unitPrice || 0) >= 0 &&
   Number(row?.discount || 0) >= 0 &&
   Number(row?.discount || 0) <= 100;
@@ -346,7 +352,9 @@ const validateInvoiceForm = (values: InvoiceFormValues) => {
       errors.amount = "Cantidad inválida.";
     }
 
-    if (row.unitPrice < 0) {
+    if (row.unitPrice === "") {
+      errors.unitPrice = "Ingresá precio.";
+    } else if (row.unitPrice < 0) {
       errors.unitPrice = "Precio inválido.";
     }
 
@@ -1087,12 +1095,16 @@ function ProductsTable({
                         onRowChange?.(
                           row.id,
                           "unitPrice",
-                          normalizeInvoiceDecimalInput(e.target.value),
+                          normalizeOptionalInvoiceDecimalInput(e.target.value),
                         )
                       }
                       inputProps={{ min: 0, step: invoiceDecimalStep }}
                       InputProps={withLoadingInputProps(
-                        undefined,
+                        {
+                          startAdornment: (
+                            <InputAdornment position="start">$</InputAdornment>
+                          ),
+                        },
                         isPriceLoading,
                       )}
                       inputRef={setFieldRef(row.id, "unitPrice")}
@@ -1656,7 +1668,7 @@ export default function InvoiceFormPage() {
           items: values.rows.map((row) => ({
             product: row.product,
             amount: Number(row.amount),
-            unitPrice: row.unitPrice,
+            unitPrice: Number(row.unitPrice),
             discount: row.discount,
           })),
         }).unwrap();
@@ -1756,7 +1768,7 @@ export default function InvoiceFormPage() {
             id: row.id,
             product: row.product,
             amount: Number(row.amount),
-            unitPrice: row.unitPrice,
+            unitPrice: Number(row.unitPrice),
             discount: row.discount,
           })),
         }).unwrap();
@@ -2281,7 +2293,10 @@ export default function InvoiceFormPage() {
 
         return {
           ...row,
-          [field]: field === "amount" && value === "" ? "" : Number(value),
+          [field]:
+            (field === "amount" || field === "unitPrice") && value === ""
+              ? ""
+              : Number(value),
         };
       }),
     );

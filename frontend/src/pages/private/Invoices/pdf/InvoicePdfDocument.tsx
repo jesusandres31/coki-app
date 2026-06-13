@@ -14,6 +14,9 @@ interface InvoicePdfDocumentProps {
   invoice: InvoicePdfModel;
 }
 
+const formatInvoiceQuantity = (amount: number) =>
+  Number.isInteger(amount) ? String(amount) : amount.toFixed(3);
+
 const styles = StyleSheet.create({
   page: {
     paddingTop: 20,
@@ -167,7 +170,7 @@ export function InvoicePdfDocument({ invoice }: InvoicePdfDocumentProps) {
               key: "amount",
               label: "Cant.",
               style: styles.qtyCell,
-              render: (item) => item.amount,
+              render: (item) => formatInvoiceQuantity(item.amount),
             },
             {
               key: "unit",

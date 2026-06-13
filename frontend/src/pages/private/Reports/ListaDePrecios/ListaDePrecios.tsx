@@ -9,6 +9,7 @@ import {
   Checkbox,
   Chip,
   FormControlLabel,
+  InputAdornment,
   Stack,
   Table,
   TableBody,
@@ -814,6 +815,11 @@ export default function ListaDePrecios() {
                                 }
                               }}
                               inputProps={{ min: 0, step: "0.01" }}
+                              InputProps={{
+                                startAdornment: (
+                                  <InputAdornment position="start">$</InputAdornment>
+                                ),
+                              }}
                               sx={{
                                 width: "100%",
                                 "& .MuiInputBase-root": {

@@ -1,7 +1,6 @@
 import { useMemo } from "react";
 import { useFormik } from "formik";
 import * as Yup from "yup";
-import { AccountBalanceWalletRounded } from "@mui/icons-material";
 import {
   Autocomplete,
   Button,
@@ -326,11 +325,7 @@ export default function PaymentMovementDialog({
               min: isAdjustment ? undefined : 0.01,
             }}
             InputProps={{
-              startAdornment: (
-                <InputAdornment position="start">
-                  <AccountBalanceWalletRounded fontSize="small" />
-                </InputAdornment>
-              ),
+              startAdornment: <InputAdornment position="start">$</InputAdornment>,
             }}
           />
           <TextField

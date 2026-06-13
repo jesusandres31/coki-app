@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useFormik } from "formik";
 import * as Yup from "yup";
 import { useParams } from "react-router-dom";
+import { InputAdornment } from "@mui/material";
 import {
   useCreateProductMutation,
   useDeleteProductMutation,
@@ -166,6 +167,9 @@ export default function ProductFormPage() {
       min: FORM_VLDN.NN_REAL_NUMBER.min,
       max: FORM_VLDN.NN_REAL_NUMBER.max,
       type: "number",
+      InputProps: {
+        startAdornment: <InputAdornment position="start">$</InputAdornment>,
+      },
     },
     {
       required: true,
