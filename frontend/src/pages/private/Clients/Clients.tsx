@@ -21,7 +21,7 @@ import { useRouter } from "src/hooks";
 import { AppRoutes } from "src/config";
 import { ClientsResponse } from "src/types/pocketbase-types";
 import { Column, DataGridRowAction, GetList } from "src/types";
-import { formatMoney } from "src/utils/format";
+import { MoneyValue } from "src/utils/format";
 import { clientsBreadcrumbFlow } from "./breadcrumbFlow";
 import PaymentMovementDialog from "../Payments/PaymentMovementDialog";
 import { buildCrudRowActions } from "../crudListUtils";
@@ -98,7 +98,9 @@ export default function Clients() {
         align: "right",
         minWidth: 140,
         type: "number",
-        render: (item: ClientsResponse) => formatMoney(item.balance ?? 0),
+        render: (item: ClientsResponse) => (
+          <MoneyValue value={item.balance ?? 0} />
+        ),
       },
     ],
     [],

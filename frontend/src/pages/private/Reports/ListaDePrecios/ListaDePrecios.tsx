@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import dayjs from "dayjs";
+import { NumericFormat } from "react-number-format";
 import { PrintRounded, RestartAltRounded } from "@mui/icons-material";
 import {
   Autocomplete,
@@ -32,7 +33,7 @@ import { getListArgsInitialState } from "src/constants";
 import { setSnackbar } from "src/slices/uiSlice";
 import { GetList } from "src/types";
 import { ProductsResponse } from "src/types/pocketbase-types";
-import { formatMoney } from "src/utils/format";
+import { formatMoney, MoneyValue } from "src/utils/format";
 import { buildMeasureUnitNameById } from "src/utils/measureUnits";
 import { openPriceListPdfInViewer, openPriceListPdfTab } from "../pdf";
 import { getProductTypeIds, roundPrice, toNumber } from "../reportUtils";
@@ -381,7 +382,7 @@ export default function ListaDePrecios() {
             id: row.id,
             productName: row.productName,
             measureUnitName: row.measureUnitName,
-            unitPrice: formatMoney(row.unitPrice),
+            unitPrice: row.unitPrice,
           })),
           totalItems: priceListRows.length,
         },
@@ -636,14 +637,17 @@ export default function ListaDePrecios() {
               spacing={1}
               alignItems={{ xs: "stretch", md: "center" }}
             >
-              <TextField
+              <NumericFormat
+                customInput={TextField}
                 size="small"
-                type="number"
                 variant="outlined"
                 label="Ajuste global (%)"
                 value={sessionPercentDraft}
-                onChange={(event) => setSessionPercentDraft(event.target.value)}
-                inputProps={{ step: "0.01" }}
+                valueIsNumericString
+                decimalSeparator=","
+                allowedDecimalSeparators={[",", "."]}
+                decimalScale={2}
+                onValueChange={(values) => setSessionPercentDraft(values.value)}
                 sx={{ minWidth: { md: 220 } }}
               />
               <Button
@@ -794,14 +798,19 @@ export default function ListaDePrecios() {
                           }}
                         >
                           {editingPriceProductId === row.id ? (
-                            <TextField
+                            <NumericFormat
+                              customInput={TextField}
                               autoFocus
                               size="small"
-                              type="number"
                               variant="standard"
                               value={editingPriceDraft}
-                              onChange={(event) =>
-                                setEditingPriceDraft(event.target.value)
+                              valueIsNumericString
+                              decimalSeparator=","
+                              allowedDecimalSeparators={[",", "."]}
+                              decimalScale={2}
+                              allowNegative={false}
+                              onValueChange={(values) =>
+                                setEditingPriceDraft(values.value)
                               }
                               onBlur={() => handleCommitPriceEditor(row.id)}
                               onKeyDown={(event) => {
@@ -814,10 +823,18 @@ export default function ListaDePrecios() {
                                   handleClosePriceEditor();
                                 }
                               }}
-                              inputProps={{ min: 0, step: "0.01" }}
                               InputProps={{
                                 startAdornment: (
-                                  <InputAdornment position="start">$</InputAdornment>
+                                  <InputAdornment
+                                    position="start"
+                                    sx={{
+                                      mr: 0.75,
+                                      minWidth: 14,
+                                      justifyContent: "center",
+                                    }}
+                                  >
+                                    $
+                                  </InputAdornment>
                                 ),
                               }}
                               sx={{
@@ -837,7 +854,7 @@ export default function ListaDePrecios() {
                               fontWeight={row.hasManualPrice ? 700 : 500}
                               sx={{ width: "100%", textAlign: "right" }}
                             >
-                              {formatMoney(row.unitPrice)}
+                              <MoneyValue value={row.unitPrice} />
                             </Typography>
                           )}
                         </Box>

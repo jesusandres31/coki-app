@@ -68,7 +68,7 @@ import {
   setBreadcrumbs,
   setSnackbar,
 } from "src/slices/uiSlice";
-import { formatMoney, formatPercent } from "src/utils/format";
+import { formatMoney, formatPercent, MoneyValue } from "src/utils/format";
 import {
   buildMeasureUnitNameById,
   isKgMeasureUnitName,
@@ -1042,6 +1042,7 @@ function ProductsTable({
                     size="small"
                     variant="standard"
                     value={row.amount}
+                    valueIsNumericString
                     decimalSeparator=","
                     allowedDecimalSeparators={[",", "."]}
                     decimalScale={invoiceDecimalScale}
@@ -1085,29 +1086,43 @@ function ProductsTable({
 
                 <TableCell sx={priceCellSx}>
                   <Box>
-                    <TextField
+                    <NumericFormat
+                      customInput={TextField}
                       fullWidth
                       size="small"
                       variant="standard"
-                      type="number"
                       value={row.unitPrice}
-                      onChange={(e) =>
+                      valueIsNumericString
+                      decimalSeparator=","
+                      allowedDecimalSeparators={[",", "."]}
+                      decimalScale={invoiceDecimalScale}
+                      allowNegative={false}
+                      onValueChange={(values) =>
                         onRowChange?.(
                           row.id,
                           "unitPrice",
-                          normalizeOptionalInvoiceDecimalInput(e.target.value),
+                          normalizeOptionalInvoiceDecimalInput(values.value),
                         )
                       }
                       inputProps={{ min: 0, step: invoiceDecimalStep }}
                       InputProps={withLoadingInputProps(
                         {
                           startAdornment: (
-                            <InputAdornment position="start">$</InputAdornment>
+                            <InputAdornment
+                              position="start"
+                              sx={{
+                                mr: 0.75,
+                                minWidth: 14,
+                                justifyContent: "center",
+                              }}
+                            >
+                              $
+                            </InputAdornment>
                           ),
                         },
                         isPriceLoading,
                       )}
-                      inputRef={setFieldRef(row.id, "unitPrice")}
+                      getInputRef={setFieldRef(row.id, "unitPrice")}
                       onKeyDown={handleFieldKeyDown(rowIndex, "unitPrice")}
                       disabled={controlsDisabled || isPriceLoading}
                       error={Boolean(rowError.unitPrice)}
@@ -1159,23 +1174,34 @@ function ProductsTable({
                         ))
                       }
                       FormHelperTextProps={singleLineHelperTextProps}
-                      sx={readableDisabledFieldSx}
+                      sx={(theme) => ({
+                        ...readableDisabledFieldSx(theme),
+                        "& .MuiInputBase-input": {
+                          textAlign: "right",
+                          fontVariantNumeric: "tabular-nums",
+                        },
+                      })}
                     />
                   </Box>
                 </TableCell>
 
                 <TableCell sx={editableBodyCellSx}>
-                  <TextField
+                  <NumericFormat
+                    customInput={TextField}
                     fullWidth
                     size="small"
                     variant="standard"
-                    type="number"
                     value={row.discount}
-                    onChange={(e) =>
+                    valueIsNumericString
+                    decimalSeparator=","
+                    allowedDecimalSeparators={[",", "."]}
+                    decimalScale={invoiceDecimalScale}
+                    allowNegative={false}
+                    onValueChange={(values) =>
                       onRowChange?.(
                         row.id,
                         "discount",
-                        clampDiscount(Number(e.target.value || 0)),
+                        clampDiscount(Number(values.value || 0)),
                       )
                     }
                     inputProps={{ min: 0, max: 100, step: invoiceDecimalStep }}
@@ -1184,7 +1210,7 @@ function ProductsTable({
                         <InputAdornment position="end">%</InputAdornment>
                       ),
                     }}
-                    inputRef={setFieldRef(row.id, "discount")}
+                    getInputRef={setFieldRef(row.id, "discount")}
                     onKeyDown={handleFieldKeyDown(rowIndex, "discount")}
                     disabled={controlsDisabled}
                     error={Boolean(rowError.discount)}
@@ -1201,7 +1227,7 @@ function ProductsTable({
                       fontWeight={600}
                       sx={totalValueSx}
                     >
-                      {formatMoney(row.total)}
+                      <MoneyValue value={row.total} />
                     </Typography>
                     <Box sx={rowHelperSpacerSx} />
                   </Box>
@@ -1309,14 +1335,19 @@ function InvoiceTotalsSummary({
         alignItems="flex-start"
         spacing={1}
       >
-        <TextField
+        <NumericFormat
+          customInput={TextField}
           variant="standard"
           fullWidth
           label="Descuento factura"
-          type="number"
           value={discountPercent}
-          onChange={(event) =>
-            onDiscountChange?.(clampDiscount(Number(event.target.value || 0)))
+          valueIsNumericString
+          decimalSeparator=","
+          allowedDecimalSeparators={[",", "."]}
+          decimalScale={invoiceDecimalScale}
+          allowNegative={false}
+          onValueChange={(values) =>
+            onDiscountChange?.(clampDiscount(Number(values.value || 0)))
           }
           disabled={disabled}
           inputProps={{ min: 0, max: 100, step: invoiceDecimalStep }}
@@ -1401,21 +1432,33 @@ function ClientBalanceSummary({
         label="Registrar pago"
       />
       {hasPayment && (
-        <TextField
+        <NumericFormat
+          customInput={TextField}
           variant="standard"
           size="small"
           fullWidth
           label="Importe entregado"
-          type="number"
           value={partialPaymentAmount || ""}
-          onChange={(event) =>
+          valueIsNumericString
+          decimalSeparator=","
+          allowedDecimalSeparators={[",", "."]}
+          decimalScale={invoiceDecimalScale}
+          allowNegative={false}
+          onValueChange={(values) =>
             onPartialPaymentAmountChange(
-              normalizeInvoiceDecimalInput(event.target.value),
+              normalizeInvoiceDecimalInput(values.value),
             )
           }
           inputProps={{ min: 0, step: invoiceDecimalStep }}
           InputProps={{
-            startAdornment: <InputAdornment position="start">$</InputAdornment>,
+            startAdornment: (
+              <InputAdornment
+                position="start"
+                sx={{ mr: 0.75, minWidth: 14, justifyContent: "center" }}
+              >
+                $
+              </InputAdornment>
+            ),
           }}
           disabled={disabled}
         />
@@ -1491,10 +1534,32 @@ export default function InvoiceFormPage() {
   const [focusedProductRowId, setFocusedProductRowId] = useState("");
   const mobileAddProductButtonRef = useRef<HTMLButtonElement>(null);
   const desktopAddProductButtonRef = useRef<HTMLButtonElement>(null);
+  const invoiceConfirmButtonRef = useRef<HTMLButtonElement>(null);
+  const deleteInvoiceConfirmButtonRef = useRef<HTMLButtonElement>(null);
 
   useEffect(() => {
     setMode(isDetailRoute ? requestedDetailMode : "new");
   }, [isDetailRoute, requestedDetailMode]);
+
+  useEffect(() => {
+    if (!invoiceConfirmationAction) return;
+
+    const frameId = requestAnimationFrame(() => {
+      invoiceConfirmButtonRef.current?.focus();
+    });
+
+    return () => cancelAnimationFrame(frameId);
+  }, [invoiceConfirmationAction]);
+
+  useEffect(() => {
+    if (!deleteDialogOpen) return;
+
+    const frameId = requestAnimationFrame(() => {
+      deleteInvoiceConfirmButtonRef.current?.focus();
+    });
+
+    return () => cancelAnimationFrame(frameId);
+  }, [deleteDialogOpen]);
 
   useEffect(() => {
     setIsInvoiceDeleted(false);
@@ -2882,6 +2947,14 @@ export default function InvoiceFormPage() {
             ? undefined
             : () => setInvoiceConfirmationAction(null)
         }
+        onKeyDown={(event) => {
+          if (event.key !== "Enter" || invoiceConfirmationDialog?.loading) {
+            return;
+          }
+
+          event.preventDefault();
+          handleConfirmInvoiceAction();
+        }}
       >
         <DialogTitle>{invoiceConfirmationDialog?.title}</DialogTitle>
         <DialogContent>
@@ -2900,6 +2973,8 @@ export default function InvoiceFormPage() {
             Cancelar
           </Button>
           <Button
+            ref={invoiceConfirmButtonRef}
+            autoFocus
             color={invoiceConfirmationDialog?.color}
             variant="contained"
             onClick={handleConfirmInvoiceAction}
@@ -2913,6 +2988,12 @@ export default function InvoiceFormPage() {
       <Dialog
         open={deleteDialogOpen}
         onClose={isDeleting ? undefined : () => setDeleteDialogOpen(false)}
+        onKeyDown={(event) => {
+          if (event.key !== "Enter" || isDeleting) return;
+
+          event.preventDefault();
+          void handleDeleteInvoice();
+        }}
       >
         <DialogTitle>Eliminar factura</DialogTitle>
         <DialogContent>
@@ -2931,6 +3012,8 @@ export default function InvoiceFormPage() {
             Cancelar
           </Button>
           <Button
+            ref={deleteInvoiceConfirmButtonRef}
+            autoFocus
             color="error"
             variant="contained"
             onClick={() => void handleDeleteInvoice()}

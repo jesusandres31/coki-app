@@ -7,7 +7,7 @@ import {
   PdfSimpleTable,
   pdfStyles,
 } from "src/components/common/pdf";
-import { formatMoney, formatPercent } from "src/utils/format";
+import { formatDecimal, formatMoneyAmount, formatPercent } from "src/utils/format";
 import { InvoicePdfItem, InvoicePdfModel } from "./model";
 
 interface InvoicePdfDocumentProps {
@@ -15,7 +15,14 @@ interface InvoicePdfDocumentProps {
 }
 
 const formatInvoiceQuantity = (amount: number) =>
-  Number.isInteger(amount) ? String(amount) : amount.toFixed(3);
+  Number.isInteger(amount) ? String(amount) : formatDecimal(amount, 3);
+
+const renderPdfMoney = (value: number) => (
+  <View style={styles.moneyValue}>
+    <Text style={styles.moneySymbol}>$</Text>
+    <Text style={styles.moneyAmount}>{formatMoneyAmount(value)}</Text>
+  </View>
+);
 
 const styles = StyleSheet.create({
   page: {
@@ -102,6 +109,21 @@ const styles = StyleSheet.create({
     width: "20%",
     textAlign: "right",
   },
+  moneyValue: {
+    flexDirection: "row",
+    justifyContent: "flex-end",
+    alignItems: "baseline",
+    width: "100%",
+  },
+  moneySymbol: {
+    width: 7,
+    marginRight: 4,
+    textAlign: "center",
+  },
+  moneyAmount: {
+    minWidth: 34,
+    textAlign: "right",
+  },
 });
 
 export function InvoicePdfDocument({ invoice }: InvoicePdfDocumentProps) {
@@ -182,14 +204,14 @@ export function InvoicePdfDocument({ invoice }: InvoicePdfDocumentProps) {
               key: "unitPrice",
               label: "Precio Unit.",
               style: unitPriceCellStyle,
-              render: (item) => formatMoney(item.unitPrice),
+              render: (item) => renderPdfMoney(item.unitPrice),
             },
             ...discountColumns,
             {
               key: "total",
               label: "Total",
               style: styles.totalCell,
-              render: (item) => formatMoney(item.total),
+              render: (item) => renderPdfMoney(item.total),
             },
           ]}
         />
@@ -198,7 +220,7 @@ export function InvoicePdfDocument({ invoice }: InvoicePdfDocumentProps) {
           {hasInvoiceDiscount ? (
             <View style={pdfStyles.summaryRow}>
               <Text>Subtotal</Text>
-              <Text>{formatMoney(invoice.subtotal)}</Text>
+              {renderPdfMoney(invoice.subtotal)}
             </View>
           ) : null}
           {hasInvoiceDiscount ? (
@@ -215,7 +237,7 @@ export function InvoicePdfDocument({ invoice }: InvoicePdfDocumentProps) {
             ]}
           >
             <Text>Total</Text>
-            <Text>{formatMoney(invoice.total)}</Text>
+            {renderPdfMoney(invoice.total)}
           </View>
         </View>
       </Page>

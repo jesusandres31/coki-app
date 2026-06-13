@@ -15,7 +15,7 @@ import { resetBreadcrumbs, setBreadcrumbs, setSnackbar } from "src/slices/uiSlic
 import { useRouter } from "src/hooks";
 import { AppRoutes } from "src/config";
 import { ProductsResponse } from "src/types/pocketbase-types";
-import { formatMoney } from "src/utils/format";
+import { MoneyValue } from "src/utils/format";
 import { buildMeasureUnitNameById } from "src/utils/measureUnits";
 import { Column, DataGridRowAction, GetList } from "src/types";
 import { productsBreadcrumbFlow } from "./breadcrumbFlow";
@@ -99,7 +99,9 @@ export default function Products() {
         id: "unit_price",
         label: "Precio",
         minWidth: 150,
-        render: (item: ProductsResponse) => formatMoney(item.unit_price),
+        render: (item: ProductsResponse) => (
+          <MoneyValue value={item.unit_price} />
+        ),
       },
       {
         id: "measure_unit",

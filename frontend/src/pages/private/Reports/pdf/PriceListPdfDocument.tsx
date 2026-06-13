@@ -5,6 +5,7 @@ import {
   PdfSimpleTable,
   pdfStyles,
 } from "src/components/common/pdf";
+import { formatMoneyAmount } from "src/utils/format";
 import { PriceListPdfItem, PriceListPdfModel } from "./model";
 import { buildProductUnitPdfColumns } from "./reportPdfUtils";
 
@@ -24,7 +25,29 @@ const styles = StyleSheet.create({
     width: "26%",
     textAlign: "right",
   },
+  moneyValue: {
+    flexDirection: "row",
+    justifyContent: "flex-end",
+    alignItems: "baseline",
+    width: "100%",
+  },
+  moneySymbol: {
+    width: 7,
+    marginRight: 4,
+    textAlign: "center",
+  },
+  moneyAmount: {
+    minWidth: 34,
+    textAlign: "right",
+  },
 });
+
+const renderPdfMoney = (value: number) => (
+  <View style={styles.moneyValue}>
+    <Text style={styles.moneySymbol}>$</Text>
+    <Text style={styles.moneyAmount}>{formatMoneyAmount(value)}</Text>
+  </View>
+);
 
 export function PriceListPdfDocument({ report }: PriceListPdfDocumentProps) {
   return (
@@ -47,7 +70,7 @@ export function PriceListPdfDocument({ report }: PriceListPdfDocumentProps) {
               key: "price",
               label: "Precio",
               style: styles.priceCell,
-              render: (item) => item.unitPrice,
+              render: (item) => renderPdfMoney(item.unitPrice),
             },
           ]}
         />

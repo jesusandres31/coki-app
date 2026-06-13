@@ -1,5 +1,5 @@
 import { StyleSheet, Text, View } from "@react-pdf/renderer";
-import { ReactNode } from "react";
+import { isValidElement, ReactNode } from "react";
 
 export const pdfStyles = StyleSheet.create({
   page: {
@@ -207,14 +207,25 @@ export function PdfSimpleTable<T>({
               : [pdfStyles.row, rowStyle]
           }
         >
-          {columns.map((column) => (
-            <Text
-              key={column.key}
-              style={[pdfStyles.cell, cellStyle, column.style]}
-            >
-              {column.render(row)}
-            </Text>
-          ))}
+          {columns.map((column) => {
+            const content = column.render(row);
+
+            return isValidElement(content) ? (
+              <View
+                key={column.key}
+                style={[pdfStyles.cell, cellStyle, column.style]}
+              >
+                {content}
+              </View>
+            ) : (
+              <Text
+                key={column.key}
+                style={[pdfStyles.cell, cellStyle, column.style]}
+              >
+                {content}
+              </Text>
+            );
+          })}
         </View>
       ))}
     </View>

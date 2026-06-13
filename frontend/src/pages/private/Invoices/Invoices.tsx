@@ -20,7 +20,11 @@ import {
   InvoicesResponse,
   VInvoicesResponse,
 } from "src/types/pocketbase-types";
-import { formatDate, formatMoney, formatPercent } from "src/utils/format";
+import {
+  formatDate,
+  formatPercent,
+  MoneyValue,
+} from "src/utils/format";
 import { buildMeasureUnitNameById } from "src/utils/measureUnits";
 import { useRouter } from "src/hooks";
 import { AppRoutes } from "src/config";
@@ -283,7 +287,7 @@ export default function Invoices() {
         label: "Total",
         minWidth: 140,
         disableSort: true,
-        render: (item: InvoiceListRow) => formatMoney(item.total),
+        render: (item: InvoiceListRow) => <MoneyValue value={item.total} />,
       },
     ],
     [clientNameById],
@@ -327,7 +331,7 @@ export default function Invoices() {
             label: "Precio Unit.",
             width: 105,
             minWidth: 95,
-            render: (item: any) => formatMoney(item?.unit_price),
+            render: (item: any) => <MoneyValue value={item?.unit_price} />,
           },
           {
             id: "discount",
@@ -342,7 +346,7 @@ export default function Invoices() {
             align: "left",
             width: 120,
             minWidth: 110,
-            render: (item: any) => formatMoney(item?.total),
+            render: (item: any) => <MoneyValue value={item?.total} />,
           },
         ],
       },

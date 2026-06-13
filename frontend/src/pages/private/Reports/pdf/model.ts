@@ -16,7 +16,7 @@ export interface PriceListPdfItem {
   id: string;
   productName: string;
   measureUnitName: string;
-  unitPrice: string;
+  unitPrice: number;
 }
 
 export interface PriceListPdfModel {

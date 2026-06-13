@@ -11,7 +11,7 @@ import {
 import { useAppDispatch } from "src/app/store";
 import { resetBreadcrumbs, setBreadcrumbs } from "src/slices/uiSlice";
 import { Column, GetList } from "src/types";
-import { formatDate, formatMoney } from "src/utils/format";
+import { formatDate, MoneyValue } from "src/utils/format";
 import { paymentsBreadcrumbFlow } from "./breadcrumbFlow";
 import PaymentMovementDialog from "./PaymentMovementDialog";
 
@@ -114,8 +114,9 @@ export default function Payments() {
         align: "right",
         minWidth: 140,
         type: "number",
-        render: (item: PaymentAccountMovementWithExpand) =>
-          formatMoney(item.amount ?? 0),
+        render: (item: PaymentAccountMovementWithExpand) => (
+          <MoneyValue value={item.amount ?? 0} />
+        ),
       },
     ],
     [],

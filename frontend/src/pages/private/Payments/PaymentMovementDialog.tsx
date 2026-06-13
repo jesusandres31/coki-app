@@ -1,6 +1,7 @@
 import { useMemo } from "react";
 import { useFormik } from "formik";
 import * as Yup from "yup";
+import { NumericFormat } from "react-number-format";
 import {
   Autocomplete,
   Button,
@@ -306,26 +307,34 @@ export default function PaymentMovementDialog({
               );
             })}
           </TextField>
-          <TextField
+          <NumericFormat
+            customInput={TextField}
             required
             label={isAdjustment ? "Saldo final" : "Importe"}
             name="amount"
-            type="number"
             value={formik.values.amount}
-            onChange={(event) => {
-              formik.setFieldValue("amount", event.target.value);
+            valueIsNumericString
+            decimalSeparator=","
+            allowedDecimalSeparators={[",", "."]}
+            decimalScale={2}
+            onValueChange={(values) => {
+              formik.setFieldValue("amount", values.value);
               formik.setErrors({});
             }}
             error={!!formik.errors.amount}
             helperText={formik.errors.amount || " "}
             size="small"
             fullWidth
-            inputProps={{
-              step: 0.01,
-              min: isAdjustment ? undefined : 0.01,
-            }}
+            allowNegative={isAdjustment}
             InputProps={{
-              startAdornment: <InputAdornment position="start">$</InputAdornment>,
+              startAdornment: (
+                <InputAdornment
+                  position="start"
+                  sx={{ mr: 0.75, minWidth: 14, justifyContent: "center" }}
+                >
+                  $
+                </InputAdornment>
+              ),
             }}
           />
           <TextField
@@ -359,6 +368,7 @@ export default function PaymentMovementDialog({
           Cancelar
         </Button>
         <Button
+          autoFocus
           variant="contained"
           onClick={() => void formik.submitForm()}
           loading={isCreating}

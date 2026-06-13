@@ -17,7 +17,7 @@ import { useRouter } from "src/hooks";
 import { resetBreadcrumbs, setBreadcrumbs, setSnackbar } from "src/slices/uiSlice";
 import { Input } from "src/types";
 import { MeasureunitsResponse, ProductTypesResponse } from "src/types/pocketbase-types";
-import { FORM_MSG, FORM_VLDN } from "src/utils/FormUtils";
+import { FORM_MSG, FORM_VLDN, NumericFormatFloat } from "src/utils/FormUtils";
 import { getMeasureUnitDisplayName } from "src/utils/measureUnits";
 import {
   buildDeleteHeaderAction,
@@ -166,9 +166,16 @@ export default function ProductFormPage() {
       error: formik.errors.unit_price,
       min: FORM_VLDN.NN_REAL_NUMBER.min,
       max: FORM_VLDN.NN_REAL_NUMBER.max,
-      type: "number",
       InputProps: {
-        startAdornment: <InputAdornment position="start">$</InputAdornment>,
+        inputComponent: NumericFormatFloat as any,
+        startAdornment: (
+          <InputAdornment
+            position="start"
+            sx={{ mr: 0.75, minWidth: 14, justifyContent: "center" }}
+          >
+            $
+          </InputAdornment>
+        ),
       },
     },
     {

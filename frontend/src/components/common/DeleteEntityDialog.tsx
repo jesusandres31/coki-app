@@ -41,6 +41,7 @@ export default function DeleteEntityDialog({
           Cancelar
         </Button>
         <Button
+          autoFocus
           color="error"
           variant="contained"
           onClick={onConfirm}

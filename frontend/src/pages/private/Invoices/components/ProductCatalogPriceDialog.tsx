@@ -68,6 +68,7 @@ export default function ProductCatalogPriceDialog({
             customInput={TextField}
             label="Precio"
             value={price}
+            valueIsNumericString
             size="small"
             fullWidth
             decimalSeparator=","
@@ -75,7 +76,14 @@ export default function ProductCatalogPriceDialog({
             decimalScale={3}
             allowNegative={false}
             InputProps={{
-              startAdornment: <InputAdornment position="start">$</InputAdornment>,
+              startAdornment: (
+                <InputAdornment
+                  position="start"
+                  sx={{ mr: 0.75, minWidth: 14, justifyContent: "center" }}
+                >
+                  $
+                </InputAdornment>
+              ),
             }}
             helperText={`Actual: ${formatMoney(product?.unitPrice ?? 0)}`}
             onValueChange={(values) => {
@@ -95,6 +103,7 @@ export default function ProductCatalogPriceDialog({
           Cancelar
         </Button>
         <Button
+          autoFocus
           variant="contained"
           color="success"
           loading={loading}

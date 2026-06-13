@@ -21,7 +21,7 @@ export const NumericFormatFloat = React.forwardRef<
       {...other}
       getInputRef={ref}
       onValueChange={(values) => {
-        if (isValidNumber(values.floatValue)) {
+        if (values.value === "" || isValidNumber(values.floatValue)) {
           onChange({
             target: {
               name: props.name,
@@ -31,11 +31,12 @@ export const NumericFormatFloat = React.forwardRef<
         }
       }}
       valueIsNumericString
-      thousandSeparator
+      decimalSeparator=","
+      allowedDecimalSeparators={[",", "."]}
       decimalScale={2}
       allowNegative={false}
       isAllowed={(values) => {
-        return isValidNumber(values.floatValue);
+        return values.value === "" || isValidNumber(values.floatValue);
       }}
     />
   );

@@ -1,6 +1,6 @@
 import { NULL_VAL } from "src/constants";
 import { FORM_VLDN } from "./FormUtils";
-import { Chip } from "@mui/material";
+import { Box, Chip } from "@mui/material";
 
 // dates
 export const formatDate = (str: Date | string) => {
@@ -50,22 +50,54 @@ export const formatNulls = (value: any) => {
   return value;
 };
 
+export const formatDecimal = (
+  num: number | undefined,
+  fractionDigits: number,
+) => {
+  if (isNaN(Number(num)) || (!num && num !== 0)) {
+    return "NaN";
+  }
+
+  return Number(num).toFixed(fractionDigits).replace(".", ",");
+};
+
 export const formatMoney = (num: number | undefined) => {
   if (isNaN(Number(num)) || (!num && num !== 0)) {
     return "NaN";
   }
-  const hasDecimals = Number(num) % 1 !== 0;
-  const formatStyle = hasDecimals ? "2-digit" : "0-digit";
-  const formatOptions = {
-    style: "currency",
-    currency: "USD",
-    minimumFractionDigits: formatStyle === "2-digit" ? 2 : 0,
-    maximumFractionDigits: formatStyle === "2-digit" ? 2 : 0,
-    useGrouping: false,
-  };
-  const formattedPrice = num.toLocaleString("en-US", formatOptions as any);
-  return formattedPrice;
+  const value = Number(num);
+  return `$ ${formatMoneyAmount(value)}`;
 };
+
+export const formatMoneyAmount = (num: number | undefined) => {
+  if (isNaN(Number(num)) || (!num && num !== 0)) {
+    return "NaN";
+  }
+
+  const value = Number(num);
+  return Number.isInteger(value) ? String(value) : formatDecimal(value, 2);
+};
+
+export const MoneyValue = ({ value }: { value: number | undefined }) => (
+  <Box
+    component="span"
+    sx={{
+      display: "inline-grid",
+      gridTemplateColumns: "14px minmax(0, 1fr)",
+      columnGap: 0.75,
+      alignItems: "baseline",
+      minWidth: 86,
+      fontVariantNumeric: "tabular-nums",
+    }}
+  >
+    <Box component="span" sx={{ textAlign: "center" }}>
+      $
+    </Box>
+    <Box component="span" sx={{ textAlign: "right" }}>
+      {formatMoneyAmount(value)}
+    </Box>
+  </Box>
+);
 
 export const formatPercent = (num: number | undefined) => {
   if (isNaN(Number(num)) || (!num && num !== 0)) {
@@ -73,7 +105,7 @@ export const formatPercent = (num: number | undefined) => {
   }
   const value = Number(num);
   const hasDecimals = value % 1 !== 0;
-  return `${hasDecimals ? value.toFixed(2) : value}%`;
+  return `${hasDecimals ? formatDecimal(value, 2) : value}%`;
 };
 
 export const formatPaid = (total: number, paid: number) => {
@@ -92,8 +124,8 @@ export const formatPaid = (total: number, paid: number) => {
 export const isValidNumber = (value: number | undefined): boolean => {
   return (
     value !== undefined &&
-    value < FORM_VLDN.NN_REAL_NUMBER.max &&
-    value > FORM_VLDN.NN_REAL_NUMBER.min
+    value <= FORM_VLDN.NN_REAL_NUMBER.max &&
+    value >= FORM_VLDN.NN_REAL_NUMBER.min
   );
 };
 
