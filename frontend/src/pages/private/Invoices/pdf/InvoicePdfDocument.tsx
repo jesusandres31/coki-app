@@ -29,17 +29,17 @@ const styles = StyleSheet.create({
     paddingTop: 20,
     paddingBottom: 20,
     paddingHorizontal: 22,
-    fontSize: 9,
+    fontSize: 10,
   },
   header: {
     marginBottom: 7,
     gap: 8,
   },
   headerTitle: {
-    fontSize: 12,
+    fontSize: 13,
   },
   headerAside: {
-    fontSize: 8,
+    fontSize: 9,
     width: 160,
   },
   meta: {
@@ -54,11 +54,11 @@ const styles = StyleSheet.create({
   tableCell: {
     paddingVertical: 3.5,
     paddingHorizontal: 5,
-    fontSize: 8.5,
+    fontSize: 9.5,
   },
   tableHeaderCell: {
     paddingVertical: 4,
-    fontSize: 8.5,
+    fontSize: 9.5,
     fontWeight: 700,
   },
   tableRow: {
@@ -68,12 +68,12 @@ const styles = StyleSheet.create({
     marginTop: 9,
     minWidth: 190,
     gap: 2,
-    fontSize: 9,
+    fontSize: 11,
   },
   grandTotal: {
     paddingTop: 4,
     marginTop: 1,
-    fontSize: 11,
+    fontSize: 13,
   },
   productCell: {
     width: "31%",
@@ -113,7 +113,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "flex-end",
     alignItems: "baseline",
-    width: "100%",
+    alignSelf: "flex-end",
   },
   moneySymbol: {
     width: 7,
@@ -121,7 +121,7 @@ const styles = StyleSheet.create({
     textAlign: "center",
   },
   moneyAmount: {
-    minWidth: 34,
+    minWidth: 52,
     textAlign: "right",
   },
 });
