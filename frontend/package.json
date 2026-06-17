@@ -6,7 +6,7 @@
   "scripts": {
     "dev": "vite",
     "bump-version": "pnpm version patch --no-git-tag-version",
-    "commit-version": "git diff --quiet HEAD -- package.json || (git add package.json && git commit -m \"Bump frontend version\" -- package.json && git push)",
+    "commit-version": "git diff --quiet HEAD -- package.json || (git add package.json && git commit -m \"Auto-commit frontend version\" -- package.json && git push)",
     "build": "pnpm run bump-version && tsc && vite build && pnpm run commit-version",
     "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
     "preview": "vite preview"
