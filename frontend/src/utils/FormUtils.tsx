@@ -32,6 +32,7 @@ export const NumericFormatFloat = React.forwardRef<
       }}
       valueIsNumericString
       decimalSeparator=","
+      thousandSeparator="."
       allowedDecimalSeparators={[",", "."]}
       decimalScale={2}
       allowNegative={false}

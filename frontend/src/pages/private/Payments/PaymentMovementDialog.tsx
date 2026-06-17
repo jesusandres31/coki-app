@@ -315,6 +315,7 @@ export default function PaymentMovementDialog({
             value={formik.values.amount}
             valueIsNumericString
             decimalSeparator=","
+            thousandSeparator="."
             allowedDecimalSeparators={[",", "."]}
             decimalScale={2}
             onValueChange={(values) => {

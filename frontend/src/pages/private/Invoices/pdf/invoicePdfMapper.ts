@@ -1,10 +1,10 @@
-import dayjs from "dayjs";
 import {
   MeasureunitsResponse,
   ProductsResponse,
   VInvoicesResponse,
 } from "src/types/pocketbase-types";
 import { getRecordDisplayName, parseJsonValue, toNumber } from "src/utils/data";
+import { formatDate } from "src/utils/format";
 import { getInvoiceStateLabel } from "src/utils/invoiceState";
 import { buildMeasureUnitNameById } from "src/utils/measureUnits";
 import { InvoicePdfItem, InvoicePdfModel } from "./model";
@@ -103,9 +103,7 @@ export const buildInvoicePdfModel = ({
 
   return {
     invoiceId: invoice.id,
-    date: dayjs(invoice.date).isValid()
-      ? dayjs(invoice.date).format("DD/MM/YYYY")
-      : String(invoice.date || "-"),
+    date: invoice.date ? formatDate(invoice.date) : "-",
     clientName: getRecordDisplayName(invoice.client),
     stateLabel: getInvoiceStateLabel(
       (invoice as VInvoicesResponse & { state?: unknown }).state,

@@ -3,12 +3,23 @@ import { FORM_VLDN } from "./FormUtils";
 import { Box, Chip } from "@mui/material";
 
 // dates
+const dateOnlyPattern = /^(\d{4})-(\d{2})-(\d{2})$/;
+const utcDateAtMidnightPattern =
+  /^(\d{4})-(\d{2})-(\d{2})[ T]00:00(?::00(?:\.000)?)?Z?$/;
+
+const formatDateParts = (year: string, month: string, day: string) =>
+  `${day}/${month}/${year.slice(2)}`;
+
 export const formatDate = (str: Date | string) => {
   if (typeof str === "string") {
-    const dateOnlyMatch = str.trim().match(/^(\d{4})-(\d{2})-(\d{2})$/);
-    if (dateOnlyMatch) {
-      const [, year, month, day] = dateOnlyMatch;
-      return `${day}/${month}/${year.slice(2)}`;
+    const value = str.trim();
+    const dateOnlyMatch = value.match(dateOnlyPattern);
+    const utcDateAtMidnightMatch = value.match(utcDateAtMidnightPattern);
+    const calendarDateMatch = dateOnlyMatch || utcDateAtMidnightMatch;
+
+    if (calendarDateMatch) {
+      const [, year, month, day] = calendarDateMatch;
+      return formatDateParts(year, month, day);
     }
   }
 
@@ -58,7 +69,10 @@ export const formatDecimal = (
     return "NaN";
   }
 
-  return Number(num).toFixed(fractionDigits).replace(".", ",");
+  return new Intl.NumberFormat("es-AR", {
+    minimumFractionDigits: fractionDigits,
+    maximumFractionDigits: fractionDigits,
+  }).format(Number(num));
 };
 
 export const formatMoney = (num: number | undefined) => {
@@ -75,7 +89,10 @@ export const formatMoneyAmount = (num: number | undefined) => {
   }
 
   const value = Number(num);
-  return Number.isInteger(value) ? String(value) : formatDecimal(value, 2);
+  return new Intl.NumberFormat("es-AR", {
+    minimumFractionDigits: Number.isInteger(value) ? 0 : 2,
+    maximumFractionDigits: Number.isInteger(value) ? 0 : 2,
+  }).format(value);
 };
 
 export const MoneyValue = ({ value }: { value: number | undefined }) => (
@@ -105,7 +122,7 @@ export const formatPercent = (num: number | undefined) => {
   }
   const value = Number(num);
   const hasDecimals = value % 1 !== 0;
-  return `${hasDecimals ? formatDecimal(value, 2) : value}%`;
+  return `${hasDecimals ? formatDecimal(value, 2) : formatMoneyAmount(value)}%`;
 };
 
 export const formatPaid = (total: number, paid: number) => {

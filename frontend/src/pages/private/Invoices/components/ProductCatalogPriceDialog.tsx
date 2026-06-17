@@ -72,6 +72,7 @@ export default function ProductCatalogPriceDialog({
             size="small"
             fullWidth
             decimalSeparator=","
+            thousandSeparator="."
             allowedDecimalSeparators={[",", "."]}
             decimalScale={3}
             allowNegative={false}

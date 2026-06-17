@@ -1044,6 +1044,7 @@ function ProductsTable({
                     value={row.amount}
                     valueIsNumericString
                     decimalSeparator=","
+                    thousandSeparator="."
                     allowedDecimalSeparators={[",", "."]}
                     decimalScale={invoiceDecimalScale}
                     fixedDecimalScale={shouldShowAmountDecimals}
@@ -1094,6 +1095,7 @@ function ProductsTable({
                       value={row.unitPrice}
                       valueIsNumericString
                       decimalSeparator=","
+                      thousandSeparator="."
                       allowedDecimalSeparators={[",", "."]}
                       decimalScale={invoiceDecimalScale}
                       allowNegative={false}
@@ -1194,6 +1196,7 @@ function ProductsTable({
                     value={row.discount}
                     valueIsNumericString
                     decimalSeparator=","
+                    thousandSeparator="."
                     allowedDecimalSeparators={[",", "."]}
                     decimalScale={invoiceDecimalScale}
                     allowNegative={false}
@@ -1343,6 +1346,7 @@ function InvoiceTotalsSummary({
           value={discountPercent}
           valueIsNumericString
           decimalSeparator=","
+          thousandSeparator="."
           allowedDecimalSeparators={[",", "."]}
           decimalScale={invoiceDecimalScale}
           allowNegative={false}
@@ -1441,6 +1445,7 @@ function ClientBalanceSummary({
           value={partialPaymentAmount || ""}
           valueIsNumericString
           decimalSeparator=","
+          thousandSeparator="."
           allowedDecimalSeparators={[",", "."]}
           decimalScale={invoiceDecimalScale}
           allowNegative={false}

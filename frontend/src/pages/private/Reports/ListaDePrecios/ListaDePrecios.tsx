@@ -645,6 +645,7 @@ export default function ListaDePrecios() {
                 value={sessionPercentDraft}
                 valueIsNumericString
                 decimalSeparator=","
+                thousandSeparator="."
                 allowedDecimalSeparators={[",", "."]}
                 decimalScale={2}
                 onValueChange={(values) => setSessionPercentDraft(values.value)}
@@ -806,6 +807,7 @@ export default function ListaDePrecios() {
                               value={editingPriceDraft}
                               valueIsNumericString
                               decimalSeparator=","
+                              thousandSeparator="."
                               allowedDecimalSeparators={[",", "."]}
                               decimalScale={2}
                               allowNegative={false}
