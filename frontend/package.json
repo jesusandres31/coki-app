@@ -1,12 +1,13 @@
 {
   "name": "coki-app",
   "private": true,
-  "version": "0.0.12",
+  "version": "0.0.13",
   "type": "module",
   "scripts": {
     "dev": "vite",
     "bump-version": "pnpm version patch --no-git-tag-version",
-    "build": "pnpm run bump-version && tsc && vite build",
+    "commit-version": "node scripts/commit-version.mjs",
+    "build": "pnpm run bump-version && tsc && vite build && pnpm run commit-version",
     "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
     "preview": "vite preview"
   },
