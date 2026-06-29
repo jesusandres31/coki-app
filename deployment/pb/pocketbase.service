@@ -10,7 +10,7 @@ Restart        = always
 RestartSec     = 5s
 StandardOutput = append:/home/ubuntu/coki-app/backend/errors.log
 StandardError  = append:/home/ubuntu/coki-app/backend/errors.log
-ExecStart      = /home/ubuntu/coki-app/backend/pocketbase-linux serve --http=127.0.0.1:8091
+ExecStart      = /home/ubuntu/coki-app/backend/pocketbase serve --http=127.0.0.1:8091
 
 [Install]
 WantedBy = multi-user.target

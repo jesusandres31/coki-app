@@ -5,6 +5,7 @@ APP_NAME="coki-app"
 REPO_DIR="/home/ubuntu/coki-app"
 FRONTEND_DIR="$REPO_DIR/frontend"
 BACKEND_DIR="$REPO_DIR/backend"
+PB_BINARY="$BACKEND_DIR/pocketbase"
 WEB_DIST="/var/www/$APP_NAME/dist"
 SERVICE="cokiapp.pocketbase.service"
 PB_PORT="8091"
@@ -20,7 +21,7 @@ git checkout master
 git pull --ff-only
 
 echo "prepare BACKEND binary:"
-chmod +x "$BACKEND_DIR/pocketbase-linux"
+chmod +x "$PB_BINARY"
 
 echo "rebuild FRONTEND:"
 cd "$FRONTEND_DIR"
