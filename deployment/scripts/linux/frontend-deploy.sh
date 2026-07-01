@@ -1,8 +1,13 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+# NOTE: We only deploy the built dist directory to the web root because
+# the frontend is built on Windows and transferred to the server with scp.
+
 SRC="/home/ubuntu/coki-app/frontend/dist"
 DST="/var/www/coki-app/dist"
+
+echo "##### RUN FRONTEND DEPLOY SCRIPT #####"
 
 test -d "$SRC/assets"
 
