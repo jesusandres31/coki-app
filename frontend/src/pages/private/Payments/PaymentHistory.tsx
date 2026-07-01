@@ -162,24 +162,29 @@ export default function PaymentHistory() {
             sx={{
               borderLeft: "3px solid",
               borderColor: COLOR.whatsapp_green,
-              pl: 1,
-              py: 0.25,
+              pl: 1.25,
+              height: 40,
+              display: "flex",
+              flexDirection: { xs: "column", sm: "row" },
+              alignItems: { xs: "flex-start", sm: "center" },
+              justifyContent: "center",
+              columnGap: 1,
               whiteSpace: "nowrap",
             }}
           >
             <Typography
               variant={isMobile ? "caption" : "body2"}
               color="text.secondary"
-              sx={{ lineHeight: 1.1 }}
+              sx={{ lineHeight: 1 }}
             >
               Saldo actual
             </Typography>
             <Typography
-              variant={isMobile ? "body2" : "subtitle2"}
+              variant={isMobile ? "subtitle2" : "h6"}
               sx={{
                 color: COLOR.whatsapp_green,
                 fontWeight: 800,
-                lineHeight: 1.2,
+                lineHeight: 1,
               }}
             >
               {formatMoney(client?.balance ?? 0)}
