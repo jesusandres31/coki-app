@@ -1,50 +1,27 @@
 import { useEffect, useMemo, useState } from "react";
-import { AddCardRounded } from "@mui/icons-material";
-import { Button, Chip } from "@mui/material";
+import { AddCardRounded, ReceiptLongRounded } from "@mui/icons-material";
 import DataGrid from "src/components/common/DataGrid/DataGrid";
 import { getListArgsInitialState } from "src/constants";
-import {
-  PaymentAccountMovementTypeName,
-  PaymentAccountMovementWithExpand,
-  useGetPaymentAccountMovementsListQuery,
-} from "src/app/services/invoiceService";
+import { useGetClientsListQuery } from "src/app/services/invoiceService";
 import { useAppDispatch } from "src/app/store";
 import { resetBreadcrumbs, setBreadcrumbs } from "src/slices/uiSlice";
-import { Column, GetList } from "src/types";
-import { formatDate, MoneyValue } from "src/utils/format";
+import { useRouter } from "src/hooks";
+import { AppRoutes } from "src/config";
+import { ClientsResponse } from "src/types/pocketbase-types";
+import { Column, DataGridRowAction, GetList } from "src/types";
+import { MoneyValue } from "src/utils/format";
 import { paymentsBreadcrumbFlow } from "./breadcrumbFlow";
 import PaymentMovementDialog from "./PaymentMovementDialog";
 
-const paymentTypeLabels: Record<PaymentAccountMovementTypeName, string> = {
-  payment: "Entrega",
-  debt: "Deuda",
-  adjustment: "Ajuste",
-};
-
-const paymentTypeColors: Record<
-  PaymentAccountMovementTypeName,
-  "success" | "warning" | "info"
-> = {
-  payment: "success",
-  debt: "warning",
-  adjustment: "info",
-};
-
-const isKnownPaymentType = (
-  value: string,
-): value is PaymentAccountMovementTypeName =>
-  ["payment", "debt", "adjustment"].includes(value);
-
-const getMovementTypeName = (item: PaymentAccountMovementWithExpand) =>
-  String(item.expand?.type?.name || "");
-
 export default function Payments() {
   const dispatch = useAppDispatch();
-  const [movementDialogOpen, setMovementDialogOpen] = useState(false);
+  const { handleGoTo } = useRouter();
+  const [clientForPaymentMovement, setClientForPaymentMovement] =
+    useState<ClientsResponse | null>(null);
   const [queryArgs, setQueryArgs] = useState<GetList>(() => ({
     ...getListArgsInitialState,
-    order: "desc",
-    orderBy: "created",
+    order: "asc",
+    orderBy: "name",
   }));
 
   useEffect(() => {
@@ -54,72 +31,46 @@ export default function Payments() {
     };
   }, [dispatch]);
 
-  const { data, error, isFetching } =
-    useGetPaymentAccountMovementsListQuery(queryArgs);
+  const { data, error, isFetching } = useGetClientsListQuery(queryArgs);
 
   const columns: Column = useMemo(
     () => [
       {
-        id: "created",
-        label: "Fecha",
-        align: "left",
-        minWidth: 140,
-        render: (item: PaymentAccountMovementWithExpand) =>
-          formatDate(item.created),
-      },
-      {
-        id: "client",
+        id: "name",
         label: "Cliente",
         align: "left",
-        minWidth: 240,
-        disableSort: true,
-        render: (item: PaymentAccountMovementWithExpand) =>
-          item.expand?.client?.name || "-",
+        minWidth: 260,
       },
       {
-        id: "description",
-        label: "Descripción",
-        align: "left",
-        minWidth: 280,
-        render: (item: PaymentAccountMovementWithExpand) =>
-          item.description || "-",
-      },
-      {
-        id: "type",
-        label: "Tipo",
-        align: "left",
-        minWidth: 140,
-        disableSort: true,
-        render: (item: PaymentAccountMovementWithExpand) => {
-          const typeName = getMovementTypeName(item);
-          const label = isKnownPaymentType(typeName)
-            ? paymentTypeLabels[typeName]
-            : typeName || "-";
-
-          return isKnownPaymentType(typeName) ? (
-            <Chip
-              size="small"
-              variant="outlined"
-              color={paymentTypeColors[typeName]}
-              label={label}
-            />
-          ) : (
-            label
-          );
-        },
-      },
-      {
-        id: "amount",
-        label: "Importe",
+        id: "balance",
+        label: "Saldo",
         align: "right",
-        minWidth: 140,
+        minWidth: 160,
         type: "number",
-        render: (item: PaymentAccountMovementWithExpand) => (
-          <MoneyValue value={item.amount ?? 0} />
+        render: (item: ClientsResponse) => (
+          <MoneyValue value={item.balance ?? 0} />
         ),
       },
     ],
     [],
+  );
+
+  const rowActions: DataGridRowAction[] = useMemo(
+    () => [
+      {
+        id: "add-payment-account-movement",
+        label: "Registrar movimiento",
+        icon: <AddCardRounded fontSize="small" color="primary" />,
+        onClick: (item) => setClientForPaymentMovement(item as ClientsResponse),
+      },
+      {
+        id: "payment-history",
+        label: "Ver historial",
+        icon: <ReceiptLongRounded fontSize="small" color="info" />,
+        onClick: (item) => handleGoTo(`${AppRoutes.Payments}/${item.id}`),
+      },
+    ],
+    [handleGoTo],
   );
 
   return (
@@ -130,25 +81,15 @@ export default function Payments() {
         isFetching={isFetching}
         columns={columns}
         hasSearch
-        searchPlaceholder="Buscar movimiento"
+        searchPlaceholder="Buscar cliente"
         initialQuery={queryArgs}
         onQueryChange={setQueryArgs}
-        toolbarElement={
-          <Button
-            size="small"
-            variant="contained"
-            startIcon={<AddCardRounded />}
-            onClick={() => setMovementDialogOpen(true)}
-          >
-            Nuevo movimiento
-          </Button>
-        }
+        rowActions={rowActions}
       />
       <PaymentMovementDialog
-        open={movementDialogOpen}
-        client={null}
-        allowClientSelect
-        onClose={() => setMovementDialogOpen(false)}
+        open={Boolean(clientForPaymentMovement)}
+        client={clientForPaymentMovement}
+        onClose={() => setClientForPaymentMovement(null)}
       />
     </>
   );

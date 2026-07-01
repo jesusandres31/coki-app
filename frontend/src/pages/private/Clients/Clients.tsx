@@ -1,8 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import {
-  AddRounded,
-  AddCardRounded,
-} from "@mui/icons-material";
+import { AddRounded } from "@mui/icons-material";
 import { Button } from "@mui/material";
 import DataGrid from "src/components/common/DataGrid/DataGrid";
 import DeleteEntityDialog from "src/components/common/DeleteEntityDialog";
@@ -23,7 +20,6 @@ import { ClientsResponse } from "src/types/pocketbase-types";
 import { Column, DataGridRowAction, GetList } from "src/types";
 import { MoneyValue } from "src/utils/format";
 import { clientsBreadcrumbFlow } from "./breadcrumbFlow";
-import PaymentMovementDialog from "../Payments/PaymentMovementDialog";
 import { buildCrudRowActions } from "../crudListUtils";
 
 export default function Clients() {
@@ -32,8 +28,6 @@ export default function Clients() {
   const [clientToDelete, setClientToDelete] = useState<ClientsResponse | null>(
     null,
   );
-  const [clientForPaymentMovement, setClientForPaymentMovement] =
-    useState<ClientsResponse | null>(null);
   const [queryArgs, setQueryArgs] = useState<GetList>(() => ({
     ...getListArgsInitialState,
     order: "asc",
@@ -107,20 +101,13 @@ export default function Clients() {
   );
 
   const rowActions: DataGridRowAction[] = useMemo(
-    () => [
-      {
-        id: "add-payment-account-movement",
-        label: "Registrar movimiento",
-        icon: <AddCardRounded fontSize="small" color="primary" />,
-        onClick: (item) => setClientForPaymentMovement(item as ClientsResponse),
-      },
-      ...buildCrudRowActions<ClientsResponse>({
+    () =>
+      buildCrudRowActions<ClientsResponse>({
         entityLabel: "cliente",
         baseRoute: AppRoutes.Clients,
         handleGoTo,
         onDelete: setClientToDelete,
       }),
-    ],
     [handleGoTo],
   );
 
@@ -146,11 +133,6 @@ export default function Clients() {
             Crear cliente
           </Button>
         }
-      />
-      <PaymentMovementDialog
-        open={Boolean(clientForPaymentMovement)}
-        client={clientForPaymentMovement}
-        onClose={() => setClientForPaymentMovement(null)}
       />
       <DeleteEntityDialog
         open={Boolean(clientToDelete)}

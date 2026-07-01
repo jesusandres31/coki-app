@@ -4,7 +4,7 @@ import {
   CategoryRounded,
   DescriptionRounded,
   Inventory2Rounded,
-  PaymentsRounded,
+  CurrencyExchangeRounded,
   LocalShippingRounded,
   PriceCheckRounded,
   PeopleRounded,
@@ -40,7 +40,7 @@ export const DRAWER_SECTIONS: DrawerSection[] = [
       },
       {
         text: "Cuentas",
-        icon: <PaymentsRounded />,
+        icon: <CurrencyExchangeRounded />,
         to: AppRoutes.Payments,
       },
       {

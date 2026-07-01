@@ -101,6 +101,10 @@ export interface CreatePaymentAccountMovementReq {
   description?: string;
 }
 
+export interface GetPaymentAccountMovementsByClientReq extends GetList {
+  clientId: string;
+}
+
 export interface CreatePaymentAccountMovementRes {
   movement: PaymentAccountMovementsResponse;
   client: ClientsResponse;
@@ -208,6 +212,17 @@ const buildPaymentAccountMovementsListFilter = (filter: string | undefined) => {
   ].join(" || ");
 };
 
+const buildPaymentAccountMovementsByClientFilter = (
+  clientId: string,
+  filter: string | undefined,
+) => {
+  const safeClientId = escapePbFilterValue(clientId);
+  const searchFilter = buildPaymentAccountMovementsListFilter(filter);
+  const clientFilter = `client = "${safeClientId}"`;
+
+  return searchFilter ? `${clientFilter} && (${searchFilter})` : clientFilter;
+};
+
 type SoftDeletableCollection =
   | "clients"
   | "invoices"
@@ -259,27 +274,14 @@ const createAccountMovement = async (
     .collection("payment_account_movement_types")
     .getFirstListItem(`name = "${escapePbFilterValue(typeName)}"`);
 
-  const client = await typedPb.collection("clients").getOne(clientId);
-  const currentBalance = Number(client.balance ?? 0);
-  const nextBalance =
-    typeName === "payment"
-      ? currentBalance - Math.abs(amount)
-      : typeName === "debt"
-        ? currentBalance + Math.abs(amount)
-        : amount; // adjustment
-
   const movement = await typedPb
     .collection("payment_account_movements")
     .create({
       client: clientId,
       type: type.id,
-      amount,
+      delta: amount,
       description: description.trim(),
     });
-
-  await typedPb
-    .collection("clients")
-    .update(clientId, { balance: nextBalance });
 
   return movement;
 };
@@ -497,6 +499,27 @@ export const invoiceApi = mainApi.injectEndpoints({
       },
       providesTags: [paymentAccountMovementsTag],
     }),
+    getPaymentAccountMovementsByClient: build.query<
+      ListResult<PaymentAccountMovementWithExpand>,
+      GetPaymentAccountMovementsByClientReq
+    >({
+      queryFn: async (_arg) => {
+        const res = await typedPb.collection("payment_account_movements").getList(
+          _arg.page,
+          _arg.perPage,
+          {
+            expand: "client,type",
+            filter: buildPaymentAccountMovementsByClientFilter(
+              _arg.clientId,
+              _arg.filter,
+            ),
+            sort: pbSort(_arg.order, _arg.orderBy),
+          },
+        );
+        return { data: res as ListResult<PaymentAccountMovementWithExpand> };
+      },
+      providesTags: [paymentAccountMovementsTag],
+    }),
     createPaymentAccountMovement: build.mutation<
       CreatePaymentAccountMovementRes,
       CreatePaymentAccountMovementReq
@@ -506,30 +529,18 @@ export const invoiceApi = mainApi.injectEndpoints({
           .collection("payment_account_movement_types")
           .getFirstListItem(`name = "${escapePbFilterValue(_arg.typeName)}"`);
 
-        const client = await typedPb
-          .collection("clients")
-          .getOne(_arg.clientId);
-
-        const currentBalance = Number(client.balance ?? 0);
-        const nextBalance =
-          _arg.typeName === "payment"
-            ? currentBalance - Math.abs(_arg.amount)
-            : _arg.typeName === "debt"
-              ? currentBalance + Math.abs(_arg.amount)
-              : _arg.amount; // adjustment
-
         const movement = await typedPb
           .collection("payment_account_movements")
           .create({
             client: _arg.clientId,
             type: type.id,
-            amount: _arg.amount,
+            delta: _arg.amount,
             description: _arg.description?.trim() ?? "",
           });
 
         const updatedClient = await typedPb
           .collection("clients")
-          .update(_arg.clientId, { balance: nextBalance });
+          .getOne(_arg.clientId);
 
         return { data: { movement, client: updatedClient } };
       },
@@ -1011,6 +1022,7 @@ export const {
   useGetInvoicesViewQuery,
   useGetMeasureUnitsQuery,
   useGetPaymentAccountMovementsListQuery,
+  useGetPaymentAccountMovementsByClientQuery,
   useGetPaymentAccountMovementTypesQuery,
   useGetProductByIdQuery,
   useGetConfigQuery,

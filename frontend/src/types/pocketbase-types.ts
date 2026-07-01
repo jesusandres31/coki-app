@@ -185,9 +185,11 @@ export type PaymentAccountMovementTypesRecord = {
 }
 
 export type PaymentAccountMovementsRecord = {
-	amount: number
+	balance_after?: number
+	balance_before?: number
 	client: RecordIdString
 	created: IsoAutoDateString
+	delta: number
 	description?: string
 	id: string
 	type: RecordIdString

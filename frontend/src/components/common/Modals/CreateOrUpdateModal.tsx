@@ -59,12 +59,7 @@ export default function CreateOrUpdateModal({
         {title ? title : `${isUpdate ? "Actualizar" : "Crear nuevo"} ${label}`}
       </DialogTitle>
       <DialogContent sx={{ pt: 2.5 }}>
-        <Grid
-          container
-          spacing={1.5}
-          alignItems="flex-start"
-          sx={{ pt: 0.5 }}
-        >
+        <Grid container spacing={1.5} alignItems="flex-start" sx={{ pt: 1 }}>
           {inputs.map((input) => {
             if (input.hide) return null;
 
@@ -124,7 +119,10 @@ export default function CreateOrUpdateModal({
             <Button
               variant="text"
               color="inherit"
-              sx={{ color: "text.secondary", width: { xs: "100%", sm: "auto" } }}
+              sx={{
+                color: "text.secondary",
+                width: { xs: "100%", sm: "auto" },
+              }}
               onClick={handleClose}
               disabled={loading}
             >

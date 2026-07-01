@@ -95,26 +95,25 @@ export const formatMoneyAmount = (num: number | undefined) => {
   }).format(value);
 };
 
-export const MoneyValue = ({ value }: { value: number | undefined }) => (
-  <Box
-    component="span"
-    sx={{
-      display: "inline-grid",
-      gridTemplateColumns: "14px minmax(0, 1fr)",
-      columnGap: 0.75,
-      alignItems: "baseline",
-      minWidth: 86,
-      fontVariantNumeric: "tabular-nums",
-    }}
-  >
-    <Box component="span" sx={{ textAlign: "center" }}>
-      $
+export const MoneyValue = ({ value }: { value: number | undefined }) => {
+  if (isNaN(Number(value)) || (!value && value !== 0)) {
+    return <>{NULL_VAL}</>;
+  }
+
+  return (
+    <Box
+      component="span"
+      sx={{
+        display: "inline-block",
+        minWidth: "max-content",
+        fontVariantNumeric: "tabular-nums",
+        whiteSpace: "nowrap",
+      }}
+    >
+      $ {formatMoneyAmount(value)}
     </Box>
-    <Box component="span" sx={{ textAlign: "right" }}>
-      {formatMoneyAmount(value)}
-    </Box>
-  </Box>
-);
+  );
+};
 
 export const formatPercent = (num: number | undefined) => {
   if (isNaN(Number(num)) || (!num && num !== 0)) {

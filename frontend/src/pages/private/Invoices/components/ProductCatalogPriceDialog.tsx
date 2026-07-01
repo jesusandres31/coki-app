@@ -46,10 +46,15 @@ export default function ProductCatalogPriceDialog({
   const canConfirm = Boolean(product) && price !== "" && normalizedPrice >= 0;
 
   return (
-    <Dialog open={open} onClose={loading ? undefined : onClose} fullWidth maxWidth="xs">
+    <Dialog
+      open={open}
+      onClose={loading ? undefined : onClose}
+      fullWidth
+      maxWidth="xs"
+    >
       <DialogTitle>Editar precio general</DialogTitle>
       <DialogContent>
-        <Stack spacing={2} sx={{ pt: 0.5 }}>
+        <Stack spacing={2} sx={{ pt: 1 }}>
           <TextField
             label="Producto"
             value={product?.name || ""}

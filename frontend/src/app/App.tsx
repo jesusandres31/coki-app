@@ -26,6 +26,9 @@ const InvoiceDetail = lazy(() =>
 const Payments = lazy(() =>
   import("src/pages").then((module) => ({ default: module.Payments })),
 );
+const PaymentHistory = lazy(() =>
+  import("src/pages").then((module) => ({ default: module.PaymentHistory })),
+);
 const Reports = lazy(() =>
   import("src/pages").then((module) => ({ default: module.Reports })),
 );
@@ -71,6 +74,10 @@ const privateRoutes = [
   {
     route: AppRoutes.Payments,
     render: <Payments />,
+  },
+  {
+    route: AppRoutes.PaymentsDetail,
+    render: <PaymentHistory />,
   },
   {
     route: AppRoutes.Reports,

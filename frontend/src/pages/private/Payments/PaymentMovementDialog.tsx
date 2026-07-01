@@ -39,17 +39,22 @@ interface PaymentMovementDialogProps {
   open: boolean;
   onClose: () => void;
   allowClientSelect?: boolean;
+  mode?: "movement" | "rectification";
 }
 
 const paymentTypeLabels: Record<PaymentAccountMovementTypeName, string> = {
   payment: "Entrega",
   debt: "Deuda",
-  adjustment: "Ajuste",
+  adjustment: "Rectificación",
 };
 
-const paymentTypeOrder: PaymentAccountMovementTypeName[] = [
+const selectablePaymentTypeOrder: PaymentAccountMovementTypeName[] = [
   "payment",
   "debt",
+];
+
+const paymentTypeOrder: PaymentAccountMovementTypeName[] = [
+  ...selectablePaymentTypeOrder,
   "adjustment",
 ];
 
@@ -63,6 +68,7 @@ export default function PaymentMovementDialog({
   open,
   onClose,
   allowClientSelect = false,
+  mode = "movement",
 }: PaymentMovementDialogProps) {
   const dispatch = useAppDispatch();
   const { data: clients = [], isFetching: isFetchingClients } =
@@ -86,24 +92,39 @@ export default function PaymentMovementDialog({
 
   const sortedMovementTypes = useMemo(
     () =>
-      [...movementTypes].sort((a, b) => {
-        const aName = String(a.name || "");
-        const bName = String(b.name || "");
-        const aIndex = paymentTypeOrder.indexOf(
-          aName as PaymentAccountMovementTypeName,
-        );
-        const bIndex = paymentTypeOrder.indexOf(
-          bName as PaymentAccountMovementTypeName,
-        );
+      movementTypes
+        .filter((item) =>
+          mode === "rectification"
+            ? item.name === "adjustment"
+            : selectablePaymentTypeOrder.includes(
+                String(item.name || "") as PaymentAccountMovementTypeName,
+              ),
+        )
+        .sort((a, b) => {
+          const aName = String(a.name || "");
+          const bName = String(b.name || "");
+          const aIndex = paymentTypeOrder.indexOf(
+            aName as PaymentAccountMovementTypeName,
+          );
+          const bIndex = paymentTypeOrder.indexOf(
+            bName as PaymentAccountMovementTypeName,
+          );
 
-        return (aIndex === -1 ? 999 : aIndex) - (bIndex === -1 ? 999 : bIndex);
-      }),
-    [movementTypes],
+          return (
+            (aIndex === -1 ? 999 : aIndex) - (bIndex === -1 ? 999 : bIndex)
+          );
+        }),
+    [mode, movementTypes],
   );
 
   const defaultPaymentTypeId = useMemo(
-    () => movementTypes.find((item) => item.name === "payment")?.id || "",
-    [movementTypes],
+    () =>
+      movementTypes.find((item) =>
+        mode === "rectification"
+          ? item.name === "adjustment"
+          : item.name === "payment",
+      )?.id || "",
+    [mode, movementTypes],
   );
 
   const formik = useFormik<PaymentMovementFormValues>({
@@ -174,7 +195,10 @@ export default function PaymentMovementDialog({
 
         dispatch(
           setSnackbar({
-            message: "Movimiento registrado satisfactoriamente.",
+            message:
+              mode === "rectification"
+                ? "Saldo rectificado satisfactoriamente."
+                : "Movimiento registrado satisfactoriamente.",
             type: "success",
           }),
         );
@@ -182,7 +206,10 @@ export default function PaymentMovementDialog({
       } catch {
         dispatch(
           setSnackbar({
-            message: "No se pudo registrar el movimiento.",
+            message:
+              mode === "rectification"
+                ? "No se pudo rectificar el saldo."
+                : "No se pudo registrar el movimiento.",
             type: "error",
           }),
         );
@@ -195,7 +222,7 @@ export default function PaymentMovementDialog({
 
   const selectedType = movementTypesById.get(formik.values.typeId);
   const selectedTypeName = String(selectedType?.name || "");
-  const isAdjustment = selectedTypeName === "adjustment";
+  const isRectification = mode === "rectification";
   const currentBalance = Number(selectedClient?.balance ?? 0);
   const formAmount = Number(formik.values.amount || 0);
   const previewBalance =
@@ -213,9 +240,11 @@ export default function PaymentMovementDialog({
 
   return (
     <Dialog open={open} onClose={handleClose} maxWidth="sm" fullWidth>
-      <DialogTitle>Registrar movimiento</DialogTitle>
+      <DialogTitle>
+        {isRectification ? "Rectificar saldo" : "Registrar movimiento"}
+      </DialogTitle>
       <DialogContent sx={{ pt: 2.5 }}>
-        <Stack spacing={1.5} sx={{ pt: 0.5 }}>
+        <Stack spacing={1.5} sx={{ pt: 1 }}>
           {allowClientSelect ? (
             <Autocomplete
               fullWidth
@@ -274,43 +303,45 @@ export default function PaymentMovementDialog({
               disabled
             />
           </Stack>
-          <TextField
-            select
-            required
-            label="Tipo"
-            name="typeId"
-            value={formik.values.typeId}
-            onChange={(event) => {
-              formik.setFieldValue("typeId", event.target.value);
-              formik.setErrors({});
-            }}
-            error={!!formik.errors.typeId}
-            helperText={formik.errors.typeId || " "}
-            size="small"
-            fullWidth
-            disabled={isFetchingMovementTypes}
-            InputProps={withLoadingInputProps(
-              undefined,
-              isFetchingMovementTypes,
-            )}
-          >
-            {sortedMovementTypes.map((type) => {
-              const typeName = String(type.name || "");
-              const label = isKnownPaymentType(typeName)
-                ? paymentTypeLabels[typeName]
-                : typeName;
+          {isRectification ? null : (
+            <TextField
+              select
+              required
+              label="Tipo"
+              name="typeId"
+              value={formik.values.typeId}
+              onChange={(event) => {
+                formik.setFieldValue("typeId", event.target.value);
+                formik.setErrors({});
+              }}
+              error={!!formik.errors.typeId}
+              helperText={formik.errors.typeId || " "}
+              size="small"
+              fullWidth
+              disabled={isFetchingMovementTypes}
+              InputProps={withLoadingInputProps(
+                undefined,
+                isFetchingMovementTypes,
+              )}
+            >
+              {sortedMovementTypes.map((type) => {
+                const typeName = String(type.name || "");
+                const label = isKnownPaymentType(typeName)
+                  ? paymentTypeLabels[typeName]
+                  : typeName;
 
-              return (
-                <MenuItem key={type.id} value={type.id}>
-                  {label}
-                </MenuItem>
-              );
-            })}
-          </TextField>
+                return (
+                  <MenuItem key={type.id} value={type.id}>
+                    {label}
+                  </MenuItem>
+                );
+              })}
+            </TextField>
+          )}
           <NumericFormat
             customInput={TextField}
             required
-            label={isAdjustment ? "Saldo final" : "Importe"}
+            label={isRectification ? "Saldo rectificado" : "Importe"}
             name="amount"
             value={formik.values.amount}
             valueIsNumericString
@@ -326,7 +357,7 @@ export default function PaymentMovementDialog({
             helperText={formik.errors.amount || " "}
             size="small"
             fullWidth
-            allowNegative={isAdjustment}
+            allowNegative={isRectification}
             InputProps={{
               startAdornment: (
                 <InputAdornment
@@ -375,7 +406,7 @@ export default function PaymentMovementDialog({
           loading={isCreating}
           disabled={isCreating || isLoadingPaymentDialogData}
         >
-          Registrar
+          {isRectification ? "Rectificar" : "Registrar"}
         </Button>
       </DialogActions>
     </Dialog>
