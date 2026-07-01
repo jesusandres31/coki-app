@@ -52,6 +52,7 @@ interface DataGridProps {
   searchPlaceholder?: string;
   initialQuery?: Partial<GetList>;
   onQueryChange?: (query: GetList) => void;
+  toolbarInfoElement?: ReactNode;
   toolbarElement?: ReactNode;
   rowActions?: DataGridRowAction[];
   onCollapseChange?: (itemId: string, collapsed: boolean) => void;
@@ -68,6 +69,7 @@ export default function DataGrid({
   searchPlaceholder,
   initialQuery,
   onQueryChange,
+  toolbarInfoElement,
   toolbarElement,
   rowActions,
   onCollapseChange,
@@ -214,6 +216,7 @@ export default function DataGrid({
           selectedCount={selectedItems.length}
           onSearch={handleSetFilter}
           searchPlaceholder={searchPlaceholder}
+          toolbarInfoElement={toolbarInfoElement}
           toolbarElement={toolbarElement}
         />
       )}

@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { AddCardRounded, ReceiptLongRounded } from "@mui/icons-material";
+import { AddCardRounded, OpenInNewRounded } from "@mui/icons-material";
 import DataGrid from "src/components/common/DataGrid/DataGrid";
 import { getListArgsInitialState } from "src/constants";
 import { useGetClientsListQuery } from "src/app/services/invoiceService";
@@ -60,13 +60,13 @@ export default function Payments() {
       {
         id: "add-payment-account-movement",
         label: "Registrar movimiento",
-        icon: <AddCardRounded fontSize="small" color="primary" />,
+        icon: <AddCardRounded fontSize="small" color="info" />,
         onClick: (item) => setClientForPaymentMovement(item as ClientsResponse),
       },
       {
         id: "payment-history",
         label: "Ver historial",
-        icon: <ReceiptLongRounded fontSize="small" color="info" />,
+        icon: <OpenInNewRounded fontSize="small" color="primary" />,
         onClick: (item) => handleGoTo(`${AppRoutes.Payments}/${item.id}`),
       },
     ],

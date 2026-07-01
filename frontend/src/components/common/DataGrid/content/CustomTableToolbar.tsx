@@ -17,6 +17,7 @@ interface CustomTableToolbarProps {
   selectedCount: number;
   onSearch: (value: string) => void;
   searchPlaceholder?: string;
+  toolbarInfoElement?: ReactNode;
   toolbarElement?: ReactNode;
 }
 
@@ -25,6 +26,7 @@ export default function CustomTableToolbar({
   selectedCount,
   onSearch,
   searchPlaceholder = "Search",
+  toolbarInfoElement,
   toolbarElement,
 }: CustomTableToolbarProps) {
   const { isMobile } = useUI();
@@ -53,6 +55,7 @@ export default function CustomTableToolbar({
           width: "100%",
           display: "flex",
           alignItems: "center",
+          flexWrap: { xs: "wrap", sm: "nowrap" },
           gap: 1.5,
         }}
       >
@@ -78,16 +81,18 @@ export default function CustomTableToolbar({
             <Box
               sx={{
                 width: "100%",
-                maxWidth: 450,
-                height: 40,
+                maxWidth: toolbarInfoElement ? 680 : 450,
+                minHeight: 40,
                 display: "flex",
-                alignItems: "center",
+                alignItems: { xs: "flex-start", sm: "center" },
+                flexDirection: { xs: "column", sm: "row" },
+                gap: { xs: 1, sm: 1.5 },
               }}
             >
               <FormControl
                 variant="outlined"
                 size="small"
-                sx={{ width: "100%" }}
+                sx={{ width: "100%", maxWidth: 450 }}
               >
                 <InputLabel>{searchPlaceholder}</InputLabel>
                 <OutlinedInput
@@ -116,6 +121,18 @@ export default function CustomTableToolbar({
                   label={searchPlaceholder}
                 />
               </FormControl>
+              {toolbarInfoElement ? (
+                <Box
+                  sx={{
+                    flex: "0 0 auto",
+                    display: "flex",
+                    alignItems: "center",
+                    alignSelf: { xs: "flex-end", sm: "center" },
+                  }}
+                >
+                  {toolbarInfoElement}
+                </Box>
+              ) : null}
             </Box>
           )}
         </Box>

@@ -7,6 +7,10 @@ export const STYLE = {
   },
 };
 
+export const COLOR = {
+  whatsapp_green: "#25d366",
+};
+
 export const SEARCH = {
   debounceMs: 500,
 };

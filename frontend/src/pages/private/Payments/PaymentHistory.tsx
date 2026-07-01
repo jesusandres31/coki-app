@@ -2,9 +2,9 @@ import { useEffect, useMemo, useState } from "react";
 import { skipToken } from "@reduxjs/toolkit/query";
 import { useParams } from "react-router-dom";
 import { AddCardRounded, EditNoteRounded } from "@mui/icons-material";
-import { Button, Chip, Stack } from "@mui/material";
+import { Box, Button, Chip, Stack, Typography } from "@mui/material";
 import DataGrid from "src/components/common/DataGrid/DataGrid";
-import { getListArgsInitialState } from "src/constants";
+import { COLOR, getListArgsInitialState } from "src/constants";
 import {
   PaymentAccountMovementTypeName,
   PaymentAccountMovementWithExpand,
@@ -14,6 +14,7 @@ import {
 import { useAppDispatch } from "src/app/store";
 import { resetBreadcrumbs, setBreadcrumbs } from "src/slices/uiSlice";
 import { Column, GetList } from "src/types";
+import { useUI } from "src/hooks";
 import { formatDate, formatMoney, MoneyValue } from "src/utils/format";
 import { paymentsBreadcrumbFlow } from "./breadcrumbFlow";
 import PaymentMovementDialog from "./PaymentMovementDialog";
@@ -43,6 +44,7 @@ const getMovementTypeName = (item: PaymentAccountMovementWithExpand) =>
 
 export default function PaymentHistory() {
   const dispatch = useAppDispatch();
+  const { isMobile } = useUI();
   const { clientId } = useParams();
   const [movementDialogMode, setMovementDialogMode] = useState<
     "movement" | "rectification" | null
@@ -155,23 +157,40 @@ export default function PaymentHistory() {
         searchPlaceholder="Buscar movimiento"
         initialQuery={queryArgs}
         onQueryChange={setQueryArgs}
+        toolbarInfoElement={
+          <Box
+            sx={{
+              borderLeft: "3px solid",
+              borderColor: COLOR.whatsapp_green,
+              pl: 1,
+              py: 0.25,
+              whiteSpace: "nowrap",
+            }}
+          >
+            <Typography
+              variant={isMobile ? "caption" : "body2"}
+              color="text.secondary"
+              sx={{ lineHeight: 1.1 }}
+            >
+              Saldo actual
+            </Typography>
+            <Typography
+              variant={isMobile ? "body2" : "subtitle2"}
+              sx={{
+                color: COLOR.whatsapp_green,
+                fontWeight: 800,
+                lineHeight: 1.2,
+              }}
+            >
+              {formatMoney(client?.balance ?? 0)}
+            </Typography>
+          </Box>
+        }
         toolbarElement={
           <Stack direction="row" spacing={1.5} alignItems="center">
-            <Chip
-              variant="outlined"
-              color="success"
-              // size="small"
-              label={`Saldo Actual: ${formatMoney(client?.balance ?? 0)}`}
-              sx={{
-                fontWeight: 700,
-                // borderWidth: 1.5,
-                // "& .MuiChip-label": {
-                //   px: 1.25,
-                // },
-              }}
-            />
             <Button
               size="small"
+              color="info"
               variant="outlined"
               startIcon={<EditNoteRounded />}
               onClick={() => setMovementDialogMode("rectification")}
