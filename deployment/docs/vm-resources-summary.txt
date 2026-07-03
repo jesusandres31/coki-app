@@ -1,0 +1,30 @@
+VM resources summary:
+
+Ubuntu server running on KVM virtualization.
+
+CPU:
+
+- 2 vCPUs
+- AMD EPYC 7551 32-Core Processor
+
+Memory:
+
+- 1 GB RAM total
+- Around 954 MiB usable by the OS
+- No swap currently configured
+
+Disk:
+
+- 50 GB block volume
+- Main root partition: 45 GB
+- Around 39 GB free
+- Disk usage is low, about 12%
+
+Network:
+
+- Virtio network interface
+- Interface name: ens3
+
+General note:
+
+- This is a small, low-memory VM. CPU and disk are acceptable, but RAM is limited.
