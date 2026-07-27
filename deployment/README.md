@@ -1,70 +1,37 @@
-## Scripts:
+# Deployment
 
-ssh -i .\ssh-key-2026-04-14.key ubuntu@150.136.172.105
+Deploy scripts assume the SSH key is available at the repo root as `ssh-key-2026-04-14.key`.
 
-```
-sh deploy.sh
-```
+## Windows
 
-## Util commands:
-
-### node:
-
-- v20.11.1
-
-npm install -g pnpm
-
-### nginx:
-
-```
-sudo nano /etc/nginx/conf.d/coki.ctes.dedyn.io.conf
-sudo nano /etc/nginx/conf.d/admin-coki.ctes.dedyn.io.conf
-
-sudo rm -rf /home/ubuntu/coki-app/frontend/dist
-sudo rm -rf /var/www/coki-app/dist/
-sudo cp -r /home/ubuntu/coki-app/frontend/dist /var/www/coki-app/dist
-sudo ls /var/www/coki-app/dist/assets/
-
-sudo chown -R www-data:www-data /var/www/coki-app
-sudo find /var/www/coki-app -type d -exec chmod 755 {} \;
-sudo find /var/www/coki-app -type f -exec chmod 644 {} \;
-
-sudo nginx -t
-sudo systemctl restart nginx
-sudo systemctl status nginx
-
-sudo tail -n 50 /var/log/nginx/error.log
-sudo tail -n 50 /var/log/nginx/access.log
+```powershell
+.\deployment\scripts\win\frontend-deploy.ps1
+.\deployment\scripts\win\backend-deploy.ps1
+.\deployment\scripts\win\deploy-all.ps1
 ```
 
-sudo service nginx reload
+`frontend-deploy.ps1` builds with `frontend/.env.prod` locally and copies `frontend/dist` to the server. Remote cleanup and publishing are handled by `deployment/scripts/linux/frontend-deploy.sh`.
 
-- uncomment line: `# include /etc/nginx/default.d/*.conf;`
+`backend-deploy.ps1` runs the Linux backend deploy script on the server. The server script pulls `master` and restarts `cokiapp.pocketbase.service`.
 
-### certbot:
+## Server Setup
 
-```
-sudo certbot --nginx -d coki.ctes.dedyn.io
-sudo certbot --nginx -d admin-coki.ctes.dedyn.io
-```
+For a fresh Ubuntu server:
 
-### pocketbase
-
-https://pocketbase.io/docs/going-to-production/
-
-sudo nano /lib/systemd/system/cokiapp.pocketbase.service
-
-chmod +x pocketbase
-
-```
-sudo systemctl enable cokiapp.pocketbase.service
-sudo systemctl start cokiapp.pocketbase
-sudo systemctl status cokiapp.pocketbase
+```sh
+REPO_URL="https://github.com/jesusandres31/coki-app.git" bash deployment/scripts/linux/setup/first-deploy.sh
 ```
 
----
+After DNS points to the server, run with certbot enabled:
 
-scp -i ".\ssh-key-2026-04-14.key" -r "C:\Users\jesus\projects\mine\coki-app\frontend\dist" ubuntu@150.136.172.105:/home/ubuntu/coki-app/frontend/
-scp -i ".\ssh-key-2026-04-14.key" -r "C:\Users\jesus\projects\mine\coki-app\backend\pb_data" ubuntu@150.136.172.105:/home/ubuntu/coki-app/backend/
+```sh
+RUN_CERTBOT=true bash deployment/scripts/linux/setup/first-deploy.sh
+```
 
-sudo bash /home/ubuntu/coki-app/deployment/scripts/frontend-deploy.sh
+## Server
+
+- App dir: `/home/ubuntu/coki-app`
+- Web root: `/var/www/coki-app/dist`
+- PocketBase service: `cokiapp.pocketbase.service`
+- Public domain: `coki.ctes.dedyn.io`
+- PocketBase admin/API domain: `admin-coki.ctes.dedyn.io`
