@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { Button } from "@mui/material";
 import {
   AddRounded,
+  EditRounded,
   OpenInNewRounded,
   PrintRounded,
 } from "@mui/icons-material";
@@ -361,6 +362,13 @@ export default function Invoices() {
         label: "Ver factura",
         icon: <OpenInNewRounded fontSize="small" color="primary" />,
         onClick: (item) => handleGoTo(`${AppRoutes.Invoices}/${item.id}`),
+      },
+      {
+        id: "edit",
+        label: "Editar factura",
+        icon: <EditRounded fontSize="small" color="info" />,
+        onClick: (item) =>
+          handleGoTo(`${AppRoutes.Invoices}/${item.id}?mode=edit`),
       },
       {
         id: "print",

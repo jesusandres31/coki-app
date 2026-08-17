@@ -2,7 +2,7 @@ import { alpha, createTheme } from "@mui/material";
 import type {} from "@mui/x-date-pickers/themeAugmentation";
 
 const app = {
-  fgDefault: "#111827",
+  fgDefault: "#201127",
   fgMuted: "#425466",
   fgSubtle: "#6B7280",
   canvasDefault: "#FFFFFF",

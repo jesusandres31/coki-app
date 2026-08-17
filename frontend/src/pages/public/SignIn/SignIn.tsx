@@ -8,9 +8,12 @@ import {
   Card,
   CardContent,
   Stack,
+  IconButton,
+  InputAdornment,
 } from "@mui/material";
-import { LockRounded } from "@mui/icons-material";
+import { LockRounded, Visibility, VisibilityOff } from "@mui/icons-material";
 import { useFormik } from "formik";
+import { useState } from "react";
 import * as Yup from "yup";
 import { SignInRequest } from "src/interfaces";
 import { removeSpace } from "src/utils/format";
@@ -20,6 +23,7 @@ import { FORM_MSG, FORM_VLDN } from "src/utils/FormUtils";
 
 export default function SignIn() {
   const { handleSignIn, isSigningIn } = useAuth();
+  const [showPassword, setShowPassword] = useState(false);
 
   const formik = useFormik<SignInRequest>({
     initialValues: {
@@ -114,7 +118,7 @@ export default function SignIn() {
               id="password"
               label="Contraseña"
               name="password"
-              type="password"
+              type={showPassword ? "text" : "password"}
               autoComplete="current-password"
               value={formik.values.password}
               onChange={(e) => {
@@ -127,6 +131,27 @@ export default function SignIn() {
               inputProps={{
                 max: FORM_VLDN.SHORT_STRING.max,
                 min: FORM_VLDN.SHORT_STRING.min,
+              }}
+              slotProps={{
+                input: {
+                  endAdornment: (
+                    <InputAdornment position="end">
+                      <IconButton
+                        aria-label={
+                          showPassword
+                            ? "Ocultar contraseña"
+                            : "Mostrar contraseña"
+                        }
+                        aria-pressed={showPassword}
+                        edge="end"
+                        onClick={() => setShowPassword((visible) => !visible)}
+                        onMouseDown={(event) => event.preventDefault()}
+                      >
+                        {showPassword ? <VisibilityOff /> : <Visibility />}
+                      </IconButton>
+                    </InputAdornment>
+                  ),
+                },
               }}
             />
             <Button

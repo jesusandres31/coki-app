@@ -56,7 +56,7 @@ const mapInvoiceItems = (
     );
 
     const productRecord = productById.get(productId);
-    const amount = Math.max(1, toNumber(item.amount || 1));
+    const amount = Math.max(0, toNumber(item.amount ?? 1));
     const unitPrice = Math.max(0, toNumber(item.unit_price));
     const discount = clampDiscount(toNumber(item.discount));
 

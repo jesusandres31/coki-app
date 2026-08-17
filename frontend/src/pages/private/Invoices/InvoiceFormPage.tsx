@@ -49,6 +49,7 @@ import {
   useDeleteInvoiceMutation,
   useGetConfigQuery,
   useGetClientsQuery,
+  useGetInvoiceProductsByInvoiceIdQuery,
   useGetInvoiceViewByIdQuery,
   useGetMeasureUnitsQuery,
   useGetProductsQuery,
@@ -1620,6 +1621,22 @@ export default function InvoiceFormPage() {
   } = useGetInvoiceViewByIdQuery(invoiceId || "", {
     skip: !isDetailRoute || isInvoiceDeleted,
   });
+  const {
+    data: activeInvoiceProducts,
+    isFetching: isInvoiceProductsFetching,
+    error: invoiceProductsError,
+  } = useGetInvoiceProductsByInvoiceIdQuery(invoiceId || "", {
+    skip: !isDetailRoute || isInvoiceDeleted,
+  });
+
+  const invoiceWithActiveProducts = useMemo(() => {
+    if (!invoice || activeInvoiceProducts === undefined) return invoice;
+
+    return {
+      ...invoice,
+      invoice_products: activeInvoiceProducts,
+    };
+  }, [activeInvoiceProducts, invoice]);
 
   const [createInvoice, { isLoading: isCreating }] = useCreateInvoiceMutation();
   const [updateInvoice, { isLoading: isUpdating }] = useUpdateInvoiceMutation();
@@ -1871,35 +1888,39 @@ export default function InvoiceFormPage() {
   );
 
   const getInvoiceDraftFallback = useCallback(() => {
-    if (!isEditMode || !invoice) return null;
+    if (!isEditMode || !invoiceWithActiveProducts) return null;
 
-    return buildInvoiceFormValuesFromInvoice(invoice);
-  }, [invoice, isEditMode]);
+    return buildInvoiceFormValuesFromInvoice(invoiceWithActiveProducts);
+  }, [invoiceWithActiveProducts, isEditMode]);
 
   const { clearDraft: clearActiveInvoiceDraft } =
     useSessionStorageDraft<InvoiceFormValues>({
       key: invoiceDraftKey,
       value: isNewMode ? newFormik.values : editFormik.values,
-      ready: isNewMode || Boolean(invoice),
+      ready:
+        isNewMode ||
+        Boolean(invoiceWithActiveProducts && activeInvoiceProducts !== undefined),
       onHydrate: hydrateInvoiceDraft,
       getFallbackValue: getInvoiceDraftFallback,
     });
 
   useEffect(() => {
-    if (!invoice || isNewMode || isEditMode) return;
+    if (!invoiceWithActiveProducts || isNewMode || isEditMode) return;
 
-    editFormik.setValues(buildInvoiceFormValuesFromInvoice(invoice));
-  }, [invoice, isEditMode, isNewMode]);
+    editFormik.setValues(
+      buildInvoiceFormValuesFromInvoice(invoiceWithActiveProducts),
+    );
+  }, [invoiceWithActiveProducts, isEditMode, isNewMode]);
 
   const invoiceProducts: InvoiceProductRow[] = useMemo(() => {
     const parsed = parseJsonValue<InvoiceProductRow[]>(
-      invoice?.invoice_products,
+      invoiceWithActiveProducts?.invoice_products,
     );
     if (!parsed || !Array.isArray(parsed)) {
       return [];
     }
     return parsed;
-  }, [invoice?.invoice_products]);
+  }, [invoiceWithActiveProducts?.invoice_products]);
 
   const productById = useMemo(
     () =>
@@ -2378,7 +2399,7 @@ export default function InvoiceFormPage() {
   };
 
   const handlePrintInvoice = async () => {
-    if (!invoice) return;
+    if (!invoiceWithActiveProducts) return;
     const popup = openInvoicePdfTab();
 
     if (!popup) {
@@ -2396,7 +2417,7 @@ export default function InvoiceFormPage() {
 
     try {
       const invoicePdfModel = buildInvoicePdfModel({
-        invoice,
+        invoice: invoiceWithActiveProducts,
         products,
         measureUnits,
       });
@@ -2415,7 +2436,7 @@ export default function InvoiceFormPage() {
     }
   };
 
-  if (isDetailRoute && isFetching) {
+  if (isDetailRoute && (isFetching || isInvoiceProductsFetching)) {
     return (
       <PageContainer>
         <Container
@@ -2450,7 +2471,10 @@ export default function InvoiceFormPage() {
     );
   }
 
-  if (isDetailRoute && (error || !invoice)) {
+  if (
+    isDetailRoute &&
+    (error || invoiceProductsError || !invoiceWithActiveProducts)
+  ) {
     return (
       <PageContainer>
         <Container

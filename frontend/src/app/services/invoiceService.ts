@@ -18,7 +18,6 @@ import {
   Update,
   VInvoicesResponse,
 } from "src/types/pocketbase-types";
-import { configKey } from "src/config";
 import {
   activeRecordFilter,
   ApiTag,
@@ -616,10 +615,16 @@ export const invoiceApi = mainApi.injectEndpoints({
     }),
     getConfig: build.query<ConfigsResponse, void>({
       queryFn: async () => {
-        const res = await typedPb
-          .collection("configs")
-          .getFirstListItem(`company = "${configKey.COMPANY}"`);
-        return { data: res };
+        const res = await typedPb.collection("configs").getList(1, 1, {
+          sort: "+created",
+        });
+        const config = res.items[0];
+
+        if (!config) {
+          throw new Error("No se encontró la configuración general.");
+        }
+
+        return { data: config };
       },
       providesTags: [configsTag],
     }),
@@ -1014,6 +1019,7 @@ export const {
   useGetClientsQuery,
   useGetClientsListQuery,
   useGetInvoicesListQuery,
+  useGetInvoiceProductsByInvoiceIdQuery,
   useGetInvoiceViewByIdQuery,
   useLazyGetInvoiceProductsByInvoiceIdQuery,
   useLazyGetLastProductPriceForClientQuery,
