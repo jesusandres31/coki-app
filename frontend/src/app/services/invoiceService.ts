@@ -1,4 +1,4 @@
-import { ListResult } from "pocketbase";
+import { ListResult, RecordListOptions } from "pocketbase";
 import dayjs from "dayjs";
 import { pb } from "src/libs";
 import { GetList } from "src/types";
@@ -40,6 +40,7 @@ const paymentAccountMovementsTag = ApiTag.PaymentAccountMovements;
 const paymentAccountMovementTypesTag = ApiTag.PaymentAccountMovementTypes;
 const typedPb = pb as TypedPocketBase;
 const MAX_DISCOUNT_PERCENT = 100;
+const DATA_PAGE_SIZE = 100;
 const pbNoAutoCancelOptions = { requestKey: null } as const;
 
 export type PaymentAccountMovementTypeName = "payment" | "debt" | "adjustment";
@@ -343,13 +344,49 @@ const syncInvoiceBalanceChange = async (
   );
 };
 
-const getActiveNameSortedFullList = async <T,>(
+type PaginatedCollection =
+  | "clients"
+  | "invoices"
+  | "invoices_products"
+  | "invoicestates"
+  | "measureunits"
+  | "payment_account_movement_types"
+  | "products"
+  | "v_invoices";
+
+const getRecordsByPages = async <T,>(
+  collection: PaginatedCollection,
+  options: RecordListOptions = {},
+) => {
+  const records: T[] = [];
+  let page = 1;
+  let totalPages = 1;
+
+  do {
+    const result = (await typedPb.collection(collection).getList(
+      page,
+      DATA_PAGE_SIZE,
+      {
+        ...options,
+        requestKey: null,
+      },
+    )) as ListResult<T>;
+
+    records.push(...result.items);
+    totalPages = result.totalPages;
+    page += 1;
+  } while (page <= totalPages);
+
+  return records;
+};
+
+const getActiveNameSortedRecords = async <T,>(
   collection: "measureunits" | "products",
 ) =>
-  typedPb.collection(collection).getFullList({
+  getRecordsByPages<T>(collection, {
     filter: activeRecordFilter,
     sort: "+name",
-  }) as Promise<T[]>;
+  });
 
 const getActiveRecordById = async <T,>(
   collection: "clients" | "products" | "product_types",
@@ -371,6 +408,7 @@ export const invoiceApi = mainApi.injectEndpoints({
           {
             filter: buildInvoicesListFilter(_arg.filter),
             sort: pbSort(_arg.order, _arg.orderBy),
+            expand: "client",
           },
         );
 
@@ -406,10 +444,9 @@ export const invoiceApi = mainApi.injectEndpoints({
         const to = toExclusive.replace(/\\/g, "\\\\").replace(/"/g, '\\"');
         // Use an exclusive upper bound to include the full "to" day even when `date` has time.
         const filter = `${activeRecordFilter} && date >= "${from}" && date < "${to}"`;
-        const res = await typedPb.collection("v_invoices").getFullList({
+        const res = await getRecordsByPages<VInvoicesResponse>("v_invoices", {
           filter,
           sort: "+date",
-          requestKey: null,
         });
 
         return { data: res };
@@ -425,17 +462,22 @@ export const invoiceApi = mainApi.injectEndpoints({
     }),
     getInvoiceProductsByInvoiceId: build.query<InvoicesProductsResponse[], string>({
       queryFn: async (_arg) => {
-        const res = await typedPb.collection("invoices_products").getFullList({
-          filter: `invoice = "${escapePbFilterValue(_arg)}" && ${activeRecordFilter}`,
-          sort: "+created",
-        });
+        const res = await getRecordsByPages<InvoicesProductsResponse>(
+          "invoices_products",
+          {
+            filter: `invoice = "${escapePbFilterValue(_arg)}" && ${activeRecordFilter}`,
+            sort: "+created",
+            expand: "product,product.measure_unit",
+          },
+        );
+
         return { data: res };
       },
       providesTags: [invoiceProductsTag],
     }),
     getClients: build.query<ClientsResponse[], void>({
       queryFn: async () => {
-        const res = await typedPb.collection("clients").getFullList({
+        const res = await getRecordsByPages<ClientsResponse>("clients", {
           filter: activeRecordFilter,
           sort: "+name",
         });
@@ -445,9 +487,12 @@ export const invoiceApi = mainApi.injectEndpoints({
     }),
     getInvoiceStates: build.query<InvoicestatesResponse[], void>({
       queryFn: async () => {
-        const res = await typedPb.collection("invoicestates").getFullList({
-          sort: "+name",
-        });
+        const res = await getRecordsByPages<InvoicestatesResponse>(
+          "invoicestates",
+          {
+            sort: "+name",
+          },
+        );
         return { data: res };
       },
       providesTags: [invoiceStatesTag],
@@ -471,11 +516,12 @@ export const invoiceApi = mainApi.injectEndpoints({
       void
     >({
       queryFn: async () => {
-        const res = await typedPb
-          .collection("payment_account_movement_types")
-          .getFullList({
+        const res = await getRecordsByPages<PaymentAccountMovementTypesResponse>(
+          "payment_account_movement_types",
+          {
             sort: "+name",
-          });
+          },
+        );
         return { data: res };
       },
       providesTags: [paymentAccountMovementTypesTag],
@@ -555,7 +601,7 @@ export const invoiceApi = mainApi.injectEndpoints({
     getProducts: build.query<ProductsResponse[], void>({
       queryFn: async () => {
         const res =
-          await getActiveNameSortedFullList<ProductsResponse>("products");
+          await getActiveNameSortedRecords<ProductsResponse>("products");
         return { data: res };
       },
       providesTags: [productsTag],
@@ -563,7 +609,7 @@ export const invoiceApi = mainApi.injectEndpoints({
     getMeasureUnits: build.query<MeasureunitsResponse[], void>({
       queryFn: async () => {
         const res =
-          await getActiveNameSortedFullList<MeasureunitsResponse>("measureunits");
+          await getActiveNameSortedRecords<MeasureunitsResponse>("measureunits");
         return { data: res };
       },
       providesTags: [measureUnitsTag],
@@ -639,34 +685,33 @@ export const invoiceApi = mainApi.injectEndpoints({
         const excludeInvoiceId = _arg.excludeInvoiceId
           ? escapePbFilterValue(_arg.excludeInvoiceId)
           : "";
-        const excludeFilter = excludeInvoiceId
-          ? ` && id != "${excludeInvoiceId}"`
-          : "";
 
-        const invoices = await typedPb.collection("invoices").getFullList({
-          filter: `client = "${clientId}" && state = "${escapePbFilterValue(openState.id)}" && ${activeRecordFilter}${excludeFilter}`,
-          sort: "-date,-created",
-          fields: "id,date,created",
-          requestKey: null,
-        });
+        const invoiceProductFilter = [
+          `invoice.client = "${clientId}"`,
+          `invoice.state = "${escapePbFilterValue(openState.id)}"`,
+          `invoice.deleted = ""`,
+          `product = "${productId}"`,
+          activeRecordFilter,
+          excludeInvoiceId ? `invoice != "${excludeInvoiceId}"` : "",
+        ]
+          .filter(Boolean)
+          .join(" && ");
+        const invoiceProducts = await typedPb
+          .collection("invoices_products")
+          .getList(1, 1, {
+            filter: invoiceProductFilter,
+            sort: "-invoice.date,-created",
+            fields: "unit_price",
+            requestKey: null,
+          });
+        const lastItem = invoiceProducts.items[0];
 
-        for (const invoice of invoices) {
-          const invoiceProducts = await typedPb
-            .collection("invoices_products")
-            .getFullList({
-              filter: `invoice = "${escapePbFilterValue(invoice.id)}" && product = "${productId}" && ${activeRecordFilter}`,
-              sort: "-created",
-              requestKey: null,
-            });
-          const lastItem = invoiceProducts[0];
-
-          if (lastItem) {
-            return {
-              data: {
-                unitPrice: Number(lastItem.unit_price ?? 0),
-              },
-            };
-          }
+        if (lastItem) {
+          return {
+            data: {
+              unitPrice: Number(lastItem.unit_price ?? 0),
+            },
+          };
         }
 
         return { data: null };
@@ -787,11 +832,12 @@ export const invoiceApi = mainApi.injectEndpoints({
         let subtotal = 0;
 
         if (_arg.items) {
-          const existingItems = await typedPb
-            .collection("invoices_products")
-            .getFullList({
+          const existingItems = await getRecordsByPages<InvoicesProductsResponse>(
+            "invoices_products",
+            {
               filter: `invoice = "${escapePbFilterValue(_arg.id)}" && ${activeRecordFilter}`,
-            });
+            },
+          );
 
           const existingItemsById = new Map(
             existingItems.map((item) => [item.id, item]),
@@ -837,11 +883,12 @@ export const invoiceApi = mainApi.injectEndpoints({
               .map((item) => softDeleteRecord("invoices_products", item.id)),
           );
         } else {
-          const existingItems = await typedPb
-            .collection("invoices_products")
-            .getFullList({
+          const existingItems = await getRecordsByPages<InvoicesProductsResponse>(
+            "invoices_products",
+            {
               filter: `invoice = "${escapePbFilterValue(_arg.id)}" && ${activeRecordFilter}`,
-            });
+            },
+          );
 
           subtotal = existingItems.reduce(
             (acc, item) => acc + Number(item.total ?? 0),
@@ -897,11 +944,12 @@ export const invoiceApi = mainApi.injectEndpoints({
         const shouldSyncAccount =
           !hasDeletedValue(currentInvoice.deleted) &&
           (await isOpenInvoiceState(String(currentInvoice.state || "")));
-        const existingItems = await typedPb
-          .collection("invoices_products")
-          .getFullList({
+        const existingItems = await getRecordsByPages<InvoicesProductsResponse>(
+          "invoices_products",
+          {
             filter: `invoice = "${escapePbFilterValue(_arg)}" && ${activeRecordFilter}`,
-          });
+          },
+        );
 
         await Promise.all(
           existingItems.map((item) =>

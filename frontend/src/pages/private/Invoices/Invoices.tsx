@@ -9,16 +9,16 @@ import {
 import DataGrid from "src/components/common/DataGrid/DataGrid";
 import { getListArgsInitialState } from "src/constants";
 import {
-  useGetClientsQuery,
   useGetInvoicesListQuery,
-  useGetMeasureUnitsQuery,
   useLazyGetInvoiceProductsByInvoiceIdQuery,
-  useGetProductsQuery,
 } from "src/app/services/invoiceService";
 import { Column, DataGridRowAction, DetailColumn, GetList } from "src/types";
 import {
+  ClientsResponse,
   InvoicesProductsResponse,
   InvoicesResponse,
+  MeasureunitsResponse,
+  ProductsResponse,
   VInvoicesResponse,
 } from "src/types/pocketbase-types";
 import {
@@ -26,7 +26,6 @@ import {
   formatPercent,
   MoneyValue,
 } from "src/utils/format";
-import { buildMeasureUnitNameById } from "src/utils/measureUnits";
 import { useRouter } from "src/hooks";
 import { AppRoutes } from "src/config";
 import { useAppDispatch } from "src/app/store";
@@ -42,10 +41,21 @@ import {
   openInvoicePdfTab,
 } from "./pdf";
 
-interface InvoiceListRow extends InvoicesResponse {
-  invoice_products?: InvoicesProductsResponse[];
+interface InvoiceListRow
+  extends InvoicesResponse<{ client?: ClientsResponse }> {
+  invoice_products?: InvoiceProductListRow[];
   invoice_products_loading?: boolean;
 }
+
+interface InvoiceProductListRow
+  extends InvoicesProductsResponse<{
+    product?: ProductsResponse<{ measure_unit?: MeasureunitsResponse }>;
+  }> {}
+
+const getInvoiceClientName = (invoice: InvoiceListRow) => {
+  const expandedName = invoice.expand?.client?.name;
+  return expandedName ? String(expandedName) : "-";
+};
 
 export default function Invoices() {
   const dispatch = useAppDispatch();
@@ -55,7 +65,7 @@ export default function Invoices() {
     orderBy: "created",
   }));
   const [invoiceProductsByInvoiceId, setInvoiceProductsByInvoiceId] = useState<
-    Record<string, InvoicesProductsResponse[]>
+    Record<string, InvoiceProductListRow[]>
   >({});
   const [
     invoiceProductsLoadingByInvoiceId,
@@ -74,47 +84,6 @@ export default function Invoices() {
   }, [dispatch]);
 
   const { data, error, isFetching } = useGetInvoicesListQuery(queryArgs);
-  const { data: clients = [], isFetching: isFetchingClients } =
-    useGetClientsQuery();
-  const { data: products = [], isFetching: isFetchingProducts } =
-    useGetProductsQuery();
-  const { data: measureUnits = [], isFetching: isFetchingMeasureUnits } =
-    useGetMeasureUnitsQuery();
-  const isLoadingInvoiceGridData =
-    isFetching ||
-    isFetchingClients ||
-    isFetchingProducts ||
-    isFetchingMeasureUnits;
-
-  const clientNameById = useMemo(
-    () =>
-      new Map(clients.map((client) => [client.id, String(client.name || "-")])),
-    [clients],
-  );
-
-  const measureUnitNameById = useMemo(
-    () => buildMeasureUnitNameById(measureUnits),
-    [measureUnits],
-  );
-
-  const productMeasureUnitByProductId = useMemo(
-    () =>
-      new Map(
-        products.map((product) => [
-          product.id,
-          measureUnitNameById.get(String(product.measure_unit || "")) || "-",
-        ]),
-      ),
-    [products, measureUnitNameById],
-  );
-
-  const productNameById = useMemo(
-    () =>
-      new Map(
-        products.map((product) => [product.id, String(product.name || "-")]),
-      ),
-    [products],
-  );
 
   const invoicesData = useMemo(() => {
     if (!data) return undefined;
@@ -143,7 +112,9 @@ export default function Invoices() {
       }));
 
       try {
-        const items = await triggerGetInvoiceProducts(invoiceId).unwrap();
+        const items = (await triggerGetInvoiceProducts(
+          invoiceId,
+        ).unwrap()) as InvoiceProductListRow[];
         setInvoiceProductsByInvoiceId((prev) => ({
           ...prev,
           [invoiceId]: items,
@@ -178,7 +149,9 @@ export default function Invoices() {
       }));
 
       try {
-        const items = await triggerGetInvoiceProducts(invoiceId).unwrap();
+        const items = (await triggerGetInvoiceProducts(
+          invoiceId,
+        ).unwrap()) as InvoiceProductListRow[];
         setInvoiceProductsByInvoiceId((prev) => ({
           ...prev,
           [invoiceId]: items,
@@ -221,18 +194,16 @@ export default function Invoices() {
 
       try {
         const invoiceProducts = await getInvoiceProducts(invoice.id);
-        const clientName = clientNameById.get(String(invoice.client || ""));
+        const clientName = getInvoiceClientName(invoice);
         const invoicePdfModel = buildInvoicePdfModel({
           invoice: {
             ...invoice,
             client: JSON.stringify({
               id: invoice.client,
-              name: clientName || "-",
+              name: clientName,
             }),
             invoice_products: JSON.stringify(invoiceProducts),
           } as VInvoicesResponse,
-          products,
-          measureUnits,
         });
 
         await openInvoicePdfInViewer(invoicePdfModel, popup);
@@ -249,12 +220,9 @@ export default function Invoices() {
       }
     },
     [
-      clientNameById,
       dispatch,
       getInvoiceProducts,
-      measureUnits,
       printingInvoiceId,
-      products,
     ],
   );
 
@@ -273,7 +241,7 @@ export default function Invoices() {
         align: "left",
         minWidth: 220,
         render: (item: InvoiceListRow) =>
-          clientNameById.get(String(item.client || "")) || "-",
+          getInvoiceClientName(item),
         disableSort: true,
       },
       {
@@ -291,7 +259,7 @@ export default function Invoices() {
         render: (item: InvoiceListRow) => <MoneyValue value={item.total} />,
       },
     ],
-    [clientNameById],
+    [],
   );
 
   const detailColumns: DetailColumn = useMemo(
@@ -307,8 +275,7 @@ export default function Invoices() {
             width: "42%",
             minWidth: 180,
             render: (item: any) => {
-              const productId = String(item?.product || item?.product_id || "");
-              return productNameById.get(productId) || "-";
+              return item?.expand?.product?.name || "-";
             },
           },
           {
@@ -323,9 +290,7 @@ export default function Invoices() {
             width: 90,
             minWidth: 80,
             render: (item: any) =>
-              productMeasureUnitByProductId.get(
-                String(item?.product || item?.product_id || ""),
-              ) || "-",
+              item?.expand?.product?.expand?.measure_unit?.name || "-",
           },
           {
             id: "unit_price",
@@ -352,7 +317,7 @@ export default function Invoices() {
         ],
       },
     ],
-    [productMeasureUnitByProductId, productNameById],
+    [],
   );
 
   const rowActions: DataGridRowAction[] = useMemo(
@@ -384,7 +349,7 @@ export default function Invoices() {
     <DataGrid
       data={invoicesData}
       error={error}
-      isFetching={isLoadingInvoiceGridData}
+      isFetching={isFetching}
       columns={columns}
       detailColumns={detailColumns}
       // hasCheckbox

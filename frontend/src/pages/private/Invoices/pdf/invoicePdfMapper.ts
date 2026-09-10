@@ -14,6 +14,9 @@ interface InvoiceProductRow {
   product_id?: string;
   product?: { id?: string; name?: string } | string | null;
   product_name?: string;
+  expand?: {
+    product?: ProductsResponse<{ measure_unit?: MeasureunitsResponse }>;
+  };
   amount?: number;
   unit_price?: number;
   discount?: number;
@@ -22,8 +25,8 @@ interface InvoiceProductRow {
 
 interface BuildInvoicePdfModelArgs {
   invoice: VInvoicesResponse;
-  products: ProductsResponse[];
-  measureUnits: MeasureunitsResponse[];
+  products?: ProductsResponse[];
+  measureUnits?: MeasureunitsResponse[];
 }
 
 const clampDiscount = (value: number) => Math.min(100, Math.max(0, value));
@@ -65,9 +68,11 @@ const mapInvoiceItems = (
       productName:
         item.product_name ||
         (typeof item.product === "object" ? item.product?.name : "") ||
+        item.expand?.product?.name ||
         productRecord?.name ||
         "-",
       measureUnitName:
+        item.expand?.product?.expand?.measure_unit?.name ||
         measureUnitById.get(String(productRecord?.measure_unit || "")) || "-",
       amount,
       unitPrice,
@@ -84,8 +89,8 @@ const mapInvoiceItems = (
 
 export const buildInvoicePdfModel = ({
   invoice,
-  products,
-  measureUnits,
+  products = [],
+  measureUnits = [],
 }: BuildInvoicePdfModelArgs): InvoicePdfModel => {
   const parsedInvoiceProducts =
     parseJsonValue<InvoiceProductRow[]>(invoice.invoice_products) || [];
