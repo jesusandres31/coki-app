@@ -144,5 +144,6 @@ export interface DataGridRowAction {
   label: string;
   icon: React.ReactNode;
   onClick: (item: DataItem) => void;
+  hideOnMobile?: boolean;
 }
 

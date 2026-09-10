@@ -340,6 +340,7 @@ export default function Invoices() {
         label: "Imprimir factura",
         icon: <PrintRounded fontSize="small" sx={{ color: "text.primary" }} />,
         onClick: (item) => void handlePrintInvoice(item as InvoiceListRow),
+        hideOnMobile: true,
       },
     ],
     [handleGoTo, handlePrintInvoice],

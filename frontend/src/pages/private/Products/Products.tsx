@@ -15,7 +15,7 @@ import { resetBreadcrumbs, setBreadcrumbs, setSnackbar } from "src/slices/uiSlic
 import { useRouter } from "src/hooks";
 import { AppRoutes } from "src/config";
 import { ProductsResponse } from "src/types/pocketbase-types";
-import { MoneyValue } from "src/utils/format";
+import { formatDate, formatTime, MoneyValue } from "src/utils/format";
 import { buildMeasureUnitNameById } from "src/utils/measureUnits";
 import { Column, DataGridRowAction, GetList } from "src/types";
 import { productsBreadcrumbFlow } from "./breadcrumbFlow";
@@ -127,6 +127,14 @@ export default function Products() {
 
           return typeNames.length > 0 ? typeNames.join(", ") : "-";
         },
+      },
+      {
+        id: "updated",
+        label: "Última actualización",
+        align: "left",
+        minWidth: 230,
+        render: (item: ProductsResponse) =>
+          `${formatDate(item.updated)} ${formatTime(item.updated)}`,
       },
     ],
     [measureUnitById, productTypeNameById],

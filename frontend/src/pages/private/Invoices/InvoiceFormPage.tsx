@@ -2195,6 +2195,7 @@ export default function InvoiceFormPage() {
         <Button
           size="small"
           variant="contained"
+          sx={{ display: { xs: "none", sm: "inline-flex" } }}
           startIcon={<PrintRounded />}
           onClick={() => void handlePrintInvoice()}
           loading={isPrinting}

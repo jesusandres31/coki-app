@@ -247,6 +247,9 @@ export default function DataGrid({
               isCollapsible={isCollapsible}
               hasRowActions={Boolean(rowActions?.length)}
               rowActionsCount={rowActions?.length ?? 0}
+              mobileRowActionsCount={
+                rowActions?.filter((action) => !action.hideOnMobile).length ?? 0
+              }
               hasCheckbox={hasCheckbox}
               handleSelectAll={handleSelectAll}
               handleSortTable={handleSort}

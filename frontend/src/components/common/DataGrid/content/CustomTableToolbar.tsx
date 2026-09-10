@@ -101,6 +101,7 @@ export default function CustomTableToolbar({
                   startAdornment={
                     <InputAdornment
                       position="start"
+                      disablePointerEvents
                       sx={{ color: "text.disabled" }}
                     >
                       <SearchRounded />

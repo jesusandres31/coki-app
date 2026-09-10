@@ -50,10 +50,17 @@ export default function CustomTableBody({
 }: CustomTableBodyProps) {
   const isCollapsible = Boolean(detailColumns);
   const hasRowActions = rowActions.length > 0;
-  const actionsColumnWidth =
-    rowActions.length > 0
-      ? rowActions.length * 30 + (rowActions.length - 1) * 4 + 16
+  const getActionsColumnWidth = (actionsCount: number) =>
+    actionsCount > 0
+      ? actionsCount * 30 + (actionsCount - 1) * 4 + 16
       : 56;
+  const mobileRowActionsCount = rowActions.filter(
+    (action) => !action.hideOnMobile,
+  ).length;
+  const actionsColumnWidth = {
+    xs: getActionsColumnWidth(mobileRowActionsCount),
+    sm: getActionsColumnWidth(rowActions.length),
+  };
   const tableIconButtonSx = {
     width: 30,
     height: 30,
@@ -207,7 +214,12 @@ export default function CustomTableBody({
                       <Tooltip key={action.id} title={action.label}>
                         <IconButton
                           onClick={() => action.onClick(row)}
-                          sx={tableIconButtonSx}
+                          sx={{
+                            ...tableIconButtonSx,
+                            ...(action.hideOnMobile
+                              ? { display: { xs: "none", sm: "inline-flex" } }
+                              : {}),
+                          }}
                         >
                           {action.icon}
                         </IconButton>

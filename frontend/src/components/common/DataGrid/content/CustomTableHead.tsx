@@ -19,6 +19,7 @@ interface CustomTableHeadProps {
   isCollapsible: boolean;
   hasRowActions?: boolean;
   rowActionsCount?: number;
+  mobileRowActionsCount?: number;
   hasCheckbox?: boolean;
   handleSelectAll: () => void;
   handleSortTable: (columnId: string) => void;
@@ -34,6 +35,7 @@ export default function CustomTableHead({
   isCollapsible,
   hasRowActions = false,
   rowActionsCount = 0,
+  mobileRowActionsCount = rowActionsCount,
   hasCheckbox = false,
   handleSelectAll,
   handleSortTable,
@@ -43,10 +45,14 @@ export default function CustomTableHead({
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
   const isAllSelected = items.length === selectedItems.length;
   const collapseColumnWidth = 48;
-  const actionsColumnWidth =
-    rowActionsCount > 0
-      ? rowActionsCount * 30 + (rowActionsCount - 1) * 4 + 16
+  const getActionsColumnWidth = (actionsCount: number) =>
+    actionsCount > 0
+      ? actionsCount * 30 + (actionsCount - 1) * 4 + 16
       : 56;
+  const actionsColumnWidth = {
+    xs: getActionsColumnWidth(mobileRowActionsCount),
+    sm: getActionsColumnWidth(rowActionsCount),
+  };
   const actionsStickySx = {
     position: "sticky",
     right: isCollapsible ? collapseColumnWidth : 0,
