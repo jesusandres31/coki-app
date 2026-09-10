@@ -121,7 +121,7 @@ export default function ClientFormPage() {
           type: "success",
         }),
       );
-      setReviewMode();
+      handleGoTo(AppRoutes.Clients);
     },
   });
 

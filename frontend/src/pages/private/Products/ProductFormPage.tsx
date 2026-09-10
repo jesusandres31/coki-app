@@ -146,7 +146,7 @@ export default function ProductFormPage() {
           type: "success",
         }),
       );
-      setReviewMode();
+      handleGoTo(AppRoutes.Products);
     },
   });
 

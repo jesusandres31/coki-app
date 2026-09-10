@@ -94,13 +94,16 @@ export function useSessionStorageDraft<T>({
   const hydratedKeyRef = useRef("");
   const latestKeyRef = useRef("");
   const pageUnloadingRef = useRef(false);
+  const clearedKeyRef = useRef("");
 
   const clearDraft = useCallback(() => {
     if (!key) return;
 
     removeSessionStorageItem(key);
-    hydratedKeyRef.current = "";
-    setHydratedKey("");
+    // Keep the current key hydrated and block persistence until the caller
+    // leaves this draft. Resetting hydration here can immediately restore the
+    // just-cleared draft from a stale fallback during navigation.
+    clearedKeyRef.current = key;
   }, [key]);
 
   useEffect(() => {
@@ -108,6 +111,10 @@ export function useSessionStorageDraft<T>({
 
     if (previousKey && previousKey !== key) {
       removeSessionStorageItem(previousKey);
+    }
+
+    if (previousKey !== key && clearedKeyRef.current === previousKey) {
+      clearedKeyRef.current = "";
     }
 
     latestKeyRef.current = key;
@@ -167,6 +174,7 @@ export function useSessionStorageDraft<T>({
 
   useEffect(() => {
     if (!enabled || !key || hydratedKey !== key || !ready) return;
+    if (clearedKeyRef.current === key) return;
 
     setSessionStorageJson(key, value);
   }, [enabled, hydratedKey, key, ready, value]);

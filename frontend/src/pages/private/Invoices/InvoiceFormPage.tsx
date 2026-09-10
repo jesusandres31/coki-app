@@ -77,6 +77,7 @@ import {
 import {
   buildSessionStorageKey,
   parseSessionStorageJson,
+  removeSessionStorageItem,
   useSessionStorageDraft,
 } from "src/utils/sessionStorageDraft";
 import { invoiceBreadcrumbFlow } from "./breadcrumbFlow";
@@ -275,6 +276,7 @@ const normalizeIsoDate = (value: string) => {
 
 const getRowId = () =>
   `${Date.now()}-${Math.random().toString(16).slice(2, 10)}`;
+const pocketBaseRecordIdPattern = /^[a-z0-9]{15}$/;
 
 const buildEmptyRow = (): InvoiceProductInput => ({
   id: getRowId(),
@@ -283,6 +285,24 @@ const buildEmptyRow = (): InvoiceProductInput => ({
   unitPrice: 0,
   discount: 0,
 });
+
+const removeDeletedRowsFromDraft = (
+  draft: InvoiceFormValues,
+  activeItems: InvoiceProductRow[],
+): InvoiceFormValues => {
+  const activeItemIds = new Set(
+    activeItems.map((item) => item.id).filter(Boolean),
+  );
+  const rows = draft.rows.filter(
+    (row) =>
+      !pocketBaseRecordIdPattern.test(row.id) || activeItemIds.has(row.id),
+  );
+
+  return {
+    ...draft,
+    rows: rows.length > 0 ? rows : [buildEmptyRow()],
+  };
+};
 
 const getCreateItemTotal = (item: InvoiceProductInput) =>
   Math.max(
@@ -1882,9 +1902,12 @@ export default function InvoiceFormPage() {
         return;
       }
 
-      editFormik.setValues(draft, true);
+      editFormik.setValues(
+        removeDeletedRowsFromDraft(draft, activeInvoiceProducts || []),
+        true,
+      );
     },
-    [editFormik, isNewMode, newFormik],
+    [activeInvoiceProducts, editFormik, isNewMode, newFormik],
   );
 
   const getInvoiceDraftFallback = useCallback(() => {
@@ -2399,6 +2422,22 @@ export default function InvoiceFormPage() {
     setSearchParams({ mode: "review" });
   };
 
+  const handleStartEdit = () => {
+    if (invoiceId) {
+      removeSessionStorageItem(
+        buildSessionStorageKey(invoiceDraftStoragePrefix, `edit:${invoiceId}`),
+      );
+    }
+
+    if (invoiceWithActiveProducts) {
+      editFormik.setValues(
+        buildInvoiceFormValuesFromInvoice(invoiceWithActiveProducts),
+      );
+    }
+
+    setSearchParams({ mode: "edit" });
+  };
+
   const handlePrintInvoice = async () => {
     if (!invoiceWithActiveProducts) return;
     const popup = openInvoicePdfTab();
@@ -2524,7 +2563,7 @@ export default function InvoiceFormPage() {
             handleGoTo(AppRoutes.Invoices);
           }}
           onEdit={
-            !isNewMode ? () => setSearchParams({ mode: "edit" }) : undefined
+            !isNewMode ? handleStartEdit : undefined
           }
           onCancelEdit={isEditMode ? handleCancelEdit : undefined}
           onSubmit={isEditMode ? handleUpdateInvoice : undefined}

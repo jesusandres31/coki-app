@@ -117,7 +117,7 @@ export default function ProductTypeFormPage() {
           type: "success",
         }),
       );
-      setReviewMode();
+      handleGoTo(AppRoutes.ConfigProductTypes);
     },
   });
 
