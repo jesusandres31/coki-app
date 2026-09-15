@@ -831,12 +831,16 @@ function ProductsTable({
 
     scrollFieldIntoView(targetRow.id, targetField);
 
-    if (element instanceof HTMLInputElement) {
-      element.focus({ preventScroll: true });
+    const input =
+      element instanceof HTMLInputElement
+        ? element
+        : element.querySelector("input");
+    if (input) {
+      input.focus({ preventScroll: true });
       if (targetField === "product") {
-        element.click();
+        input.click();
       }
-      element.select();
+      input.select();
       return;
     }
 
@@ -879,12 +883,17 @@ function ProductsTable({
 
       if (
         field === "product" &&
-        ["ArrowUp", "ArrowDown", "Enter"].includes(event.key)
+        ["ArrowUp", "ArrowDown"].includes(event.key)
       ) {
         return;
       }
 
       if (event.key === "Enter") {
+        if (field === "product") {
+          requestAnimationFrame(() => focusNextField(rowIndex, fieldIndex));
+          return;
+        }
+
         event.preventDefault();
         focusNextField(rowIndex, fieldIndex);
         return;
