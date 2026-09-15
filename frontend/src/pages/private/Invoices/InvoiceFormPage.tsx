@@ -725,6 +725,10 @@ function ProductsTable({
   const [amountDecimalRowIds, setAmountDecimalRowIds] = useState<Set<string>>(
     () => new Set(),
   );
+  const [amountEditing, setAmountEditing] = useState<{
+    rowId: string;
+    value: string;
+  } | null>(null);
   const controlsDisabled = !editable || inputsDisabled;
   const bodyCellSx = {
     py: 0.5,
@@ -897,26 +901,7 @@ function ProductsTable({
         return;
       }
 
-      if (event.key === "ArrowRight") {
-        event.preventDefault();
-        focusField(
-          rowIndex,
-          Math.min(fieldIndex + 1, productTableEditableFields.length - 1),
-        );
-        return;
-      }
-
-      if (event.key === "ArrowLeft") {
-        event.preventDefault();
-        focusField(rowIndex, Math.max(fieldIndex - 1, 0));
-        return;
-      }
-
       if (field === "product") return;
-
-      if (field === "amount" && [",", "."].includes(event.key)) {
-        updateAmountDecimalIntent(rows[rowIndex]?.id || "", true);
-      }
 
       if (event.key === "ArrowDown") {
         event.preventDefault();
@@ -1071,15 +1056,24 @@ function ProductsTable({
                     fullWidth
                     size="small"
                     variant="standard"
-                    value={row.amount}
+                    value={
+                      amountEditing?.rowId === row.id
+                        ? amountEditing.value
+                        : row.amount
+                    }
                     valueIsNumericString
                     decimalSeparator=","
                     thousandSeparator="."
                     allowedDecimalSeparators={[",", "."]}
                     decimalScale={invoiceDecimalScale}
-                    fixedDecimalScale={shouldShowAmountDecimals}
+                    fixedDecimalScale={
+                      shouldShowAmountDecimals && amountEditing?.rowId !== row.id
+                    }
                     allowNegative={false}
-                    onValueChange={(values) => {
+                    onValueChange={(values, sourceInfo) => {
+                      if (sourceInfo.source !== "event") return;
+
+                      setAmountEditing({ rowId: row.id, value: values.value });
                       const amount =
                         values.value === "" ? "" : (values.floatValue ?? 0);
                       onRowChange?.(row.id, "amount", amount);
@@ -1094,6 +1088,17 @@ function ProductsTable({
                     inputProps={{ inputMode: "decimal" }}
                     getInputRef={setFieldRef(row.id, "amount")}
                     onKeyDown={handleFieldKeyDown(rowIndex, "amount")}
+                    onFocus={() =>
+                      setAmountEditing({
+                        rowId: row.id,
+                        value: row.amount === "" ? "" : String(row.amount),
+                      })
+                    }
+                    onBlur={() =>
+                      setAmountEditing((current) =>
+                        current?.rowId === row.id ? null : current,
+                      )
+                    }
                     disabled={controlsDisabled}
                     error={Boolean(rowError.amount)}
                     helperText={rowError.amount || " "}
