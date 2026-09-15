@@ -254,6 +254,15 @@ const productRowHelperTextSx = {
 const productRowHelperTextProps = {
   sx: productRowHelperTextSx,
 };
+const catalogPriceHelperTextProps = {
+  sx: {
+    ...productRowHelperTextSx,
+    whiteSpace: "normal",
+    overflow: "visible",
+    textOverflow: "clip",
+    lineHeight: 1.3,
+  },
+};
 
 const getLocalDate = () => {
   const now = new Date();
@@ -1178,6 +1187,10 @@ function ProductsTable({
                                   : "default",
                                 font: "inherit",
                                 lineHeight: "inherit",
+                                display: "inline-flex",
+                                flexWrap: "wrap",
+                                columnGap: 0.5,
+                                maxWidth: "100%",
                                 m: 0,
                                 p: 0,
                                 textAlign: "left",
@@ -1189,14 +1202,27 @@ function ProductsTable({
                                   : undefined,
                               }}
                             >
-                              {`Precio Gral.: ${formatMoney(row.catalogUnitPrice ?? 0)}`}
+                              <span>Precio Real:</span>
+                              <Box
+                                component="span"
+                                sx={{
+                                  fontVariantNumeric: "tabular-nums",
+                                  overflowWrap: "anywhere",
+                                }}
+                              >
+                                {formatMoney(row.catalogUnitPrice ?? 0)}
+                              </Box>
                             </Typography>
                           </Tooltip>
                         ) : (
                           " "
                         ))
                       }
-                      FormHelperTextProps={singleLineHelperTextProps}
+                      FormHelperTextProps={
+                        rowError.unitPrice
+                          ? singleLineHelperTextProps
+                          : catalogPriceHelperTextProps
+                      }
                       sx={(theme) => ({
                         ...readableDisabledFieldSx(theme),
                         "& .MuiInputBase-input": {
