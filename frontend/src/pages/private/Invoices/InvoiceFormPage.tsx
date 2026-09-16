@@ -2225,6 +2225,14 @@ export default function InvoiceFormPage() {
     latestRowsRef.current = activeFormik.values.rows;
   }, [activeFormik.values.rows]);
 
+  const updateActiveRows = (
+    updater: (rows: InvoiceProductInput[]) => InvoiceProductInput[],
+  ) => {
+    const nextRows = updater(latestRowsRef.current);
+    latestRowsRef.current = nextRows;
+    return activeFormik.setFieldValue("rows", nextRows);
+  };
+
   const activeErrors = activeFormik.errors;
   const clientError =
     isEditable && typeof activeErrors.client === "string"
@@ -2345,20 +2353,14 @@ export default function InvoiceFormPage() {
   const handleAddRow = () => {
     if (!canAddProductRow) return;
 
-    activeFormik.setFieldValue("rows", [
-      ...activeFormik.values.rows,
-      buildEmptyRow(),
-    ]);
+    updateActiveRows((rows) => [...rows, buildEmptyRow()]);
   };
 
   const handleRemoveRow = (id: string) => {
     if (!canEditProducts) return;
-    if (activeFormik.values.rows.length <= 1) return;
+    if (latestRowsRef.current.length <= 1) return;
 
-    activeFormik.setFieldValue(
-      "rows",
-      activeFormik.values.rows.filter((row) => row.id !== id),
-    );
+    updateActiveRows((rows) => rows.filter((row) => row.id !== id));
   };
 
   const handleUpdateCatalogPrice = async (unitPrice: number) => {
@@ -2372,9 +2374,8 @@ export default function InvoiceFormPage() {
         },
       }).unwrap();
 
-      activeFormik.setFieldValue(
-        "rows",
-        activeFormik.values.rows.map((row) =>
+      updateActiveRows((rows) =>
+        rows.map((row) =>
           row.id === catalogPriceProduct.rowId
             ? {
                 ...row,
@@ -2424,9 +2425,8 @@ export default function InvoiceFormPage() {
       const requestKey = priceRequestSeqRef.current + 1;
       priceRequestSeqRef.current = requestKey;
 
-      activeFormik.setFieldValue(
-        "rows",
-        latestRowsRef.current.map((row) =>
+      updateActiveRows((rows) =>
+        rows.map((row) =>
           row.id === id
             ? {
                 ...row,
@@ -2458,9 +2458,8 @@ export default function InvoiceFormPage() {
         }
 
         if (lastPrice) {
-          activeFormik.setFieldValue(
-            "rows",
-            latestRowsRef.current.map((row) =>
+          updateActiveRows((rows) =>
+            rows.map((row) =>
               row.id === id
                 ? {
                     ...row,
@@ -2485,19 +2484,20 @@ export default function InvoiceFormPage() {
       return;
     }
 
-    activeFormik.setFieldValue(
-      "rows",
-      activeFormik.values.rows.map((row) => {
-        if (row.id !== id) return row;
+    const rowIndex = latestRowsRef.current.findIndex((row) => row.id === id);
+    if (rowIndex < 0) return;
 
-        return {
-          ...row,
-          [field]:
-            (field === "amount" || field === "unitPrice") && value === ""
-              ? ""
-              : Number(value),
-        };
-      }),
+    const normalizedValue =
+      (field === "amount" || field === "unitPrice") && value === ""
+        ? ""
+        : Number(value);
+
+    latestRowsRef.current = latestRowsRef.current.map((row) =>
+      row.id === id ? { ...row, [field]: normalizedValue } : row,
+    );
+    await activeFormik.setFieldValue(
+      `rows.${rowIndex}.${field}`,
+      normalizedValue,
     );
   };
 
