@@ -34,11 +34,13 @@ import {
   DialogTitle,
   FormControlLabel,
   InputAdornment,
+  Popper,
   Switch,
   TextField,
   Tooltip,
   Typography,
 } from "@mui/material";
+import type { PopperProps } from "@mui/material/Popper";
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 import { DatePicker } from "@mui/x-date-pickers/DatePicker";
 import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
@@ -138,6 +140,7 @@ interface DebouncedAutocompleteProps {
   helperTextNoWrap?: boolean;
   prioritizeStartsWith?: boolean;
   selectBestMatchOnBlur?: boolean;
+  wideResults?: boolean;
   loading?: boolean;
 }
 
@@ -556,6 +559,17 @@ const getSearchMatchRank = (optionName: string, query: string) => {
   return 2;
 };
 
+const WideProductPopper = (props: PopperProps) => (
+  <Popper
+    {...props}
+    placement="bottom-start"
+    style={{
+      ...props.style,
+      width: "min(480px, calc(100vw - 24px))",
+    }}
+  />
+);
+
 function DebouncedAutocomplete({
   options,
   valueId,
@@ -571,6 +585,7 @@ function DebouncedAutocomplete({
   helperTextNoWrap = false,
   prioritizeStartsWith = false,
   selectBestMatchOnBlur = false,
+  wideResults = false,
   loading = false,
 }: DebouncedAutocompleteProps) {
   const [inputValue, setInputValue] = useState("");
@@ -623,6 +638,7 @@ function DebouncedAutocomplete({
       openOnFocus
       autoHighlight={selectBestMatchOnBlur}
       autoSelect={selectBestMatchOnBlur}
+      slots={wideResults ? { popper: WideProductPopper } : undefined}
       isOptionEqualToValue={(option, value) => option.id === value.id}
       getOptionLabel={(option) => option.name}
       getOptionKey={(option) => option.id}
@@ -637,6 +653,33 @@ function DebouncedAutocomplete({
           option.measureUnitName,
           option.price !== undefined ? formatMoney(option.price) : "",
         ].filter(Boolean);
+
+        if (wideResults) {
+          return (
+            <Box
+              key={key}
+              component="li"
+              {...optionProps}
+              sx={{ "&&": { display: "block" }, py: 1, minWidth: 0 }}
+            >
+              <Typography
+                variant="body2"
+                sx={{ whiteSpace: "normal", overflowWrap: "anywhere" }}
+              >
+                {option.name}
+              </Typography>
+              {secondaryParts.length > 0 && (
+                <Typography
+                  variant="caption"
+                  color="text.secondary"
+                  sx={{ display: "block", mt: 0.25 }}
+                >
+                  {secondaryParts.join(" · ")}
+                </Typography>
+              )}
+            </Box>
+          );
+        }
 
         return (
           <Box
@@ -1032,6 +1075,7 @@ function ProductsTable({
                       placeholder="Seleccionar producto"
                       prioritizeStartsWith
                       selectBestMatchOnBlur
+                      wideResults
                       variant="standard"
                       disabled={inputsDisabled}
                       loading={productsLoading}
