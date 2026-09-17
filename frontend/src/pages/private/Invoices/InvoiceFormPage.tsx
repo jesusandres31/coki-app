@@ -8,7 +8,6 @@ import { NumericFormat } from "react-number-format";
 import {
   AddRounded,
   DeleteRounded,
-  EditRounded,
   PrintRounded,
 } from "@mui/icons-material";
 import {
@@ -166,14 +165,11 @@ interface ProductsTableProps {
   showCatalogPriceHint?: boolean;
   priceLoadingRowIds?: Set<string>;
   addProductButtonRef?: RefObject<HTMLButtonElement>;
-  focusRowId?: string;
   onRowChange?: (
     id: string,
     field: keyof Omit<InvoiceProductInput, "id">,
     value: string | number,
   ) => void;
-  onEditRow?: (id: string) => void;
-  onFocusRow?: () => void;
   onRemoveRow?: (id: string) => void;
   onEditCatalogPrice?: (
     product: ProductCatalogPriceDialogProduct & { rowId: string },
@@ -226,7 +222,6 @@ const productTableEditableFields: ProductTableEditableField[] = [
 ];
 
 const invoiceProductsActionColumnWidth = 56;
-const invoiceProductsEditableActionColumnWidth = 88;
 const invoiceProductsTotalColumnWidth = 112;
 const invoiceDecimalScale = 3;
 const invoiceDecimalStep = "0.001";
@@ -754,10 +749,7 @@ function ProductsTable({
   showCatalogPriceHint = false,
   priceLoadingRowIds = new Set<string>(),
   addProductButtonRef,
-  focusRowId = "",
   onRowChange,
-  onEditRow,
-  onFocusRow,
   onRemoveRow,
   onEditCatalogPrice,
   canRemoveRow,
@@ -809,10 +801,7 @@ function ProductsTable({
   };
   const singleLineHelperTextProps = productRowHelperTextProps;
   const showActionColumn = editable;
-  const actionColumnWidth =
-    editable && onEditRow
-      ? invoiceProductsEditableActionColumnWidth
-      : invoiceProductsActionColumnWidth;
+  const actionColumnWidth = invoiceProductsActionColumnWidth;
   const actionColumnSx = {
     ...invoiceProductsActionColumnSx,
     width: actionColumnWidth,
@@ -983,18 +972,6 @@ function ProductsTable({
       });
     });
   }, [editable, inputsDisabled, rows.length]);
-
-  useEffect(() => {
-    if (!focusRowId || !editable || inputsDisabled) return;
-
-    const rowIndex = rows.findIndex((row) => row.id === focusRowId);
-    if (rowIndex < 0) return;
-
-    requestAnimationFrame(() => {
-      focusField(rowIndex, 0);
-      onFocusRow?.();
-    });
-  }, [editable, focusRowId, inputsDisabled, rows, onFocusRow]);
 
   return (
     <TableContainer
@@ -1353,29 +1330,6 @@ function ProductsTable({
                   >
                     <Box>
                       <Box sx={{ ...rowActionButtonSx, gap: 0.5 }}>
-                        {onEditRow && (
-                          <Tooltip title="Editar producto">
-                            <span>
-                              <IconButton
-                                size="small"
-                                color="primary"
-                                onClick={() => onEditRow(row.id)}
-                                disabled={inputsDisabled && editable}
-                                sx={{
-                                  width: 30,
-                                  height: 30,
-                                  border: "1px solid",
-                                  borderColor: "divider",
-                                  borderRadius: 1.25,
-                                  p: 0.5,
-                                }}
-                                aria-label="Editar producto"
-                              >
-                                <EditRounded />
-                              </IconButton>
-                            </span>
-                          </Tooltip>
-                        )}
                         {editable && (
                           <Tooltip title="Eliminar producto">
                             <span>
@@ -1641,7 +1595,6 @@ export default function InvoiceFormPage() {
     );
   const [retrieveLastPriceEnabled, setRetrieveLastPriceEnabled] =
     useState(false);
-  const [focusedProductRowId, setFocusedProductRowId] = useState("");
   const mobileAddProductButtonRef = useRef<HTMLButtonElement>(null);
   const desktopAddProductButtonRef = useRef<HTMLButtonElement>(null);
   const invoiceConfirmButtonRef = useRef<HTMLButtonElement>(null);
@@ -2404,10 +2357,6 @@ export default function InvoiceFormPage() {
     }
   };
 
-  const handleEditProductRow = (id: string) => {
-    setFocusedProductRowId(id);
-  };
-
   const handleRowChange = async (
     id: string,
     field: keyof Omit<InvoiceProductInput, "id">,
@@ -2786,10 +2735,7 @@ export default function InvoiceFormPage() {
                   productsLoading={isProductsFetching}
                   showCatalogPriceHint={retrieveLastPriceEnabled}
                   priceLoadingRowIds={priceLoadingRowIds}
-                  focusRowId={focusedProductRowId}
                   onRowChange={handleRowChange}
-                  onEditRow={handleEditProductRow}
-                  onFocusRow={() => setFocusedProductRowId("")}
                   onRemoveRow={handleRemoveRow}
                   onEditCatalogPrice={setCatalogPriceProduct}
                   canRemoveRow={() => activeFormik.values.rows.length > 1}
@@ -2980,10 +2926,7 @@ export default function InvoiceFormPage() {
                 productsLoading={isProductsFetching}
                 showCatalogPriceHint={retrieveLastPriceEnabled}
                 priceLoadingRowIds={priceLoadingRowIds}
-                focusRowId={focusedProductRowId}
                 onRowChange={handleRowChange}
-                onEditRow={handleEditProductRow}
-                onFocusRow={() => setFocusedProductRowId("")}
                 onRemoveRow={handleRemoveRow}
                 onEditCatalogPrice={setCatalogPriceProduct}
                 canRemoveRow={() => activeFormik.values.rows.length > 1}
