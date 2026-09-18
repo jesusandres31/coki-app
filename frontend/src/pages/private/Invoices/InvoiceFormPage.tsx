@@ -165,11 +165,13 @@ interface ProductsTableProps {
   showCatalogPriceHint?: boolean;
   priceLoadingRowIds?: Set<string>;
   addProductButtonRef?: RefObject<HTMLButtonElement>;
+  focusAddedRowId?: string;
   onRowChange?: (
     id: string,
     field: keyof Omit<InvoiceProductInput, "id">,
     value: string | number,
   ) => void;
+  onAddedRowFocus?: () => void;
   onRemoveRow?: (id: string) => void;
   onEditCatalogPrice?: (
     product: ProductCatalogPriceDialogProduct & { rowId: string },
@@ -749,14 +751,15 @@ function ProductsTable({
   showCatalogPriceHint = false,
   priceLoadingRowIds = new Set<string>(),
   addProductButtonRef,
+  focusAddedRowId = "",
   onRowChange,
+  onAddedRowFocus,
   onRemoveRow,
   onEditCatalogPrice,
   canRemoveRow,
 }: ProductsTableProps) {
   const tableContainerRef = useRef<HTMLDivElement>(null);
   const fieldRefs = useRef(new Map<string, HTMLElement>());
-  const previousRowsLengthRef = useRef(rows.length);
   const [amountDecimalRowIds, setAmountDecimalRowIds] = useState<Set<string>>(
     () => new Set(),
   );
@@ -854,12 +857,12 @@ function ProductsTable({
   const focusField = (rowIndex: number, fieldIndex: number) => {
     const targetRow = rows[rowIndex];
     const targetField = productTableEditableFields[fieldIndex];
-    if (!targetRow || !targetField) return;
+    if (!targetRow || !targetField) return false;
 
     const element = fieldRefs.current.get(
       getFieldKey(targetRow.id, targetField),
     );
-    if (!element) return;
+    if (!element || element.getClientRects().length === 0) return false;
 
     scrollFieldIntoView(targetRow.id, targetField);
 
@@ -873,10 +876,11 @@ function ProductsTable({
         input.click();
       }
       input.select();
-      return;
+      return true;
     }
 
     element.focus();
+    return true;
   };
   const focusAddProductButton = () => {
     addProductButtonRef?.current?.focus();
@@ -957,21 +961,23 @@ function ProductsTable({
     };
 
   useEffect(() => {
-    const previousRowsLength = previousRowsLengthRef.current;
-    previousRowsLengthRef.current = rows.length;
-
-    if (!editable || inputsDisabled || rows.length <= previousRowsLength) {
+    if (!focusAddedRowId || !editable || inputsDisabled) {
       return;
     }
 
+    const rowIndex = rows.findIndex((row) => row.id === focusAddedRowId);
+    if (rowIndex < 0) return;
+
     requestAnimationFrame(() => {
-      focusField(rows.length - 1, 0);
+      if (!focusField(rowIndex, 0)) return;
+
       requestAnimationFrame(() => {
-        focusField(rows.length - 1, 0);
-        window.setTimeout(() => focusField(rows.length - 1, 0), 0);
+        focusField(rowIndex, 0);
+        window.setTimeout(() => focusField(rowIndex, 0), 0);
       });
+      onAddedRowFocus?.();
     });
-  }, [editable, inputsDisabled, rows.length]);
+  }, [editable, focusAddedRowId, inputsDisabled, onAddedRowFocus, rows]);
 
   return (
     <TableContainer
@@ -1595,6 +1601,7 @@ export default function InvoiceFormPage() {
     );
   const [retrieveLastPriceEnabled, setRetrieveLastPriceEnabled] =
     useState(false);
+  const [addedProductRowId, setAddedProductRowId] = useState("");
   const mobileAddProductButtonRef = useRef<HTMLButtonElement>(null);
   const desktopAddProductButtonRef = useRef<HTMLButtonElement>(null);
   const invoiceConfirmButtonRef = useRef<HTMLButtonElement>(null);
@@ -2306,7 +2313,9 @@ export default function InvoiceFormPage() {
   const handleAddRow = () => {
     if (!canAddProductRow) return;
 
-    updateActiveRows((rows) => [...rows, buildEmptyRow()]);
+    const row = buildEmptyRow();
+    setAddedProductRowId(row.id);
+    updateActiveRows((rows) => [...rows, row]);
   };
 
   const handleRemoveRow = (id: string) => {
@@ -2731,11 +2740,13 @@ export default function InvoiceFormPage() {
                   inputsDisabled={!canEditProducts}
                   rowErrors={canEditProducts ? productRowErrors : []}
                   addProductButtonRef={mobileAddProductButtonRef}
+                  focusAddedRowId={addedProductRowId}
                   productOptions={productOptions}
                   productsLoading={isProductsFetching}
                   showCatalogPriceHint={retrieveLastPriceEnabled}
                   priceLoadingRowIds={priceLoadingRowIds}
                   onRowChange={handleRowChange}
+                  onAddedRowFocus={() => setAddedProductRowId("")}
                   onRemoveRow={handleRemoveRow}
                   onEditCatalogPrice={setCatalogPriceProduct}
                   canRemoveRow={() => activeFormik.values.rows.length > 1}
@@ -2922,11 +2933,13 @@ export default function InvoiceFormPage() {
                 inputsDisabled={!canEditProducts}
                 rowErrors={canEditProducts ? productRowErrors : []}
                 addProductButtonRef={desktopAddProductButtonRef}
+                focusAddedRowId={addedProductRowId}
                 productOptions={productOptions}
                 productsLoading={isProductsFetching}
                 showCatalogPriceHint={retrieveLastPriceEnabled}
                 priceLoadingRowIds={priceLoadingRowIds}
                 onRowChange={handleRowChange}
+                onAddedRowFocus={() => setAddedProductRowId("")}
                 onRemoveRow={handleRemoveRow}
                 onEditCatalogPrice={setCatalogPriceProduct}
                 canRemoveRow={() => activeFormik.values.rows.length > 1}
