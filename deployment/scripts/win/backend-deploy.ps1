@@ -1,5 +1,5 @@
 param(
-  [string]$SshKeyPath = ".\ssh-key-2026-04-14.key",
+  [string]$SshKeyPath = ".\deployment\keys\ssh-key-2026-04-14.key",
   [string]$RemoteUser = "ubuntu",
   [string]$RemoteHost = "150.136.172.105",
   [string]$RemoteRepoDir = "/home/ubuntu/coki-app",
