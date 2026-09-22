@@ -1,10 +1,13 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { ClientResponseError } from "pocketbase";
+import { useAppDispatch } from "src/app/store";
 import { authApi } from "src/app/services/authService";
 import { logout } from "src/app/auth";
 import { AppRoutes, configKey } from "src/config";
 import { SignInRequest, SignUpResponse } from "src/interfaces";
 import { pb } from "src/libs";
+import { setSnackbar } from "src/slices/uiSlice";
 import { RolesResponse, UsersResponse } from "src/types/pocketbase-types";
 
 const isPocketBaseId = (value: unknown): value is string =>
@@ -12,7 +15,9 @@ const isPocketBaseId = (value: unknown): value is string =>
 
 export const useAuth = () => {
   const navigate = useNavigate();
+  const dispatch = useAppDispatch();
   const [signIn, { isLoading: isSigningIn }] = authApi.useSignInMutation();
+  const [isSigningInWithGoogle, setIsSigningInWithGoogle] = useState(false);
   const [roleName, setRoleName] = useState("");
 
   const isLoggedIn = pb.authStore.isValid;
@@ -109,6 +114,33 @@ export const useAuth = () => {
     navigate(configKey.LANDING_PAGE);
   };
 
+  const handleGoogleSignIn = () => {
+    setIsSigningInWithGoogle(true);
+
+    // Keep this call directly inside the click handler so browsers don't block
+    // the OAuth popup before PocketBase has a chance to open it.
+    return pb
+      .collection("users")
+      .authWithOAuth2<SignUpResponse>({
+        provider: "google",
+        query: { expand: "role" },
+      })
+      .then(() => {
+        navigate(configKey.LANDING_PAGE);
+      })
+      .catch((error: unknown) => {
+        const message =
+          error instanceof ClientResponseError && error.status === 403
+            ? "Tu cuenta no está habilitada para ingresar al sistema."
+            : "No se pudo iniciar sesión con Google.";
+
+        dispatch(setSnackbar({ message, type: "error" }));
+      })
+      .finally(() => {
+        setIsSigningInWithGoogle(false);
+      });
+  };
+
   const handleSignOut = async () => {
     logout();
     navigate(AppRoutes.Login);
@@ -116,8 +148,10 @@ export const useAuth = () => {
 
   return {
     handleSignIn,
+    handleGoogleSignIn,
     handleSignOut,
     isSigningIn,
+    isSigningInWithGoogle,
     isLoggedIn,
     authUser,
     roleName,

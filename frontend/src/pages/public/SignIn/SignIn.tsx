@@ -10,8 +10,14 @@ import {
   Stack,
   IconButton,
   InputAdornment,
+  Divider,
 } from "@mui/material";
-import { LockRounded, Visibility, VisibilityOff } from "@mui/icons-material";
+import {
+  Google,
+  LockRounded,
+  Visibility,
+  VisibilityOff,
+} from "@mui/icons-material";
 import { useFormik } from "formik";
 import { useState } from "react";
 import * as Yup from "yup";
@@ -22,7 +28,12 @@ import { FORM_MSG, FORM_VLDN } from "src/utils/FormUtils";
 // import logo from "src/assets/logo.png";
 
 export default function SignIn() {
-  const { handleSignIn, isSigningIn } = useAuth();
+  const {
+    handleSignIn,
+    handleGoogleSignIn,
+    isSigningIn,
+    isSigningInWithGoogle,
+  } = useAuth();
   const [showPassword, setShowPassword] = useState(false);
 
   const formik = useFormik<SignInRequest>({
@@ -164,6 +175,18 @@ export default function SignIn() {
               disabled={isSigningIn}
             >
               Ingresar
+            </Button>
+            <Divider sx={{ py: 0.5 }}>o</Divider>
+            <Button
+              type="button"
+              fullWidth
+              variant="outlined"
+              startIcon={<Google />}
+              loading={isSigningInWithGoogle}
+              disabled={isSigningIn || isSigningInWithGoogle}
+              onClick={handleGoogleSignIn}
+            >
+              Ingresar con Google
             </Button>
           </Stack>
         </CardContent>
