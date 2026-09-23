@@ -13,7 +13,11 @@ import {
   Tooltip,
   Typography,
 } from "@mui/material";
-import { OpenInNewRounded } from "@mui/icons-material";
+import {
+  NavigateBeforeRounded,
+  NavigateNextRounded,
+  OpenInNewRounded,
+} from "@mui/icons-material";
 import {
   useGetMeasureUnitsQuery,
   useGetProductsListQuery,
@@ -255,27 +259,90 @@ export default function PriceList() {
             flexDirection: { xs: "column", sm: "row" },
             alignItems: "center",
             justifyContent: "space-between",
-            gap: 0.75,
+            gap: { xs: 0, sm: 0.75 },
             px: { xs: 1, sm: 2 },
-            py: 1,
+            py: { xs: 0.5, sm: 1 },
             borderTop: "1px solid",
             borderColor: "divider",
           }}
         >
-          <Typography variant="caption" color="text.secondary">
+          <Typography
+            variant="caption"
+            color="text.secondary"
+            sx={{ textAlign: "center" }}
+          >
             {`${firstItem}-${lastItem} de ${data.totalItems} productos`}
           </Typography>
-          <Pagination
-            size="small"
-            color="primary"
-            page={data.page}
-            count={Math.max(1, data.totalPages)}
-            siblingCount={0}
-            boundaryCount={1}
-            onChange={(_, page) =>
-              setQueryArgs((current) => ({ ...current, page }))
-            }
-          />
+          <Box
+            sx={{
+              width: { xs: "100%", sm: "auto" },
+              minWidth: { sm: 360 },
+              display: "grid",
+              gridTemplateColumns: "44px minmax(0, 1fr) 44px",
+              alignItems: "center",
+              columnGap: { xs: 1.5, sm: 3 },
+            }}
+          >
+            <IconButton
+              color="primary"
+              aria-label="Ir a la página anterior"
+              disabled={data.page <= 1}
+              onClick={() =>
+                setQueryArgs((current) => ({
+                  ...current,
+                  page: Math.max(1, current.page - 1),
+                }))
+              }
+              sx={{
+                width: 44,
+                height: 44,
+                justifySelf: "start",
+              }}
+            >
+              <NavigateBeforeRounded />
+            </IconButton>
+
+            <Pagination
+              size="small"
+              color="primary"
+              page={data.page}
+              count={Math.max(1, data.totalPages)}
+              siblingCount={0}
+              boundaryCount={1}
+              hidePrevButton
+              hideNextButton
+              onChange={(_, page) =>
+                setQueryArgs((current) => ({ ...current, page }))
+              }
+              sx={{
+                minWidth: 0,
+                justifySelf: "center",
+                "& .MuiPagination-ul": {
+                  flexWrap: "nowrap",
+                  justifyContent: "center",
+                },
+              }}
+            />
+
+            <IconButton
+              color="primary"
+              aria-label="Ir a la página siguiente"
+              disabled={data.page >= data.totalPages}
+              onClick={() =>
+                setQueryArgs((current) => ({
+                  ...current,
+                  page: Math.min(data.totalPages, current.page + 1),
+                }))
+              }
+              sx={{
+                width: 44,
+                height: 44,
+                justifySelf: "end",
+              }}
+            >
+              <NavigateNextRounded />
+            </IconButton>
+          </Box>
         </Box>
       ) : null}
     </PageContainer>
