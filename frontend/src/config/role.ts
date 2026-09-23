@@ -28,6 +28,7 @@ export const routeRoles: RouteRoles = {
   [AppRoutes.Products]: [SystemRole.ADMIN, SystemRole.REGULAR],
   [AppRoutes.ProductsNew]: [SystemRole.ADMIN, SystemRole.REGULAR],
   [AppRoutes.ProductsDetail]: [SystemRole.ADMIN, SystemRole.REGULAR],
+  [AppRoutes.PriceList]: [SystemRole.ADMIN, SystemRole.REGULAR],
 };
 
 // utils

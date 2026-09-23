@@ -23,7 +23,7 @@ import { buildCrudRowActions } from "../crudListUtils";
 
 export default function Products() {
   const dispatch = useAppDispatch();
-  const { handleGoTo } = useRouter();
+  const { handleGoTo, handleGoToFromCurrent } = useRouter();
   const [productToDelete, setProductToDelete] =
     useState<ProductsResponse | null>(null);
   const [queryArgs, setQueryArgs] = useState<GetList>(() => ({
@@ -145,10 +145,10 @@ export default function Products() {
       buildCrudRowActions<ProductsResponse>({
         entityLabel: "producto",
         baseRoute: AppRoutes.Products,
-        handleGoTo,
+        handleGoTo: (path) => handleGoToFromCurrent(path, "Productos"),
         onDelete: setProductToDelete,
       }),
-    [handleGoTo],
+    [handleGoToFromCurrent],
   );
 
   return (

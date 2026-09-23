@@ -39,7 +39,12 @@ interface ProductFormValues {
 export default function ProductFormPage() {
   const { productId } = useParams();
   const dispatch = useAppDispatch();
-  const { handleGoTo } = useRouter();
+  const {
+    handleGoTo,
+    handleGoToOrigin,
+    navigationOrigin,
+    navigationState,
+  } = useRouter();
   const isNewMode = !productId;
   const { mode, isEditMode, setEditMode, setReviewMode } =
     useDetailPageMode(isNewMode);
@@ -71,13 +76,32 @@ export default function ProductFormPage() {
     }
     dispatch(
       setBreadcrumbs(
-        productsBreadcrumbFlow.detail(productId || "", product?.name, isEditMode),
+        productsBreadcrumbFlow.detail(
+          productId || "",
+          product?.name,
+          isEditMode,
+          {
+            label: navigationOrigin?.label || "Productos",
+            to: navigationOrigin?.path || AppRoutes.Products,
+            state: navigationState,
+          },
+          navigationState,
+        ),
       ),
     );
     return () => {
       dispatch(resetBreadcrumbs());
     };
-  }, [dispatch, isEditMode, isNewMode, product?.name, productId]);
+  }, [
+    dispatch,
+    isEditMode,
+    isNewMode,
+    navigationOrigin?.label,
+    navigationOrigin?.path,
+    navigationState,
+    product?.name,
+    productId,
+  ]);
 
   const formik = useFormik<ProductFormValues>({
     enableReinitialize: true,
@@ -146,7 +170,7 @@ export default function ProductFormPage() {
           type: "success",
         }),
       );
-      handleGoTo(AppRoutes.Products);
+      handleGoToOrigin(AppRoutes.Products);
     },
   });
 
@@ -217,7 +241,7 @@ export default function ProductFormPage() {
         }),
       );
       setDeleteDialogOpen(false);
-      handleGoTo(AppRoutes.Products);
+      handleGoToOrigin(AppRoutes.Products);
     } catch (error) {
       dispatch(
         setSnackbar({
@@ -251,6 +275,7 @@ export default function ProductFormPage() {
     formik,
     backRoute: AppRoutes.Products,
     handleGoTo,
+    onBack: () => handleGoToOrigin(AppRoutes.Products),
     onEdit: isNewMode ? undefined : setEditMode,
     onCancelEdit: isNewMode ? undefined : setReviewMode,
     loading: isNewMode ? isCreating : isUpdating,

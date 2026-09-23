@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useSearchParams } from "react-router-dom";
+import { useLocation, useSearchParams } from "react-router-dom";
 import { DeleteRounded } from "@mui/icons-material";
 import { Box, Button, Card, Container } from "@mui/material";
 import { FormikProps } from "formik";
@@ -37,6 +37,7 @@ export const extractApiMessage = (error: unknown): string | undefined => {
 };
 
 export const useDetailPageMode = (isNewMode: boolean) => {
+  const location = useLocation();
   const [searchParams, setSearchParams] = useSearchParams();
   const requestedDetailMode: DetailPageMode =
     searchParams.get("mode") === "edit" ? "edit" : "review";
@@ -50,8 +51,10 @@ export const useDetailPageMode = (isNewMode: boolean) => {
   return {
     mode,
     isEditMode: mode === "edit",
-    setReviewMode: () => setSearchParams({ mode: "review" }),
-    setEditMode: () => setSearchParams({ mode: "edit" }),
+    setReviewMode: () =>
+      setSearchParams({ mode: "review" }, { state: location.state }),
+    setEditMode: () =>
+      setSearchParams({ mode: "edit" }, { state: location.state }),
   };
 };
 
@@ -106,6 +109,7 @@ interface RenderEntityFormPageArgs {
   formik: FormikProps<any>;
   backRoute: string;
   handleGoTo: (path: string) => void;
+  onBack?: () => void;
   onEdit?: () => void;
   onCancelEdit?: () => void;
   loading: boolean;
@@ -127,6 +131,7 @@ export const renderEntityFormPage = ({
   formik,
   backRoute,
   handleGoTo,
+  onBack,
   onEdit,
   onCancelEdit,
   loading,
@@ -139,7 +144,7 @@ export const renderEntityFormPage = ({
       mode={mode}
       inputs={inputs}
       formik={formik}
-      onBack={() => handleGoTo(backRoute)}
+      onBack={onBack ?? (() => handleGoTo(backRoute))}
       onEdit={onEdit}
       onCancelEdit={onCancelEdit}
       onSubmit={() => void formik.submitForm()}

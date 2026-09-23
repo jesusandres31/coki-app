@@ -333,6 +333,7 @@ export default function Drawer({ noTable }: DrawerProps) {
                   underline="hover"
                   color="text.secondary"
                   to={crumb.to as string}
+                  state={crumb.state}
                   sx={{ typography: "subtitle1", fontWeight: 500 }}
                 >
                   {crumb.label}

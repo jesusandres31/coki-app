@@ -19,6 +19,7 @@ interface ISnackbar {
 export interface IUIBreadcrumb {
   label: string;
   to?: string;
+  state?: unknown;
 }
 
 interface IUIState {

@@ -44,6 +44,7 @@ export enum AppRoutes {
   Products = "/products",
   ProductsNew = "/products/new",
   ProductsDetail = "/products/:productId",
+  PriceList = "/price-list",
   Config = "/config",
   ConfigGeneralSettings = "/config/general-settings",
   ConfigProductTypes = "/config/product-types",

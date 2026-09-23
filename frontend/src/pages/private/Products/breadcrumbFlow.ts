@@ -16,11 +16,14 @@ export const productsBreadcrumbFlow = {
     productId: string,
     productName?: string,
     isEditMode = false,
+    parentCrumb: IUIBreadcrumb = baseProductsCrumb,
+    navigationState?: unknown,
   ): IUIBreadcrumb[] => [
-    baseProductsCrumb,
+    parentCrumb,
     {
       label: productName ? `Producto ${productName}` : `Producto ${productId}`,
       to: `${AppRoutes.Products}/${productId}?mode=review`,
+      state: navigationState,
     },
     ...(isEditMode ? [{ label: "Editar" }] : []),
   ],

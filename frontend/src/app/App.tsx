@@ -44,6 +44,9 @@ const Products = lazy(() =>
 const ProductDetail = lazy(() =>
   import("src/pages").then((module) => ({ default: module.ProductDetail })),
 );
+const PriceList = lazy(() =>
+  import("src/pages").then((module) => ({ default: module.PriceList })),
+);
 const ProductTypes = lazy(() =>
   import("src/pages").then((module) => ({ default: module.ProductTypes })),
 );
@@ -118,6 +121,10 @@ const privateRoutes = [
   {
     route: AppRoutes.ProductsDetail,
     render: <ProductDetail />,
+  },
+  {
+    route: AppRoutes.PriceList,
+    render: <PriceList />,
   },
   {
     route: AppRoutes.Config,
