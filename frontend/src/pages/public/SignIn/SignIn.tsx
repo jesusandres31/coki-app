@@ -36,7 +36,7 @@ export default function SignIn() {
     isSigningIn,
     isSigningInWithGoogle,
   } = useAuth();
-  const [showPassword, setShowPassword] = useState(false);
+  const [showPassword, setShowPassword] = useState(true);
 
   const formik = useFormik<SignInRequest>({
     initialValues: {
@@ -49,21 +49,21 @@ export default function SignIn() {
         .required(FORM_MSG.required)
         .min(
           FORM_VLDN.SHORT_STRING.min,
-          FORM_MSG.minLength(FORM_VLDN.SHORT_STRING.min)
+          FORM_MSG.minLength(FORM_VLDN.SHORT_STRING.min),
         )
         .max(
           FORM_VLDN.SHORT_STRING.max,
-          FORM_MSG.maxLength(FORM_VLDN.SHORT_STRING.max)
+          FORM_MSG.maxLength(FORM_VLDN.SHORT_STRING.max),
         ),
       password: Yup.string()
         .required(FORM_MSG.required)
         .min(
           FORM_VLDN.SHORT_STRING.min,
-          FORM_MSG.minLength(FORM_VLDN.SHORT_STRING.min)
+          FORM_MSG.minLength(FORM_VLDN.SHORT_STRING.min),
         )
         .max(
           FORM_VLDN.SHORT_STRING.max,
-          FORM_MSG.maxLength(FORM_VLDN.SHORT_STRING.max)
+          FORM_MSG.maxLength(FORM_VLDN.SHORT_STRING.max),
         ),
     }),
     onSubmit: async (data) => {
@@ -193,5 +193,3 @@ export default function SignIn() {
     </Container>
   );
 }
-
-
