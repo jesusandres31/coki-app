@@ -8,7 +8,7 @@ import {
   ProtectedRoute,
 } from "src/components/common";
 import { AppRoutes, configKey } from "src/config";
-import { useAuth, useRouter } from "src/hooks";
+import { useAuth, useAuthSessionRefresh, useRouter } from "src/hooks";
 import { Box } from "@mui/material";
 
 const Profile = lazy(() =>
@@ -151,6 +151,7 @@ const privateRoutes = [
 function App(): JSX.Element {
   const { isLoggedIn } = useAuth();
   const { isLayoutRoutes } = useRouter();
+  useAuthSessionRefresh();
 
   React.useEffect(() => {
     const handleNumberInputWheel = (event: WheelEvent) => {

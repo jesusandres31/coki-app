@@ -16,12 +16,18 @@ const isPocketBaseId = (value: unknown): value is string =>
 export const useAuth = () => {
   const navigate = useNavigate();
   const dispatch = useAppDispatch();
+  const [, setAuthRevision] = useState(0);
   const [signIn, { isLoading: isSigningIn }] = authApi.useSignInMutation();
   const [isSigningInWithGoogle, setIsSigningInWithGoogle] = useState(false);
   const [roleName, setRoleName] = useState("");
 
   const isLoggedIn = pb.authStore.isValid;
   const authUser = pb.authStore.model as SignUpResponse;
+
+  useEffect(
+    () => pb.authStore.onChange(() => setAuthRevision((current) => current + 1)),
+    [],
+  );
 
   useEffect(() => {
     let ignore = false;
