@@ -1,3 +1,4 @@
+import { useUI } from "src/hooks";
 import { useMemo, useState } from "react";
 import dayjs, { Dayjs } from "dayjs";
 import {
@@ -51,6 +52,7 @@ interface DeliveryProductRow {
 }
 
 export default function ListaDeRepartoPorDias() {
+  const { isMobile } = useUI();
   const dispatch = useAppDispatch();
   const [selectedDay, setSelectedDay] = useState<Dayjs | null>(dayjs());
   const [selectedDays, setSelectedDays] = useState<string[]>([getTodayIso()]);
@@ -283,7 +285,7 @@ export default function ListaDeRepartoPorDias() {
     <Box
       component="section"
       sx={{
-        px: 2,
+        px: { xs: 0.5, sm: 2 },
         py: 1,
         flex: 1,
         minHeight: 0,
@@ -389,7 +391,7 @@ export default function ListaDeRepartoPorDias() {
         )}
 
         {isLoadingDeliveryData ? (
-          <TableLoadingSkeleton columns={3} rows={7} />
+          <TableLoadingSkeleton columns={isMobile ? 2 : 3} rows={7} />
         ) : (
           <TableContainer
             sx={{
@@ -403,12 +405,30 @@ export default function ListaDeRepartoPorDias() {
               overflowX: "auto",
             }}
           >
-            <Table size="small" sx={{ minWidth: 620 }}>
+            <Table
+              size="small"
+              sx={{
+                minWidth: isMobile ? 0 : 620,
+                width: "100%",
+                tableLayout: isMobile ? "fixed" : "auto",
+                "& .MuiTableCell-root": {
+                  px: { xs: 0.75, sm: 2 },
+                  overflowWrap: "anywhere",
+                  fontSize: { xs: "0.75rem", sm: "0.875rem" },
+                },
+                "& .MuiTableCell-root:last-child": { whiteSpace: "nowrap" },
+              }}
+            >
               <TableHead>
                 <TableRow>
                   <TableCell>Producto</TableCell>
-                  <TableCell>Unidad</TableCell>
-                  <TableCell align="right">Cantidad a repartir</TableCell>
+                  {!isMobile && <TableCell>Unidad</TableCell>}
+                  <TableCell
+                    align="right"
+                    sx={{ width: isMobile ? "38%" : undefined }}
+                  >
+                    {isMobile ? "Cantidad" : "Cantidad a repartir"}
+                  </TableCell>
                 </TableRow>
               </TableHead>
               <TableBody>
@@ -416,15 +436,18 @@ export default function ListaDeRepartoPorDias() {
                   deliveryProducts.map((row) => (
                     <TableRow key={row.key}>
                       <TableCell>{row.productName}</TableCell>
-                      <TableCell>{row.measureUnitName}</TableCell>
+                      {!isMobile && (
+                        <TableCell>{row.measureUnitName}</TableCell>
+                      )}
                       <TableCell align="right">
                         {formatQuantity(row.amount)}
+                        {isMobile ? ` ${row.measureUnitName}` : ""}
                       </TableCell>
                     </TableRow>
                   ))
                 ) : (
                   <TableRow>
-                    <TableCell colSpan={3} align="center">
+                    <TableCell colSpan={isMobile ? 2 : 3} align="center">
                       No hay productos vendidos para los días seleccionados.
                     </TableCell>
                   </TableRow>

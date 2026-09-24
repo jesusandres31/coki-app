@@ -18,6 +18,9 @@ export const getAutocompleteWidthSx = (
   sx?: SxProps<Theme>,
 ) => ({
   width: fullWidth ? "100%" : { xs: "100%", sm: STYLE.width.textfield },
+  minWidth: 0,
+  "& .MuiChip-root": { maxWidth: "100%", height: { xs: "auto", sm: 24 }, minHeight: 24 },
+  "& .MuiChip-label": { whiteSpace: { xs: "normal", sm: "nowrap" }, overflowWrap: "anywhere", py: { xs: 0.5, sm: 0 } },
   ...sx,
 });
 

@@ -37,6 +37,13 @@ export const formatTime = (str: Date | string) => {
   return `${hours}:${minutes}`;
 };
 
+export const formatUpdatedAt = (value?: string) => {
+  if (!value) return "-";
+  return dateOnlyPattern.test(value.trim())
+    ? formatDate(value)
+    : `${formatDate(value)} ${formatTime(value)}`;
+};
+
 // string formats
 export const removeSpace = (str: string) => {
   str = str.replace(" ", "");

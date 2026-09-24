@@ -1,6 +1,4 @@
 import { useEffect, useMemo, useState } from "react";
-import { AddRounded } from "@mui/icons-material";
-import { Button } from "@mui/material";
 import DataGrid from "src/components/common/DataGrid/DataGrid";
 import DeleteEntityDialog from "src/components/common/DeleteEntityDialog";
 import { getListArgsInitialState } from "src/constants";
@@ -18,7 +16,7 @@ import { useRouter } from "src/hooks";
 import { AppRoutes } from "src/config";
 import { ClientsResponse } from "src/types/pocketbase-types";
 import { Column, DataGridRowAction, GetList } from "src/types";
-import { MoneyValue } from "src/utils/format";
+import { formatUpdatedAt, MoneyValue } from "src/utils/format";
 import { clientsBreadcrumbFlow } from "./breadcrumbFlow";
 import { buildCrudRowActions } from "../crudListUtils";
 
@@ -76,18 +74,21 @@ export default function Clients() {
       },
       {
         id: "address",
+        hideOnMobile: true,
         label: "Dirección",
         align: "left",
         minWidth: 260,
       },
       {
         id: "phone",
+        hideOnMobile: true,
         label: "Teléfono",
         align: "left",
         minWidth: 180,
       },
       {
         id: "balance",
+        mobileWidth: "44%",
         label: "Saldo",
         align: "right",
         minWidth: 140,
@@ -95,6 +96,14 @@ export default function Clients() {
         render: (item: ClientsResponse) => (
           <MoneyValue value={item.balance ?? 0} />
         ),
+      },
+      {
+        id: "updated",
+        hideOnMobile: true,
+        label: "Actualizado",
+        align: "left",
+        minWidth: 190,
+        render: (item: ClientsResponse) => formatUpdatedAt(item.updated),
       },
     ],
     [],
@@ -123,16 +132,10 @@ export default function Clients() {
         initialQuery={queryArgs}
         onQueryChange={setQueryArgs}
         rowActions={rowActions}
-        toolbarElement={
-          <Button
-            size="small"
-            variant="contained"
-            startIcon={<AddRounded />}
-            onClick={() => handleGoTo(AppRoutes.ClientsNew)}
-          >
-            Crear cliente
-          </Button>
-        }
+        createAction={{
+          label: "Crear cliente",
+          onClick: () => handleGoTo(AppRoutes.ClientsNew),
+        }}
       />
       <DeleteEntityDialog
         open={Boolean(clientToDelete)}

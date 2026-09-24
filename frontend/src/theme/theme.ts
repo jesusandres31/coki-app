@@ -93,15 +93,6 @@ const theme = createTheme({
     },
   },
   components: {
-    MuiTooltip: {
-      styleOverrides: {
-        popper: ({ theme }) => ({
-          [theme.breakpoints.down("sm")]: {
-            display: "none",
-          },
-        }),
-      },
-    },
     MuiCssBaseline: {
       styleOverrides: {
         html: {
@@ -144,6 +135,7 @@ const theme = createTheme({
     MuiButton: {
       defaultProps: {
         disableElevation: true,
+        size: "small",
       },
       styleOverrides: {
         root: {

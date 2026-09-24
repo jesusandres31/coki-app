@@ -1,3 +1,4 @@
+import { useUI } from "src/hooks";
 import { useMemo, useState } from "react";
 import dayjs from "dayjs";
 import { CheckRounded } from "@mui/icons-material";
@@ -42,6 +43,7 @@ import {
 } from "../reportUtils";
 
 export default function VentasPorPeriodo() {
+  const { isMobile } = useUI();
   const dispatch = useAppDispatch();
   const [period, setPeriod] = useState<ReportPeriod>("week");
   const [customFromDraft, setCustomFromDraft] = useState(
@@ -127,7 +129,7 @@ export default function VentasPorPeriodo() {
     <Box
       component="section"
       sx={{
-        px: 2,
+        px: { xs: 0.5, sm: 2 },
         py: 1,
         flex: 1,
         minHeight: 0,
@@ -154,6 +156,10 @@ export default function VentasPorPeriodo() {
             Ventas por período
           </Typography>
           <ToggleButtonGroup
+            sx={{
+              width: { xs: "100%", sm: "auto" },
+              "& .MuiToggleButton-root": { flex: 1, px: 1, minHeight: 32 },
+            }}
             size="small"
             color="primary"
             exclusive
@@ -233,7 +239,7 @@ export default function VentasPorPeriodo() {
         )}
 
         {isFetchingSales ? (
-          <TableLoadingSkeleton columns={5} rows={7} />
+          <TableLoadingSkeleton columns={isMobile ? 3 : 5} rows={7} />
         ) : (
           <Stack spacing={2} sx={{ flex: 1, minHeight: 0 }}>
             <Stack direction={{ xs: "column", md: "row" }} spacing={1.5}>
@@ -293,14 +299,37 @@ export default function VentasPorPeriodo() {
                 overflowX: "auto",
               }}
             >
-              <Table size="small" stickyHeader sx={{ minWidth: 720 }}>
+              <Table
+                size="small"
+                stickyHeader
+                sx={{
+                  minWidth: isMobile ? 0 : 720,
+                  width: "100%",
+                  tableLayout: isMobile ? "fixed" : "auto",
+                  "& .MuiTableCell-root": {
+                    px: { xs: 0.75, sm: 2 },
+                    overflowWrap: "anywhere",
+                    fontSize: { xs: "0.75rem", sm: "0.875rem" },
+                  },
+                  "& .MuiTableCell-root:last-child": { whiteSpace: "nowrap" },
+                }}
+              >
                 <TableHead>
                   <TableRow>
-                    <TableCell>Fecha</TableCell>
+                    <TableCell sx={{ width: isMobile ? 72 : undefined }}>
+                      Fecha
+                    </TableCell>
                     <TableCell>Cliente</TableCell>
-                    <TableCell>Estado</TableCell>
-                    <TableCell align="right">Productos</TableCell>
-                    <TableCell align="right">Total</TableCell>
+                    {!isMobile && <TableCell>Estado</TableCell>}
+                    {!isMobile && (
+                      <TableCell align="right">Productos</TableCell>
+                    )}
+                    <TableCell
+                      align="right"
+                      sx={{ width: isMobile ? "38%" : undefined }}
+                    >
+                      Total
+                    </TableCell>
                   </TableRow>
                 </TableHead>
                 <TableBody>
@@ -312,23 +341,27 @@ export default function VentasPorPeriodo() {
                         <TableRow key={invoice.id}>
                           <TableCell>{formatDate(invoice.date)}</TableCell>
                           <TableCell>{getClientName(invoice)}</TableCell>
-                          <TableCell>
-                            <Chip
-                              size="small"
-                              variant="outlined"
-                              label={getStateLabel(invoice)}
-                              color="success"
-                            />
-                          </TableCell>
-                          <TableCell align="right">
-                            {formatQuantity(
-                              invoiceProducts.reduce(
-                                (acc, item) =>
-                                  acc + Math.max(0, toNumber(item.amount)),
-                                0,
-                              ),
-                            )}
-                          </TableCell>
+                          {!isMobile && (
+                            <>
+                              <TableCell>
+                                <Chip
+                                  size="small"
+                                  variant="outlined"
+                                  label={getStateLabel(invoice)}
+                                  color="success"
+                                />
+                              </TableCell>
+                              <TableCell align="right">
+                                {formatQuantity(
+                                  invoiceProducts.reduce(
+                                    (acc, item) =>
+                                      acc + Math.max(0, toNumber(item.amount)),
+                                    0,
+                                  ),
+                                )}
+                              </TableCell>
+                            </>
+                          )}
                           <TableCell align="right">
                             {formatMoney(toNumber(invoice.total))}
                           </TableCell>
@@ -337,7 +370,7 @@ export default function VentasPorPeriodo() {
                     })
                   ) : (
                     <TableRow>
-                      <TableCell colSpan={5} align="center">
+                      <TableCell colSpan={isMobile ? 3 : 5} align="center">
                         No hay ventas confirmadas en el período elegido.
                       </TableCell>
                     </TableRow>

@@ -17,9 +17,6 @@ export const translateTitle = (title?: string) => {
   if (route.startsWith(AppRoutes.Products)) {
     return "Productos";
   }
-  if (route.startsWith(AppRoutes.PriceList)) {
-    return "Lista de precios";
-  }
 
   switch (title) {
     case AppRoutes.Invoices:
@@ -30,8 +27,6 @@ export const translateTitle = (title?: string) => {
       return "Clientes";
     case AppRoutes.Products:
       return "Productos";
-    case AppRoutes.PriceList:
-      return "Lista de precios";
     default:
       return title;
   }

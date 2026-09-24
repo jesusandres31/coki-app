@@ -1,5 +1,6 @@
+import { useUI } from "src/hooks";
 import React from "react";
-import { Divider, Grid, TablePagination, Typography } from "@mui/material";
+import { Box, Divider, Grid, TablePagination, Typography } from "@mui/material";
 import { DataItem } from "src/types";
 import { ListResult } from "pocketbase";
 
@@ -16,12 +17,18 @@ export default function CustomTablePagination({
   handleResetCollapseItems,
   isCollapsed = false,
 }: CustomTablePaginationProps) {
+  const { isMobile } = useUI();
   const totalItems = data?.totalItems ?? 0;
-  const perPage = data?.perPage ?? 0;
+  const perPage = data?.perPage || 20;
   const totalPages =
     data?.totalPages ??
     (perPage > 0 ? Math.max(1, Math.ceil(totalItems / perPage)) : 0);
   const currentPage = totalItems > 0 ? (data?.page ?? 1) : 0;
+  const renderNumber = (value: number) => (
+    <Box component="span" sx={{ color: "common.black", fontWeight: 700 }}>
+      {value}
+    </Box>
+  );
 
   const handleChangePage = (
     e: React.MouseEvent<HTMLButtonElement, MouseEvent> | null,
@@ -46,23 +53,43 @@ export default function CustomTablePagination({
         }
         onPageChange={handleChangePage}
         labelDisplayedRows={(info) => {
+          const lastItem = info.to === -1 ? info.count : info.to;
           return (
             <Typography
               component="span"
               variant="subtitle2"
               color="text.primary"
+              sx={{ whiteSpace: "nowrap" }}
             >
-              {`Results ${info.from} - ${
-                info.to === -1 ? info.count : info.to
-              }, ${"of"} ${totalItems} items | Page ${currentPage} of ${totalPages}`}
+              {isMobile ? (
+                <>
+                  {renderNumber(info.from)}–{renderNumber(lastItem)} de{" "}
+                  {renderNumber(totalItems)}
+                </>
+              ) : (
+                <>
+                  Resultados {renderNumber(info.from)}–{renderNumber(lastItem)}{" "}
+                  de {renderNumber(totalItems)} elementos | Página{" "}
+                  {renderNumber(currentPage)} de {renderNumber(totalPages)}
+                </>
+              )}
             </Typography>
           );
         }}
         // onRowsPerPageChange={() => {}}
         sx={{
           backgroundColor: "background.paper",
+          "& .MuiTablePagination-spacer": {
+            display: { xs: "none", sm: "block" },
+          },
+          "& .MuiTablePagination-actions": {
+            ml: { xs: 1, sm: 2 },
+            "& button": { width: 32, height: 32 },
+          },
           "& .MuiTablePagination-toolbar": {
-            minHeight: 44,
+            minHeight: 40,
+            justifyContent: { xs: "center", sm: "flex-end" },
+            flexWrap: "wrap",
             px: { xs: 1, sm: 2 },
           },
         }}

@@ -1,6 +1,4 @@
 import { useEffect, useMemo, useState } from "react";
-import { AddRounded } from "@mui/icons-material";
-import { Button } from "@mui/material";
 import DataGrid from "src/components/common/DataGrid/DataGrid";
 import DeleteEntityDialog from "src/components/common/DeleteEntityDialog";
 import { getListArgsInitialState } from "src/constants";
@@ -19,7 +17,7 @@ import {
 import { useRouter } from "src/hooks";
 import { AppRoutes } from "src/config";
 import { ProductsResponse } from "src/types/pocketbase-types";
-import { formatDate, formatTime, MoneyValue } from "src/utils/format";
+import { formatUpdatedAt, MoneyValue } from "src/utils/format";
 import { buildMeasureUnitNameById } from "src/utils/measureUnits";
 import { Column, DataGridRowAction, GetList } from "src/types";
 import { productsBreadcrumbFlow } from "./breadcrumbFlow";
@@ -100,7 +98,9 @@ export default function Products() {
       },
       {
         id: "unit_price",
+        mobileWidth: "35%",
         label: "Precio",
+        type: "number",
         minWidth: 150,
         render: (item: ProductsResponse) => (
           <MoneyValue value={item.unit_price} />
@@ -108,6 +108,8 @@ export default function Products() {
       },
       {
         id: "measure_unit",
+        mobileWidth: 48,
+        mobileLabel: "Ud.",
         label: "Ud. medida",
         // align: "left",
         minWidth: 200,
@@ -117,6 +119,7 @@ export default function Products() {
       },
       {
         id: "product_type",
+        hideOnMobile: true,
         label: "Tipo Prod.",
         // align: "left",
         minWidth: 260,
@@ -133,11 +136,11 @@ export default function Products() {
       },
       {
         id: "updated",
-        label: "Última actualización",
+        hideOnMobile: true,
+        label: "Actualizado",
         align: "left",
         minWidth: 230,
-        render: (item: ProductsResponse) =>
-          `${formatDate(item.updated)} ${formatTime(item.updated)}`,
+        render: (item: ProductsResponse) => formatUpdatedAt(item.updated),
       },
     ],
     [measureUnitById, productTypeNameById],
@@ -166,16 +169,10 @@ export default function Products() {
         initialQuery={queryArgs}
         onQueryChange={setQueryArgs}
         rowActions={rowActions}
-        toolbarElement={
-          <Button
-            size="small"
-            variant="contained"
-            startIcon={<AddRounded />}
-            onClick={() => handleGoTo(AppRoutes.ProductsNew)}
-          >
-            Crear producto
-          </Button>
-        }
+        createAction={{
+          label: "Crear producto",
+          onClick: () => handleGoTo(AppRoutes.ProductsNew),
+        }}
       />
       <DeleteEntityDialog
         open={Boolean(productToDelete)}

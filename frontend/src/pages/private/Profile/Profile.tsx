@@ -30,7 +30,15 @@ export default function UpdateProfile() {
   }, [authUser?.username]);
 
   return (
-    <Container component="main" maxWidth="md" sx={{ py: { xs: 3, md: 5 } }}>
+    <Container
+      component="main"
+      maxWidth="md"
+      sx={{
+        py: { xs: 1.5, md: 5 },
+        px: { xs: 1, sm: 3 },
+        overflowWrap: "anywhere",
+      }}
+    >
       <CssBaseline />
 
       <Stack
@@ -44,7 +52,7 @@ export default function UpdateProfile() {
         </Typography>
         <Button
           color="primary"
-          size="medium"
+          size="small"
           variant="contained"
           startIcon={<ChevronLeftRounded />}
           onClick={() => handleGoTo(AppRoutes.Index)}
@@ -60,7 +68,7 @@ export default function UpdateProfile() {
           boxShadow: "0 1px 2px rgba(0,0,0,0.06)",
         }}
       >
-        <CardContent sx={{ p: { xs: 3, md: 4 } }}>
+        <CardContent sx={{ p: { xs: 2, md: 4 } }}>
           <Stack spacing={3}>
             <Stack
               direction={{ xs: "column", sm: "row" }}
@@ -145,6 +153,3 @@ export default function UpdateProfile() {
     </Container>
   );
 }
-
-
-

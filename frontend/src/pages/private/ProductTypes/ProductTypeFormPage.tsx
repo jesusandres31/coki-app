@@ -183,6 +183,7 @@ export default function ProductTypeFormPage() {
   }
 
   return renderEntityFormPage({
+    updatedAt: productType?.updated,
     title: isNewMode
       ? "Crear tipo de producto"
       : `Tipo de producto "${productType?.name || productType?.id || ""}"`,

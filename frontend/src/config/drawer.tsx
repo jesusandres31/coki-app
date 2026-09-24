@@ -39,11 +39,6 @@ export const DRAWER_SECTIONS: DrawerSection[] = [
         to: AppRoutes.Products,
       },
       {
-        text: "Lista de precios",
-        icon: <PriceCheckRounded />,
-        to: AppRoutes.PriceList,
-      },
-      {
         text: "Cuentas",
         icon: <CurrencyExchangeRounded />,
         to: AppRoutes.Payments,

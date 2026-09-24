@@ -5,9 +5,8 @@ import {
   Checkbox,
   TableSortLabel,
   TableHead,
-  useMediaQuery,
-  useTheme,
 } from "@mui/material";
+import { useUI } from "src/hooks";
 import { Column, DataItem, Order } from "src/types";
 
 interface CustomTableHeadProps {
@@ -19,7 +18,6 @@ interface CustomTableHeadProps {
   isCollapsible: boolean;
   hasRowActions?: boolean;
   rowActionsCount?: number;
-  mobileRowActionsCount?: number;
   hasCheckbox?: boolean;
   handleSelectAll: () => void;
   handleSortTable: (columnId: string) => void;
@@ -35,24 +33,17 @@ export default function CustomTableHead({
   isCollapsible,
   hasRowActions = false,
   rowActionsCount = 0,
-  mobileRowActionsCount = rowActionsCount,
   hasCheckbox = false,
   handleSelectAll,
   handleSortTable,
   styles,
 }: CustomTableHeadProps) {
-  const theme = useTheme();
-  const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
+  const { isMobile } = useUI();
   const isAllSelected = items.length === selectedItems.length;
   const collapseColumnWidth = 48;
   const getActionsColumnWidth = (actionsCount: number) =>
-    actionsCount > 0
-      ? actionsCount * 30 + (actionsCount - 1) * 4 + 16
-      : 56;
-  const actionsColumnWidth = {
-    xs: getActionsColumnWidth(mobileRowActionsCount),
-    sm: getActionsColumnWidth(rowActionsCount),
-  };
+    actionsCount > 0 ? actionsCount * 30 + (actionsCount - 1) * 4 + 16 : 0;
+  const actionsColumnWidth = getActionsColumnWidth(rowActionsCount);
   const actionsStickySx = {
     position: "sticky",
     right: isCollapsible ? collapseColumnWidth : 0,
@@ -84,9 +75,7 @@ export default function CustomTableHead({
               onChange={handleSelectAll}
             />
           </TableCell>
-        ) : (
-          <TableCell padding="checkbox" sx={{ width: 0 }} />
-        )}
+        ) : null}
 
         {columns.map((column, i) => {
           const id = column.id as keyof DataItem;
@@ -98,26 +87,38 @@ export default function CustomTableHead({
               key={`${String(column.id)}-${i}`}
               variant="head"
               align={column.align ?? "right"}
-              style={{ width: column.width ?? column.minWidth }}
-              sx={{
-                minWidth: column.minWidth,
+              style={{
+                width: isMobile
+                  ? column.mobileWidth
+                  : (column.width ?? column.minWidth),
               }}
-              sortDirection={direction}
+              sx={{
+                minWidth: isMobile ? 0 : column.minWidth,
+              }}
+              sortDirection={active ? direction : false}
             >
               <TableSortLabel
                 active={active}
                 direction={direction}
                 onClick={() => handleSortTable(String(column.id))}
                 disabled={column.disableSort}
+                hideSortIcon
                 sx={{
-                  minHeight: 24,
+                  display: isMobile ? "flex" : "inline-flex",
+                  minHeight: isMobile ? 0 : 24,
+                  maxWidth: "100%",
+                  "& .MuiTypography-root": {
+                    fontSize: { xs: "0.75rem", sm: "0.875rem" },
+                  },
                   "& .MuiTableSortLabel-icon": {
                     color: "text.primary !important",
                   },
                 }}
               >
                 <Typography variant="body2" fontWeight={700}>
-                  {column.label}
+                  {isMobile
+                    ? (column.mobileLabel ?? column.label)
+                    : column.label}
                 </Typography>
               </TableSortLabel>
             </TableCell>
@@ -127,12 +128,15 @@ export default function CustomTableHead({
         {hasRowActions && (
           <TableCell
             padding="none"
+            aria-label="Acciones"
             align="center"
             sx={{ ...actionsStickySx, pl: 1, pr: 2 }}
           >
-            <Typography variant="body2" fontWeight={700} sx={{ mt: 0.3 }}>
-              {isMobile ? "Accs." : "Acciones"}
-            </Typography>
+            {!isMobile && (
+              <Typography variant="body2" fontWeight={700} sx={{ mt: 0.3 }}>
+                Acciones
+              </Typography>
+            )}
           </TableCell>
         )}
 

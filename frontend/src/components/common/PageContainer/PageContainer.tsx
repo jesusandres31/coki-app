@@ -10,6 +10,8 @@ export default function PageContainer({ children }: PageContainerProps) {
       sx={{
         height: "100%",
         width: "100%",
+        minWidth: 0,
+        minHeight: 0,
         display: "flex",
         flexDirection: "column",
         overflow: "auto",
@@ -21,6 +23,8 @@ export default function PageContainer({ children }: PageContainerProps) {
         sx={{
           height: "100%",
           width: "100%",
+          minWidth: 0,
+          minHeight: 0,
           display: "flex",
           flexDirection: "column",
           overflow: "auto",

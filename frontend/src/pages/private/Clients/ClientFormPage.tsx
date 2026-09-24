@@ -202,6 +202,7 @@ export default function ClientFormPage() {
   }
 
   return renderEntityFormPage({
+    updatedAt: client?.updated,
     title: isNewMode
       ? "Crear cliente"
       : `Cliente "${client?.name || client?.id || ""}"`,

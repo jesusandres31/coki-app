@@ -42,7 +42,10 @@ const touchFormikErrors = (errors: unknown): unknown => {
   if (typeof errors !== "object" || !errors) return true;
 
   return Object.fromEntries(
-    Object.entries(errors).map(([key, value]) => [key, touchFormikErrors(value)]),
+    Object.entries(errors).map(([key, value]) => [
+      key,
+      touchFormikErrors(value),
+    ]),
   );
 };
 
@@ -84,7 +87,16 @@ export const useDetailPageMode = (isNewMode: boolean) => {
 
 export const renderFormPageState = (state: "loading" | "error") => (
   <PageContainer>
-    <Container component="main" maxWidth="lg" sx={{ py: 3, width: "100%", mx: "auto" }}>
+    <Container
+      component="main"
+      maxWidth="lg"
+      sx={{
+        py: { xs: 1, sm: 3 },
+        px: { xs: 1, sm: 3 },
+        width: "100%",
+        mx: "auto",
+      }}
+    >
       <Card variant="outlined" sx={loadingCardSx}>
         <Box
           sx={{
@@ -128,6 +140,7 @@ export const buildNameInput = (value: string, error?: string): Input => ({
 
 interface RenderEntityFormPageArgs {
   title: string;
+  updatedAt?: string;
   mode: "new" | DetailPageMode;
   inputs: Input[];
   formik: FormikProps<any>;
@@ -157,6 +170,7 @@ interface RenderEntityFormPageArgs {
 
 export const renderEntityFormPage = ({
   title,
+  updatedAt,
   mode,
   inputs,
   formik,
@@ -174,6 +188,7 @@ export const renderEntityFormPage = ({
   <>
     <EntityFormContainer
       title={title}
+      updatedAt={updatedAt}
       mode={mode}
       inputs={inputs}
       formik={formik}

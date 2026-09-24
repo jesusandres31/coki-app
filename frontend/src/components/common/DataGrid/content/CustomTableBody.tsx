@@ -1,3 +1,4 @@
+import { useUI } from "src/hooks";
 import React from "react";
 import {
   Column,
@@ -48,19 +49,12 @@ export default function CustomTableBody({
   handleToggleCollapse,
   styles,
 }: CustomTableBodyProps) {
+  const { isMobile } = useUI();
   const isCollapsible = Boolean(detailColumns);
   const hasRowActions = rowActions.length > 0;
   const getActionsColumnWidth = (actionsCount: number) =>
-    actionsCount > 0
-      ? actionsCount * 30 + (actionsCount - 1) * 4 + 16
-      : 56;
-  const mobileRowActionsCount = rowActions.filter(
-    (action) => !action.hideOnMobile,
-  ).length;
-  const actionsColumnWidth = {
-    xs: getActionsColumnWidth(mobileRowActionsCount),
-    sm: getActionsColumnWidth(rowActions.length),
-  };
+    actionsCount > 0 ? actionsCount * 30 + (actionsCount - 1) * 4 + 16 : 0;
+  const actionsColumnWidth = getActionsColumnWidth(rowActions.length);
   const tableIconButtonSx = {
     width: 30,
     height: 30,
@@ -143,9 +137,7 @@ export default function CustomTableBody({
                 >
                   <Checkbox color="primary" size="small" checked={selected} />
                 </TableCell>
-              ) : (
-                <TableCell padding="checkbox" sx={{ width: 0 }} />
-              )}
+              ) : null}
 
               {(columns as IColumn<DataItem>[]).map((column, i) => {
                 const value = column.render
@@ -165,8 +157,10 @@ export default function CustomTableBody({
                     key={`${column.id}-${i}`}
                     align={column.align ?? "right"}
                     sx={{
-                      width: column.width ?? column.minWidth,
-                      minWidth: column.minWidth,
+                      width: isMobile
+                        ? column.mobileWidth
+                        : (column.width ?? column.minWidth),
+                      minWidth: isMobile ? 0 : column.minWidth,
                       cursor: isCollapsible ? "pointer" : "default",
                       py: 0.5,
                     }}
@@ -177,12 +171,18 @@ export default function CustomTableBody({
                     {/* <Tooltip title={tooltip !== NULL_VAL && tooltip}> */}
                     <Typography
                       variant="body2"
-                      noWrap
+                      component="div"
                       color="text.primary"
                       sx={{
                         overflow: "hidden",
                         textOverflow: "ellipsis",
-                        whiteSpace: "nowrap",
+                        whiteSpace:
+                          isMobile && column.type !== "number"
+                            ? "normal"
+                            : "nowrap",
+                        overflowWrap: "anywhere",
+                        fontSize: { xs: "0.75rem", sm: "0.875rem" },
+                        "& .MuiChip-root": { maxWidth: "100%" },
                         fontWeight: 450,
                       }}
                     >
@@ -211,14 +211,23 @@ export default function CustomTableBody({
                     gap={0.5}
                   >
                     {rowActions.map((action) => (
-                      <Tooltip key={action.id} title={action.label}>
+                      <Tooltip
+                        key={action.id}
+                        title={
+                          isMobile
+                            ? (action.mobileLabel ?? action.label)
+                            : action.label
+                        }
+                      >
                         <IconButton
+                          aria-label={
+                            isMobile
+                              ? (action.mobileLabel ?? action.label)
+                              : action.label
+                          }
                           onClick={() => action.onClick(row)}
                           sx={{
                             ...tableIconButtonSx,
-                            ...(action.hideOnMobile
-                              ? { display: { xs: "none", sm: "inline-flex" } }
-                              : {}),
                           }}
                         >
                           {action.icon}
@@ -241,6 +250,10 @@ export default function CustomTableBody({
                   onClick={() => handleToggleCollapse(row.id)}
                 >
                   <IconButton
+                    aria-label={
+                      collapsed ? "Ocultar productos" : "Mostrar productos"
+                    }
+                    aria-expanded={collapsed}
                     sx={{
                       width: 30,
                       height: 30,
@@ -263,7 +276,7 @@ export default function CustomTableBody({
               <CustomCollapse
                 colSpan={
                   columns.length +
-                  1 + // checkbox column (or its placeholder)
+                  (hasCheckbox ? 1 : 0) +
                   (hasRowActions ? 1 : 0) +
                   (isCollapsible ? 1 : 0)
                 }

@@ -81,10 +81,14 @@ export default function SignIn() {
   };
 
   return (
-    <Container component="main" maxWidth="sm" sx={{ py: { xs: 5, md: 8 } }}>
+    <Container
+      component="main"
+      maxWidth="sm"
+      sx={{ py: { xs: 2, md: 8 }, px: { xs: 1.5, sm: 3 } }}
+    >
       <CssBaseline />
       <Card variant="outlined" sx={{ maxWidth: 440, mx: "auto" }}>
-        <CardContent sx={{ p: { xs: 3, sm: 4 } }}>
+        <CardContent sx={{ p: { xs: 2, sm: 4 } }}>
           <Stack spacing={2} alignItems="center">
             <Avatar sx={{ bgcolor: "primary.main", width: 48, height: 48 }}>
               <LockRounded />

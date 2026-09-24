@@ -15,7 +15,7 @@ import { useAppDispatch } from "src/app/store";
 import { resetBreadcrumbs, setBreadcrumbs } from "src/slices/uiSlice";
 import { Column, GetList } from "src/types";
 import { useUI } from "src/hooks";
-import { formatDate, formatMoney, MoneyValue } from "src/utils/format";
+import { formatDate, formatMoney, formatUpdatedAt, MoneyValue } from "src/utils/format";
 import { paymentsBreadcrumbFlow } from "./breadcrumbFlow";
 import PaymentMovementDialog from "./PaymentMovementDialog";
 
@@ -73,6 +73,7 @@ export default function PaymentHistory() {
     () => [
       {
         id: "created",
+        mobileWidth: 80,
         label: "Fecha",
         align: "left",
         minWidth: 140,
@@ -97,6 +98,11 @@ export default function PaymentHistory() {
               variant="outlined"
               color={paymentTypeColors[typeName]}
               label={label}
+              sx={{
+                height: "auto",
+                minHeight: 24,
+                "& .MuiChip-label": { whiteSpace: "normal", px: 0.75 },
+              }}
             />
           ) : (
             label
@@ -105,6 +111,7 @@ export default function PaymentHistory() {
       },
       {
         id: "description",
+        hideOnMobile: true,
         label: "Descripción",
         align: "left",
         minWidth: 280,
@@ -114,6 +121,7 @@ export default function PaymentHistory() {
       },
       {
         id: "balance_before",
+        hideOnMobile: true,
         label: "Saldo anterior",
         align: "right",
         minWidth: 150,
@@ -124,6 +132,7 @@ export default function PaymentHistory() {
       },
       {
         id: "delta",
+        mobileWidth: "40%",
         label: "Movimiento",
         align: "right",
         minWidth: 140,
@@ -134,6 +143,7 @@ export default function PaymentHistory() {
       },
       {
         id: "balance_after",
+        hideOnMobile: true,
         label: "Saldo resultante",
         align: "right",
         minWidth: 150,
@@ -141,6 +151,15 @@ export default function PaymentHistory() {
         render: (item: PaymentAccountMovementWithExpand) => (
           <MoneyValue value={item.balance_after} />
         ),
+      },
+      {
+        id: "updated",
+        hideOnMobile: true,
+        label: "Actualizado",
+        align: "left",
+        minWidth: 190,
+        render: (item: PaymentAccountMovementWithExpand) =>
+          formatUpdatedAt(item.updated),
       },
     ],
     [],
@@ -163,12 +182,13 @@ export default function PaymentHistory() {
               borderLeft: "3px solid",
               borderColor: COLOR.whatsapp_green,
               pl: 1.25,
-              height: 40,
+              minHeight: 40,
               display: "flex",
               flexDirection: { xs: "column", sm: "row" },
               alignItems: { xs: "flex-start", sm: "center" },
               justifyContent: "center",
               columnGap: 1,
+              flexWrap: "wrap",
               whiteSpace: "nowrap",
             }}
           >
@@ -189,10 +209,24 @@ export default function PaymentHistory() {
             >
               {formatMoney(client?.balance ?? 0)}
             </Typography>
+            {client?.updated && (
+              <Typography
+                variant="body2"
+                color="text.secondary"
+                sx={{ flexBasis: "100%", lineHeight: 1.4 }}
+              >
+                Actualizado: {formatUpdatedAt(client.updated)}
+              </Typography>
+            )}
           </Box>
         }
         toolbarElement={
-          <Stack direction="row" spacing={1.5} alignItems="center">
+          <Stack
+            direction={{ xs: "column", sm: "row" }}
+            spacing={1}
+            alignItems="stretch"
+            sx={{ width: "100%" }}
+          >
             <Button
               size="small"
               color="info"

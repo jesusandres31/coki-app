@@ -20,18 +20,21 @@ export const buildCrudRowActions = <T,>({
 }: BuildCrudRowActionsArgs<T>): DataGridRowAction[] => [
   {
     id: "open",
+    mobileLabel: "Ir a detalle",
     label: `Abrir ${entityLabel}`,
     icon: <OpenInNewRounded fontSize="small" color="primary" />,
     onClick: (item) => handleGoTo(`${baseRoute}/${item.id}`),
   },
   {
     id: "edit",
+    hideOnMobile: true,
     label: `Editar ${entityLabel}`,
     icon: <EditRounded fontSize="small" color="info" />,
     onClick: (item) => handleGoTo(`${baseRoute}/${item.id}?mode=edit`),
   },
   {
     id: "delete",
+    hideOnMobile: true,
     label: `Eliminar ${entityLabel}`,
     icon: <DeleteRounded fontSize="small" color="error" />,
     onClick: (item) => onDelete(item as T),

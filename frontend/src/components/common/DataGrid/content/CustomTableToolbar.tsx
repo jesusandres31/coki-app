@@ -1,4 +1,4 @@
-import { ChangeEvent, ReactNode } from "react";
+import { ChangeEvent, ReactNode, useId } from "react";
 import {
   Box,
   Toolbar,
@@ -8,8 +8,10 @@ import {
   InputLabel,
   OutlinedInput,
   InputAdornment,
+  Button,
+  Tooltip,
 } from "@mui/material";
-import { SearchRounded, ClearRounded } from "@mui/icons-material";
+import { SearchRounded, ClearRounded, AddRounded } from "@mui/icons-material";
 import { useUI } from "src/hooks";
 
 interface CustomTableToolbarProps {
@@ -19,6 +21,7 @@ interface CustomTableToolbarProps {
   searchPlaceholder?: string;
   toolbarInfoElement?: ReactNode;
   toolbarElement?: ReactNode;
+  createAction?: { label: string; onClick: () => void };
 }
 
 export default function CustomTableToolbar({
@@ -28,7 +31,9 @@ export default function CustomTableToolbar({
   searchPlaceholder = "Search",
   toolbarInfoElement,
   toolbarElement,
+  createAction,
 }: CustomTableToolbarProps) {
+  const searchId = useId();
   const { isMobile } = useUI();
   const hasSelection = selectedCount > 0;
 
@@ -54,8 +59,8 @@ export default function CustomTableToolbar({
         sx={{
           width: "100%",
           display: "flex",
-          alignItems: "center",
-          flexWrap: { xs: "wrap", sm: "nowrap" },
+          flexDirection: { xs: createAction ? "row" : "column", sm: "row" },
+          alignItems: { xs: "stretch", sm: "center" },
           gap: 1.5,
         }}
       >
@@ -94,8 +99,9 @@ export default function CustomTableToolbar({
                 size="small"
                 sx={{ width: "100%", maxWidth: 450 }}
               >
-                <InputLabel>{searchPlaceholder}</InputLabel>
+                <InputLabel htmlFor={searchId}>{searchPlaceholder}</InputLabel>
                 <OutlinedInput
+                  id={searchId}
                   value={filter}
                   onChange={handleSearch}
                   startAdornment={
@@ -110,6 +116,7 @@ export default function CustomTableToolbar({
                   endAdornment={
                     <InputAdornment position="end">
                       <IconButton
+                        aria-label="Limpiar búsqueda"
                         edge="end"
                         onClick={handleClear}
                         size="small"
@@ -138,14 +145,58 @@ export default function CustomTableToolbar({
           )}
         </Box>
 
+        {!hasSelection && createAction ? (
+          <Box
+            sx={{
+              ml: { sm: "auto" },
+              flex: "0 0 auto",
+              display: "flex",
+              alignItems: "center",
+              alignSelf: "center",
+            }}
+          >
+            {isMobile ? (
+              <Tooltip title={createAction.label}>
+                <IconButton
+                  size="small"
+                  color="primary"
+                  aria-label={createAction.label}
+                  onClick={createAction.onClick}
+                  sx={{
+                    width: 32,
+                    height: 32,
+                    color: "primary.contrastText",
+                    bgcolor: "primary.main",
+                    borderRadius: 1.25,
+                    "&:hover": { bgcolor: "primary.dark" },
+                  }}
+                >
+                  <AddRounded fontSize="small" />
+                </IconButton>
+              </Tooltip>
+            ) : (
+              <Button
+                size="small"
+                variant="contained"
+                startIcon={<AddRounded />}
+                onClick={createAction.onClick}
+              >
+                {createAction.label}
+              </Button>
+            )}
+          </Box>
+        ) : null}
+
         {!hasSelection && toolbarElement ? (
           <Box
             sx={{
               display: "flex",
-              marginLeft: "auto",
+              width: { xs: "100%", sm: "auto" },
+              marginLeft: { sm: "auto" },
+              "& .MuiButton-root": { width: { xs: "100%", sm: "auto" } },
               justifyContent: "flex-end",
               alignItems: "center",
-              pr: 1,
+              pr: { xs: 0, sm: 1 },
             }}
           >
             {toolbarElement}

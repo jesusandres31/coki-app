@@ -1,7 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { Button } from "@mui/material";
 import {
-  AddRounded,
   EditRounded,
   OpenInNewRounded,
   PrintRounded,
@@ -21,7 +19,7 @@ import {
   ProductsResponse,
   VInvoicesResponse,
 } from "src/types/pocketbase-types";
-import { formatDate, formatPercent, MoneyValue } from "src/utils/format";
+import { formatDate, formatPercent, formatUpdatedAt, MoneyValue } from "src/utils/format";
 import { useRouter } from "src/hooks";
 import { AppRoutes } from "src/config";
 import { useAppDispatch } from "src/app/store";
@@ -222,6 +220,7 @@ export default function Invoices() {
     () => [
       {
         id: "date",
+        mobileWidth: 72,
         label: "Fecha",
         align: "left",
         minWidth: 160,
@@ -244,10 +243,20 @@ export default function Invoices() {
       // },
       {
         id: "total",
+        mobileWidth: "34%",
         label: "Total",
+        type: "number",
         minWidth: 140,
         disableSort: true,
         render: (item: InvoiceListRow) => <MoneyValue value={item.total} />,
+      },
+      {
+        id: "updated",
+        hideOnMobile: true,
+        label: "Actualizado",
+        align: "left",
+        minWidth: 190,
+        render: (item: InvoiceListRow) => formatUpdatedAt(item.updated),
       },
     ],
     [],
@@ -315,12 +324,14 @@ export default function Invoices() {
     () => [
       {
         id: "open",
+        mobileLabel: "Ir a detalle",
         label: "Ver factura",
         icon: <OpenInNewRounded fontSize="small" color="primary" />,
         onClick: (item) => handleGoTo(`${AppRoutes.Invoices}/${item.id}`),
       },
       {
         id: "edit",
+        hideOnMobile: true,
         label: "Editar factura",
         icon: <EditRounded fontSize="small" color="info" />,
         onClick: (item) =>
@@ -351,16 +362,10 @@ export default function Invoices() {
       onQueryChange={setQueryArgs}
       onCollapseChange={handleCollapseChange}
       rowActions={rowActions}
-      toolbarElement={
-        <Button
-          size="small"
-          variant="contained"
-          startIcon={<AddRounded />}
-          onClick={() => handleGoTo(AppRoutes.InvoicesNew)}
-        >
-          Crear factura
-        </Button>
-      }
+      createAction={{
+        label: "Crear factura",
+        onClick: () => handleGoTo(AppRoutes.InvoicesNew),
+      }}
     />
   );
 }

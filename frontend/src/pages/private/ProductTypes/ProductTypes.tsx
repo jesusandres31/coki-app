@@ -1,6 +1,4 @@
 import { useEffect, useMemo, useState } from "react";
-import { AddRounded } from "@mui/icons-material";
-import { Button } from "@mui/material";
 import DataGrid from "src/components/common/DataGrid/DataGrid";
 import DeleteEntityDialog from "src/components/common/DeleteEntityDialog";
 import { getListArgsInitialState } from "src/constants";
@@ -16,6 +14,7 @@ import { Column, DataGridRowAction, GetList } from "src/types";
 import { ProductTypesResponse } from "src/types/pocketbase-types";
 import { productTypesBreadcrumbFlow } from "./breadcrumbFlow";
 import { buildCrudRowActions } from "../crudListUtils";
+import { formatUpdatedAt } from "src/utils/format";
 
 export default function ProductTypes() {
   const dispatch = useAppDispatch();
@@ -68,7 +67,16 @@ export default function ProductTypes() {
         label: "Nombre",
         align: "left",
         minWidth: 260,
-        width: "100%",
+        width: "70%",
+      },
+      {
+        id: "updated",
+        hideOnMobile: true,
+        label: "Actualizado",
+        align: "left",
+        minWidth: 190,
+        width: "30%",
+        render: (item: ProductTypesResponse) => formatUpdatedAt(item.updated),
       },
     ],
     [],
@@ -97,16 +105,10 @@ export default function ProductTypes() {
         initialQuery={queryArgs}
         onQueryChange={setQueryArgs}
         rowActions={rowActions}
-        toolbarElement={
-          <Button
-            size="small"
-            variant="contained"
-            startIcon={<AddRounded />}
-            onClick={() => handleGoTo(AppRoutes.ConfigProductTypesNew)}
-          >
-            Crear tipo de producto
-          </Button>
-        }
+        createAction={{
+          label: "Crear tipo de producto",
+          onClick: () => handleGoTo(AppRoutes.ConfigProductTypesNew),
+        }}
       />
       <DeleteEntityDialog
         open={Boolean(productTypeToDelete)}

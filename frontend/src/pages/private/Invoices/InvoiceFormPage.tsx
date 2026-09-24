@@ -5,11 +5,7 @@ import dayjs, { Dayjs } from "dayjs";
 import { useFormik } from "formik";
 import type { FormikErrors, FormikTouched } from "formik";
 import { NumericFormat } from "react-number-format";
-import {
-  AddRounded,
-  DeleteRounded,
-  PrintRounded,
-} from "@mui/icons-material";
+import { AddRounded, DeleteRounded, PrintRounded } from "@mui/icons-material";
 import {
   Box,
   Button,
@@ -60,7 +56,7 @@ import { withLoadingInputProps } from "src/components/common/Inputs/loadingInput
 import PageContainer from "src/components/common/PageContainer/PageContainer";
 import { SEARCH } from "src/constants";
 import { AppRoutes } from "src/config";
-import { useRouter } from "src/hooks";
+import { useRouter, useUI } from "src/hooks";
 import {
   resetBreadcrumbs,
   setBreadcrumbs,
@@ -207,10 +203,7 @@ type InvoiceProductRowErrors = Partial<
 >;
 
 type ProductTableEditableField =
-  | "product"
-  | "amount"
-  | "unitPrice"
-  | "discount";
+  "product" | "amount" | "unitPrice" | "discount";
 
 const productTableEditableFields: ProductTableEditableField[] = [
   "product",
@@ -754,6 +747,7 @@ function ProductsTable({
   onEditCatalogPrice,
   canRemoveRow,
 }: ProductsTableProps) {
+  const { isMobile } = useUI();
   const tableContainerRef = useRef<HTMLDivElement>(null);
   const fieldRefs = useRef(new Map<string, HTMLElement>());
   const [amountDecimalRowIds, setAmountDecimalRowIds] = useState<Set<string>>(
@@ -798,7 +792,9 @@ function ProductsTable({
     minHeight: productRowHelperTextMinHeight,
     mt: 0.125,
   };
-  const singleLineHelperTextProps = productRowHelperTextProps;
+  const singleLineHelperTextProps = isMobile
+    ? { sx: { whiteSpace: "normal", overflowWrap: "anywhere" } }
+    : productRowHelperTextProps;
   const showActionColumn = editable;
   const actionColumnWidth = invoiceProductsActionColumnWidth;
   const actionColumnSx = {
@@ -829,7 +825,11 @@ function ProductsTable({
     const element = fieldRefs.current.get(getFieldKey(rowId, field));
     if (!container || !element) return;
 
-    const target = element.closest("tr") || element;
+    const target = element.closest("[data-product-row], tr") || element;
+    if (isMobile) {
+      element.scrollIntoView({ block: "nearest", behavior: "smooth" });
+      return;
+    }
     const containerRect = container.getBoundingClientRect();
     const targetRect = target.getBoundingClientRect();
     const topPadding = 48;
@@ -913,10 +913,7 @@ function ProductsTable({
         return;
       }
 
-      if (
-        field === "product" &&
-        ["ArrowUp", "ArrowDown"].includes(event.key)
-      ) {
+      if (field === "product" && ["ArrowUp", "ArrowDown"].includes(event.key)) {
         return;
       }
 
@@ -975,398 +972,482 @@ function ProductsTable({
     });
   }, [editable, focusAddedRowId, inputsDisabled, onAddedRowFocus, rows]);
 
+  const renderRows = () =>
+    rows.map((row, rowIndex) => {
+      const rowError = rowErrors[rowIndex] || {};
+      const isPriceLoading = priceLoadingRowIds.has(row.id);
+      const isKgUnit = isKgMeasureUnitName(row.measureUnitName);
+      const canEditCatalogPrice =
+        editable && Boolean(row.productId) && Boolean(onEditCatalogPrice);
+      const shouldShowAmountDecimals =
+        isKgUnit ||
+        amountDecimalRowIds.has(row.id) ||
+        (row.amount !== "" && !Number.isInteger(row.amount));
+
+      const fields = {
+        product: (
+          <>
+            {editable ? (
+              <DebouncedAutocomplete
+                options={productOptions}
+                valueId={row.productId}
+                label={isMobile ? "Producto" : undefined}
+                placeholder="Seleccionar producto"
+                prioritizeStartsWith
+                selectBestMatchOnBlur
+                wideResults
+                variant="standard"
+                disabled={inputsDisabled}
+                loading={productsLoading}
+                inputRef={setFieldRef(row.id, "product")}
+                onKeyDown={handleFieldKeyDown(rowIndex, "product")}
+                error={Boolean(rowError.product)}
+                helperText={rowError.product}
+                helperTextNoWrap={!isMobile}
+                onChange={(value) => {
+                  onRowChange?.(row.id, "product", value);
+                  requestAnimationFrame(() => focusField(rowIndex, 1));
+                }}
+              />
+            ) : (
+              <TextField
+                fullWidth
+                size="small"
+                variant="standard"
+                value={row.productName}
+                multiline={isMobile}
+                label={isMobile ? "Producto" : undefined}
+                disabled
+                helperText={isMobile ? undefined : " "}
+                FormHelperTextProps={singleLineHelperTextProps}
+                sx={readableDisabledFieldSx}
+              />
+            )}
+          </>
+        ),
+        amount: (
+          <>
+            <NumericFormat
+              customInput={TextField}
+              fullWidth
+              size="small"
+              label={isMobile ? "Cantidad" : undefined}
+              variant="standard"
+              value={
+                amountEditing?.rowId === row.id
+                  ? amountEditing.value
+                  : row.amount
+              }
+              valueIsNumericString
+              decimalSeparator=","
+              thousandSeparator="."
+              allowedDecimalSeparators={[",", "."]}
+              decimalScale={invoiceDecimalScale}
+              fixedDecimalScale={
+                shouldShowAmountDecimals && amountEditing?.rowId !== row.id
+              }
+              allowNegative={false}
+              onValueChange={(values, sourceInfo) => {
+                if (sourceInfo.source !== "event") return;
+
+                setAmountEditing({ rowId: row.id, value: values.value });
+                const amount =
+                  values.value === "" ? "" : (values.floatValue ?? 0);
+                onRowChange?.(row.id, "amount", amount);
+                if (isKgUnit) return;
+
+                updateAmountDecimalIntent(
+                  row.id,
+                  values.formattedValue.includes(",") ||
+                    (amount !== "" && !Number.isInteger(amount)),
+                );
+              }}
+              inputProps={{ inputMode: "decimal" }}
+              getInputRef={setFieldRef(row.id, "amount")}
+              onKeyDown={handleFieldKeyDown(rowIndex, "amount")}
+              onFocus={() =>
+                setAmountEditing({
+                  rowId: row.id,
+                  value: row.amount === "" ? "" : String(row.amount),
+                })
+              }
+              onBlur={() =>
+                setAmountEditing((current) =>
+                  current?.rowId === row.id ? null : current,
+                )
+              }
+              disabled={controlsDisabled}
+              error={Boolean(rowError.amount)}
+              helperText={rowError.amount || (isMobile ? undefined : " ")}
+              FormHelperTextProps={singleLineHelperTextProps}
+              sx={readableDisabledFieldSx}
+            />
+          </>
+        ),
+        unit: (
+          <>
+            <TextField
+              fullWidth
+              size="small"
+              label={isMobile ? "Unidad" : undefined}
+              variant="standard"
+              value={row.measureUnitName}
+              disabled
+              helperText={isMobile ? undefined : " "}
+              FormHelperTextProps={singleLineHelperTextProps}
+              sx={readableDisabledFieldSx}
+            />
+          </>
+        ),
+        price: (
+          <>
+            <Box>
+              <NumericFormat
+                customInput={TextField}
+                fullWidth
+                size="small"
+                label={isMobile ? "Precio unitario" : undefined}
+                variant="standard"
+                value={row.unitPrice}
+                valueIsNumericString
+                decimalSeparator=","
+                thousandSeparator="."
+                allowedDecimalSeparators={[",", "."]}
+                decimalScale={invoiceDecimalScale}
+                allowNegative={false}
+                onValueChange={(values) =>
+                  onRowChange?.(
+                    row.id,
+                    "unitPrice",
+                    normalizeOptionalInvoiceDecimalInput(values.value),
+                  )
+                }
+                inputProps={{ min: 0, step: invoiceDecimalStep }}
+                InputProps={withLoadingInputProps(
+                  {
+                    startAdornment: (
+                      <InputAdornment
+                        position="start"
+                        sx={{
+                          mr: 0.75,
+                          minWidth: 14,
+                          justifyContent: "center",
+                        }}
+                      >
+                        $
+                      </InputAdornment>
+                    ),
+                  },
+                  isPriceLoading,
+                )}
+                getInputRef={setFieldRef(row.id, "unitPrice")}
+                onKeyDown={handleFieldKeyDown(rowIndex, "unitPrice")}
+                disabled={controlsDisabled || isPriceLoading}
+                error={Boolean(rowError.unitPrice)}
+                helperText={
+                  rowError.unitPrice ||
+                  (editable && showCatalogPriceHint && row.productId ? (
+                    <Tooltip title="Editar precio general">
+                      <Typography
+                        component="button"
+                        type="button"
+                        aria-label={`Editar precio general de ${row.productName}`}
+                        disabled={
+                          inputsDisabled ||
+                          isPriceLoading ||
+                          !canEditCatalogPrice
+                        }
+                        variant="caption"
+                        onClick={() => {
+                          if (!canEditCatalogPrice) return;
+
+                          onEditCatalogPrice?.({
+                            id: row.productId,
+                            rowId: row.id,
+                            name: row.productName,
+                            measureUnitName: row.measureUnitName,
+                            unitPrice: row.catalogUnitPrice ?? 0,
+                          });
+                        }}
+                        sx={{
+                          appearance: "none",
+                          border: 0,
+                          background: "transparent",
+                          color: "text.secondary",
+                          cursor: canEditCatalogPrice ? "pointer" : "default",
+                          font: "inherit",
+                          lineHeight: "inherit",
+                          display: "inline-flex",
+                          flexWrap: "wrap",
+                          columnGap: 0.5,
+                          maxWidth: "100%",
+                          m: 0,
+                          p: 0,
+                          minHeight: isMobile ? 32 : undefined,
+                          textAlign: "left",
+                          "&:hover": canEditCatalogPrice
+                            ? {
+                                color: "primary.main",
+                                textDecoration: "underline",
+                              }
+                            : undefined,
+                        }}
+                      >
+                        <span>Precio Real:</span>
+                        <Box
+                          component="span"
+                          sx={{
+                            fontVariantNumeric: "tabular-nums",
+                            overflowWrap: "anywhere",
+                          }}
+                        >
+                          {formatMoney(row.catalogUnitPrice ?? 0)}
+                        </Box>
+                      </Typography>
+                    </Tooltip>
+                  ) : (
+                    " "
+                  ))
+                }
+                FormHelperTextProps={
+                  rowError.unitPrice
+                    ? singleLineHelperTextProps
+                    : catalogPriceHelperTextProps
+                }
+                sx={(theme) => ({
+                  ...readableDisabledFieldSx(theme),
+                  "& .MuiInputBase-input": {
+                    textAlign: "right",
+                    fontVariantNumeric: "tabular-nums",
+                  },
+                })}
+              />
+            </Box>
+          </>
+        ),
+        discount: (
+          <>
+            <NumericFormat
+              customInput={TextField}
+              fullWidth
+              size="small"
+              label={isMobile ? "Descuento" : undefined}
+              variant="standard"
+              value={row.discount}
+              valueIsNumericString
+              decimalSeparator=","
+              thousandSeparator="."
+              allowedDecimalSeparators={[",", "."]}
+              decimalScale={invoiceDecimalScale}
+              allowNegative={false}
+              onValueChange={(values) =>
+                onRowChange?.(
+                  row.id,
+                  "discount",
+                  clampDiscount(Number(values.value || 0)),
+                )
+              }
+              inputProps={{ min: 0, max: 100, step: invoiceDecimalStep }}
+              InputProps={{
+                endAdornment: <InputAdornment position="end">%</InputAdornment>,
+              }}
+              getInputRef={setFieldRef(row.id, "discount")}
+              onKeyDown={handleFieldKeyDown(rowIndex, "discount")}
+              disabled={controlsDisabled}
+              error={Boolean(rowError.discount)}
+              helperText={rowError.discount || (isMobile ? undefined : " ")}
+              FormHelperTextProps={singleLineHelperTextProps}
+              sx={readableDisabledFieldSx}
+            />
+          </>
+        ),
+        total: (
+          <>
+            <Box>
+              <Typography variant="body2" fontWeight={600} sx={totalValueSx}>
+                <MoneyValue value={row.total} />
+              </Typography>
+              {!isMobile && <Box sx={rowHelperSpacerSx} />}
+            </Box>
+          </>
+        ),
+        actions: (
+          <>
+            <Box>
+              <Box sx={{ ...rowActionButtonSx, gap: 0.5 }}>
+                {editable && (
+                  <Tooltip title="Eliminar producto">
+                    <span>
+                      <IconButton
+                        size="small"
+                        color="error"
+                        onClick={() => onRemoveRow?.(row.id)}
+                        disabled={inputsDisabled || !canRemoveRow?.(row.id)}
+                        sx={{
+                          width: 30,
+                          height: 30,
+                          border: "1px solid",
+                          borderColor: "divider",
+                          borderRadius: 1.25,
+                          p: 0.5,
+                        }}
+                        aria-label="Eliminar producto"
+                      >
+                        <DeleteRounded />
+                      </IconButton>
+                    </span>
+                  </Tooltip>
+                )}
+              </Box>
+              {!isMobile && <Box sx={rowHelperSpacerSx} />}
+            </Box>
+          </>
+        ),
+      };
+      return isMobile ? (
+        <Card
+          key={row.id}
+          variant="outlined"
+          data-product-row
+          sx={{ p: 1.5, minWidth: 0, flexShrink: 0 }}
+        >
+          <Stack spacing={1.5}>
+            {fields.product}
+            <Box
+              sx={{
+                display: "grid",
+                gridTemplateColumns: "minmax(0, 1fr) minmax(0, 1fr)",
+                gap: 1.5,
+              }}
+            >
+              <Box sx={{ minWidth: 0 }}>{fields.amount}</Box>
+              <Box sx={{ minWidth: 0 }}>{fields.price}</Box>
+            </Box>
+            <Box
+              sx={{
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+                gap: 1,
+              }}
+            >
+              <Typography variant="body2" fontWeight={700}>
+                Total
+              </Typography>
+              {fields.total}
+            </Box>
+            <Box
+              sx={{
+                display: "grid",
+                gridTemplateColumns: "minmax(0, 1fr) minmax(0, 1fr) auto",
+                alignItems: "start",
+                gap: 1.5,
+              }}
+            >
+              <Box sx={{ minWidth: 0 }}>{fields.unit}</Box>
+              <Box sx={{ minWidth: 0 }}>{fields.discount}</Box>
+              {showActionColumn && fields.actions}
+            </Box>
+          </Stack>
+        </Card>
+      ) : (
+        <TableRow key={row.id}>
+          <TableCell sx={editableBodyCellSx}>{fields.product}</TableCell>
+
+          <TableCell sx={editableBodyCellSx}>{fields.amount}</TableCell>
+
+          <TableCell sx={editableBodyCellSx}>{fields.unit}</TableCell>
+
+          <TableCell sx={priceCellSx}>{fields.price}</TableCell>
+
+          <TableCell sx={editableBodyCellSx}>{fields.discount}</TableCell>
+
+          <TableCell align="right" sx={totalCellSx}>
+            {fields.total}
+          </TableCell>
+
+          {showActionColumn && (
+            <TableCell
+              align="center"
+              sx={{
+                ...actionColumnSx,
+                ...editableBodyCellSx,
+                zIndex: 2,
+                backgroundColor: "transparent",
+              }}
+            >
+              {fields.actions}
+            </TableCell>
+          )}
+        </TableRow>
+      );
+    });
+
   return (
     <TableContainer
       ref={tableContainerRef}
       sx={{
         width: "100%",
-        height: "100%",
+        height: isMobile ? "auto" : "100%",
         maxWidth: "100%",
-        flex: "1 1 0",
+        flex: isMobile ? "0 0 auto" : "1 1 0",
         minHeight: 0,
         minWidth: 0,
-        overflowY: "auto",
-        overflowX: "auto",
+        overflowY: isMobile ? "visible" : "auto",
+        overflowX: isMobile ? "visible" : "auto",
         overscrollBehavior: "contain",
         WebkitOverflowScrolling: "touch",
-        border: "1px solid",
+        border: isMobile ? 0 : "1px solid",
         borderColor: "divider",
         borderRadius: 1,
       }}
     >
-      <Table
-        size="small"
-        stickyHeader
-        sx={{
-          minWidth: editable ? 860 : 800,
-          tableLayout: "fixed",
-        }}
-      >
-        <TableHead>
-          <TableRow>
-            <TableCell sx={{ width: "35%" }}>Producto</TableCell>
-            <TableCell sx={{ width: "10%" }}>Cantidad</TableCell>
-            <TableCell sx={{ width: "7%" }}>Unidad</TableCell>
-            <TableCell sx={{ width: "16%" }}>Precio unit.</TableCell>
-            <TableCell sx={{ width: "12%" }}>Descuento</TableCell>
-            <TableCell
-              align="right"
-              sx={{
-                ...invoiceProductsTotalColumnSx,
-                backgroundColor: "#F8FAFC",
-              }}
-            >
-              Total
-            </TableCell>
-            {showActionColumn && (
+      {isMobile ? (
+        <Stack spacing={1.5} aria-label="Productos de la factura">
+          {renderRows()}
+        </Stack>
+      ) : (
+        <Table
+          size="small"
+          stickyHeader
+          sx={{
+            minWidth: editable ? 860 : 800,
+            tableLayout: "fixed",
+          }}
+        >
+          <TableHead>
+            <TableRow>
+              <TableCell sx={{ width: "35%" }}>Producto</TableCell>
+              <TableCell sx={{ width: "10%" }}>Cantidad</TableCell>
+              <TableCell sx={{ width: "7%" }}>Unidad</TableCell>
+              <TableCell sx={{ width: "16%" }}>Precio unit.</TableCell>
+              <TableCell sx={{ width: "12%" }}>Descuento</TableCell>
               <TableCell
-                align="center"
+                align="right"
                 sx={{
-                  ...actionColumnSx,
-                  zIndex: 4,
+                  ...invoiceProductsTotalColumnSx,
                   backgroundColor: "#F8FAFC",
                 }}
               >
-                Acc.
+                Total
               </TableCell>
-            )}
-          </TableRow>
-        </TableHead>
-        <TableBody>
-          {rows.map((row, rowIndex) => {
-            const rowError = rowErrors[rowIndex] || {};
-            const isPriceLoading = priceLoadingRowIds.has(row.id);
-            const isKgUnit = isKgMeasureUnitName(row.measureUnitName);
-            const canEditCatalogPrice =
-              editable && Boolean(row.productId) && Boolean(onEditCatalogPrice);
-            const shouldShowAmountDecimals =
-              isKgUnit ||
-              amountDecimalRowIds.has(row.id) ||
-              (row.amount !== "" && !Number.isInteger(row.amount));
-
-            return (
-              <TableRow key={row.id}>
-                <TableCell sx={editableBodyCellSx}>
-                  {editable ? (
-                    <DebouncedAutocomplete
-                      options={productOptions}
-                      valueId={row.productId}
-                      placeholder="Seleccionar producto"
-                      prioritizeStartsWith
-                      selectBestMatchOnBlur
-                      wideResults
-                      variant="standard"
-                      disabled={inputsDisabled}
-                      loading={productsLoading}
-                      inputRef={setFieldRef(row.id, "product")}
-                      onKeyDown={handleFieldKeyDown(rowIndex, "product")}
-                      error={Boolean(rowError.product)}
-                      helperText={rowError.product}
-                      helperTextNoWrap
-                      onChange={(value) => {
-                        onRowChange?.(row.id, "product", value);
-                        requestAnimationFrame(() => focusField(rowIndex, 1));
-                      }}
-                    />
-                  ) : (
-                    <TextField
-                      fullWidth
-                      size="small"
-                      variant="standard"
-                      value={row.productName}
-                      disabled
-                      helperText=" "
-                      FormHelperTextProps={singleLineHelperTextProps}
-                      sx={readableDisabledFieldSx}
-                    />
-                  )}
+              {showActionColumn && (
+                <TableCell
+                  align="center"
+                  sx={{
+                    ...actionColumnSx,
+                    zIndex: 4,
+                    backgroundColor: "#F8FAFC",
+                  }}
+                >
+                  Acc.
                 </TableCell>
-
-                <TableCell sx={editableBodyCellSx}>
-                  <NumericFormat
-                    customInput={TextField}
-                    fullWidth
-                    size="small"
-                    variant="standard"
-                    value={
-                      amountEditing?.rowId === row.id
-                        ? amountEditing.value
-                        : row.amount
-                    }
-                    valueIsNumericString
-                    decimalSeparator=","
-                    thousandSeparator="."
-                    allowedDecimalSeparators={[",", "."]}
-                    decimalScale={invoiceDecimalScale}
-                    fixedDecimalScale={
-                      shouldShowAmountDecimals && amountEditing?.rowId !== row.id
-                    }
-                    allowNegative={false}
-                    onValueChange={(values, sourceInfo) => {
-                      if (sourceInfo.source !== "event") return;
-
-                      setAmountEditing({ rowId: row.id, value: values.value });
-                      const amount =
-                        values.value === "" ? "" : (values.floatValue ?? 0);
-                      onRowChange?.(row.id, "amount", amount);
-                      if (isKgUnit) return;
-
-                      updateAmountDecimalIntent(
-                        row.id,
-                        values.formattedValue.includes(",") ||
-                          (amount !== "" && !Number.isInteger(amount)),
-                      );
-                    }}
-                    inputProps={{ inputMode: "decimal" }}
-                    getInputRef={setFieldRef(row.id, "amount")}
-                    onKeyDown={handleFieldKeyDown(rowIndex, "amount")}
-                    onFocus={() =>
-                      setAmountEditing({
-                        rowId: row.id,
-                        value: row.amount === "" ? "" : String(row.amount),
-                      })
-                    }
-                    onBlur={() =>
-                      setAmountEditing((current) =>
-                        current?.rowId === row.id ? null : current,
-                      )
-                    }
-                    disabled={controlsDisabled}
-                    error={Boolean(rowError.amount)}
-                    helperText={rowError.amount || " "}
-                    FormHelperTextProps={singleLineHelperTextProps}
-                    sx={readableDisabledFieldSx}
-                  />
-                </TableCell>
-
-                <TableCell sx={editableBodyCellSx}>
-                  <TextField
-                    fullWidth
-                    size="small"
-                    variant="standard"
-                    value={row.measureUnitName}
-                    disabled
-                    helperText=" "
-                    FormHelperTextProps={singleLineHelperTextProps}
-                    sx={readableDisabledFieldSx}
-                  />
-                </TableCell>
-
-                <TableCell sx={priceCellSx}>
-                  <Box>
-                    <NumericFormat
-                      customInput={TextField}
-                      fullWidth
-                      size="small"
-                      variant="standard"
-                      value={row.unitPrice}
-                      valueIsNumericString
-                      decimalSeparator=","
-                      thousandSeparator="."
-                      allowedDecimalSeparators={[",", "."]}
-                      decimalScale={invoiceDecimalScale}
-                      allowNegative={false}
-                      onValueChange={(values) =>
-                        onRowChange?.(
-                          row.id,
-                          "unitPrice",
-                          normalizeOptionalInvoiceDecimalInput(values.value),
-                        )
-                      }
-                      inputProps={{ min: 0, step: invoiceDecimalStep }}
-                      InputProps={withLoadingInputProps(
-                        {
-                          startAdornment: (
-                            <InputAdornment
-                              position="start"
-                              sx={{
-                                mr: 0.75,
-                                minWidth: 14,
-                                justifyContent: "center",
-                              }}
-                            >
-                              $
-                            </InputAdornment>
-                          ),
-                        },
-                        isPriceLoading,
-                      )}
-                      getInputRef={setFieldRef(row.id, "unitPrice")}
-                      onKeyDown={handleFieldKeyDown(rowIndex, "unitPrice")}
-                      disabled={controlsDisabled || isPriceLoading}
-                      error={Boolean(rowError.unitPrice)}
-                      helperText={
-                        rowError.unitPrice ||
-                        (editable && showCatalogPriceHint && row.productId ? (
-                          <Tooltip title="Editar precio general">
-                            <Typography
-                              component="button"
-                              type="button"
-                              variant="caption"
-                              onClick={() => {
-                                if (!canEditCatalogPrice) return;
-
-                                onEditCatalogPrice?.({
-                                  id: row.productId,
-                                  rowId: row.id,
-                                  name: row.productName,
-                                  measureUnitName: row.measureUnitName,
-                                  unitPrice: row.catalogUnitPrice ?? 0,
-                                });
-                              }}
-                              sx={{
-                                appearance: "none",
-                                border: 0,
-                                background: "transparent",
-                                color: "text.secondary",
-                                cursor: canEditCatalogPrice
-                                  ? "pointer"
-                                  : "default",
-                                font: "inherit",
-                                lineHeight: "inherit",
-                                display: "inline-flex",
-                                flexWrap: "wrap",
-                                columnGap: 0.5,
-                                maxWidth: "100%",
-                                m: 0,
-                                p: 0,
-                                textAlign: "left",
-                                "&:hover": canEditCatalogPrice
-                                  ? {
-                                      color: "primary.main",
-                                      textDecoration: "underline",
-                                    }
-                                  : undefined,
-                              }}
-                            >
-                              <span>Precio Real:</span>
-                              <Box
-                                component="span"
-                                sx={{
-                                  fontVariantNumeric: "tabular-nums",
-                                  overflowWrap: "anywhere",
-                                }}
-                              >
-                                {formatMoney(row.catalogUnitPrice ?? 0)}
-                              </Box>
-                            </Typography>
-                          </Tooltip>
-                        ) : (
-                          " "
-                        ))
-                      }
-                      FormHelperTextProps={
-                        rowError.unitPrice
-                          ? singleLineHelperTextProps
-                          : catalogPriceHelperTextProps
-                      }
-                      sx={(theme) => ({
-                        ...readableDisabledFieldSx(theme),
-                        "& .MuiInputBase-input": {
-                          textAlign: "right",
-                          fontVariantNumeric: "tabular-nums",
-                        },
-                      })}
-                    />
-                  </Box>
-                </TableCell>
-
-                <TableCell sx={editableBodyCellSx}>
-                  <NumericFormat
-                    customInput={TextField}
-                    fullWidth
-                    size="small"
-                    variant="standard"
-                    value={row.discount}
-                    valueIsNumericString
-                    decimalSeparator=","
-                    thousandSeparator="."
-                    allowedDecimalSeparators={[",", "."]}
-                    decimalScale={invoiceDecimalScale}
-                    allowNegative={false}
-                    onValueChange={(values) =>
-                      onRowChange?.(
-                        row.id,
-                        "discount",
-                        clampDiscount(Number(values.value || 0)),
-                      )
-                    }
-                    inputProps={{ min: 0, max: 100, step: invoiceDecimalStep }}
-                    InputProps={{
-                      endAdornment: (
-                        <InputAdornment position="end">%</InputAdornment>
-                      ),
-                    }}
-                    getInputRef={setFieldRef(row.id, "discount")}
-                    onKeyDown={handleFieldKeyDown(rowIndex, "discount")}
-                    disabled={controlsDisabled}
-                    error={Boolean(rowError.discount)}
-                    helperText={rowError.discount || " "}
-                    FormHelperTextProps={singleLineHelperTextProps}
-                    sx={readableDisabledFieldSx}
-                  />
-                </TableCell>
-
-                <TableCell align="right" sx={totalCellSx}>
-                  <Box>
-                    <Typography
-                      variant="body2"
-                      fontWeight={600}
-                      sx={totalValueSx}
-                    >
-                      <MoneyValue value={row.total} />
-                    </Typography>
-                    <Box sx={rowHelperSpacerSx} />
-                  </Box>
-                </TableCell>
-
-                {showActionColumn && (
-                  <TableCell
-                    align="center"
-                    sx={{
-                      ...actionColumnSx,
-                      ...editableBodyCellSx,
-                      zIndex: 2,
-                      backgroundColor: "transparent",
-                    }}
-                  >
-                    <Box>
-                      <Box sx={{ ...rowActionButtonSx, gap: 0.5 }}>
-                        {editable && (
-                          <Tooltip title="Eliminar producto">
-                            <span>
-                              <IconButton
-                                size="small"
-                                color="error"
-                                onClick={() => onRemoveRow?.(row.id)}
-                                disabled={
-                                  inputsDisabled || !canRemoveRow?.(row.id)
-                                }
-                                sx={{
-                                  width: 30,
-                                  height: 30,
-                                  border: "1px solid",
-                                  borderColor: "divider",
-                                  borderRadius: 1.25,
-                                  p: 0.5,
-                                }}
-                                aria-label="Eliminar producto"
-                              >
-                                <DeleteRounded />
-                              </IconButton>
-                            </span>
-                          </Tooltip>
-                        )}
-                      </Box>
-                      <Box sx={rowHelperSpacerSx} />
-                    </Box>
-                  </TableCell>
-                )}
-              </TableRow>
-            );
-          })}
-        </TableBody>
-      </Table>
+              )}
+            </TableRow>
+          </TableHead>
+          <TableBody>{renderRows()}</TableBody>
+        </Table>
+      )}
     </TableContainer>
   );
 }
@@ -1575,6 +1656,7 @@ function ClientBalanceSummary({
 }
 
 export default function InvoiceFormPage() {
+  const { isMobile } = useUI();
   const { invoiceId } = useParams();
   const [searchParams, setSearchParams] = useSearchParams();
   const dispatch = useAppDispatch();
@@ -1591,18 +1673,16 @@ export default function InvoiceFormPage() {
   const [invoiceConfirmationAction, setInvoiceConfirmationAction] =
     useState<InvoiceConfirmationAction | null>(null);
   const [isInvoiceDeleted, setIsInvoiceDeleted] = useState(false);
-  const [catalogPriceProduct, setCatalogPriceProduct] =
-    useState<(ProductCatalogPriceDialogProduct & { rowId: string }) | null>(
-      null,
-    );
-  const [productRowIdToRemove, setProductRowIdToRemove] = useState<string | null>(
-    null,
-  );
+  const [catalogPriceProduct, setCatalogPriceProduct] = useState<
+    (ProductCatalogPriceDialogProduct & { rowId: string }) | null
+  >(null);
+  const [productRowIdToRemove, setProductRowIdToRemove] = useState<
+    string | null
+  >(null);
   const [retrieveLastPriceEnabled, setRetrieveLastPriceEnabled] =
     useState(false);
   const [addedProductRowId, setAddedProductRowId] = useState("");
-  const mobileAddProductButtonRef = useRef<HTMLButtonElement>(null);
-  const desktopAddProductButtonRef = useRef<HTMLButtonElement>(null);
+  const addProductButtonRef = useRef<HTMLButtonElement>(null);
 
   useEffect(() => {
     setMode(isDetailRoute ? requestedDetailMode : "new");
@@ -1949,7 +2029,9 @@ export default function InvoiceFormPage() {
       value: isNewMode ? newFormik.values : editFormik.values,
       ready:
         isNewMode ||
-        Boolean(invoiceWithActiveProducts && activeInvoiceProducts !== undefined),
+        Boolean(
+          invoiceWithActiveProducts && activeInvoiceProducts !== undefined,
+        ),
       onHydrate: hydrateInvoiceDraft,
       getFallbackValue: getInvoiceDraftFallback,
     });
@@ -2599,6 +2681,7 @@ export default function InvoiceFormPage() {
       <LocalizationProvider dateAdapter={AdapterDayjs}>
         <EntityFormContainer
           title={pageTitle}
+          updatedAt={invoice?.updated}
           mode={pageMode}
           inputs={[]}
           formik={activeFormik}
@@ -2606,9 +2689,7 @@ export default function InvoiceFormPage() {
             clearActiveInvoiceDraft();
             handleGoTo(AppRoutes.Invoices);
           }}
-          onEdit={
-            !isNewMode ? handleStartEdit : undefined
-          }
+          onEdit={!isNewMode ? handleStartEdit : undefined}
           onCancelEdit={isEditMode ? handleCancelEdit : undefined}
           onSubmit={isEditMode ? handleUpdateInvoice : undefined}
           loading={isUpdating}
@@ -2630,206 +2711,31 @@ export default function InvoiceFormPage() {
             minHeight: 0,
           }}
           cardSx={{
-            flex: "1 1 auto",
+            flex: isMobile ? "0 0 auto" : "1 1 auto",
             display: "flex",
             flexDirection: "column",
             minHeight: 0,
             minWidth: 0,
           }}
           contentSx={{
-            flex: "1 1 auto",
+            flex: isMobile ? "0 0 auto" : "1 1 auto",
             display: "flex",
             flexDirection: "column",
             minHeight: 0,
             minWidth: 0,
             overflowY: { xs: "visible", lg: "hidden" },
-            overflowX: "hidden",
+            overflowX: isMobile ? "visible" : "hidden",
           }}
         >
-          <Stack
-            spacing={3}
-            sx={{
-              display: { xs: "flex", lg: "none" },
-              width: "100%",
-              minWidth: 0,
-            }}
-          >
-            <Stack spacing={1.5}>
-              {isEditable ? (
-                <DebouncedAutocomplete
-                  options={clientOptions}
-                  valueId={activeFormik.values.client}
-                  label="Cliente"
-                  placeholder="Seleccionar cliente"
-                  loading={isClientsFetching}
-                  error={Boolean(clientError)}
-                  helperText={clientError}
-                  onChange={(value) =>
-                    activeFormik.setFieldValue("client", value)
-                  }
-                />
-              ) : (
-                <TextField
-                  fullWidth
-                  size="small"
-                  label="Cliente"
-                  value={invoiceClientName}
-                  disabled
-                  sx={readableDisabledFieldSx}
-                />
-              )}
-
-              <DatePicker
-                label="Fecha"
-                value={parsePickerDate(activeFormik.values.date)}
-                onChange={(value) =>
-                  activeFormik.setFieldValue("date", formatPickerDate(value))
-                }
-                format="DD/MM/YYYY"
-                disabled={!isEditable}
-                slotProps={{
-                  field: {
-                    readOnly: true,
-                  },
-                  textField: {
-                    size: "small",
-                    fullWidth: true,
-                    error: Boolean(dateError),
-                    helperText: dateError,
-                    sx: !isEditable ? readableDisabledFieldSx : undefined,
-                  },
-                }}
-              />
-            </Stack>
-
-            <Stack spacing={1.5}>
-              <Stack spacing={1}>
-                <Typography variant="subtitle1" fontWeight={600}>
-                  Productos
-                </Typography>
-                <Button
-                  ref={mobileAddProductButtonRef}
-                  size="small"
-                  variant="contained"
-                  color="primary"
-                  startIcon={<AddRounded />}
-                  onClick={canAddProductRow ? handleAddRow : undefined}
-                  disabled={!canAddProductRow || isProductsFetching}
-                  tabIndex={canAddProductRow ? 0 : -1}
-                  aria-hidden={!isEditable}
-                  sx={{
-                    width: "100%",
-                    visibility: isEditable ? "visible" : "hidden",
-                    pointerEvents: isEditable ? "auto" : "none",
-                  }}
-                >
-                  Agregar producto
-                </Button>
-              </Stack>
-
-              <Box
-                sx={{
-                  width: "100%",
-                  minWidth: 0,
-                  minHeight: 250,
-                  height: "25vh",
-                  maxHeight: 250,
-                }}
-              >
-                <ProductsTable
-                  rows={tableRows}
-                  editable={isEditable}
-                  inputsDisabled={!canEditProducts}
-                  rowErrors={canEditProducts ? productRowErrors : []}
-                  addProductButtonRef={mobileAddProductButtonRef}
-                  focusAddedRowId={addedProductRowId}
-                  productOptions={productOptions}
-                  productsLoading={isProductsFetching}
-                  showCatalogPriceHint={retrieveLastPriceEnabled}
-                  priceLoadingRowIds={priceLoadingRowIds}
-                  onRowChange={handleRowChange}
-                  onAddedRowFocus={() => setAddedProductRowId("")}
-                  onRemoveRow={handleRemoveRow}
-                  onEditCatalogPrice={setCatalogPriceProduct}
-                  canRemoveRow={() => activeFormik.values.rows.length > 1}
-                />
-              </Box>
-            </Stack>
-
-            <Stack
-              spacing={2}
-              sx={{
-                borderTop: "1px solid #E5E7EB",
-                pt: 2.5,
-              }}
-            >
-              <InvoiceTotalsSummary
-                subtotal={summarySubtotal}
-                discountPercent={activeFormik.values.discount}
-                total={summaryTotal}
-                disabled={!isEditable}
-                onDiscountChange={(discount) =>
-                  activeFormik.setFieldValue("discount", discount)
-                }
-              />
-
-              {isNewMode && (
-                <ClientBalanceSummary
-                  currentBalance={selectedClientBalance}
-                  invoiceTotal={summaryTotal}
-                  paymentMode={activeFormik.values.paymentMode}
-                  partialPaymentAmount={
-                    activeFormik.values.partialPaymentAmount
-                  }
-                  onPaymentModeChange={(mode) => {
-                    activeFormik.setFieldValue("paymentMode", mode);
-                    if (mode === "partial") {
-                      activeFormik.setFieldValue(
-                        "partialPaymentAmount",
-                        summaryTotal,
-                      );
-                    } else {
-                      activeFormik.setFieldValue("partialPaymentAmount", 0);
-                    }
-                  }}
-                  onPartialPaymentAmountChange={(amount) =>
-                    activeFormik.setFieldValue("partialPaymentAmount", amount)
-                  }
-                />
-              )}
-            </Stack>
-
-            {isNewMode && (
-              <Stack
-                spacing={1}
-                sx={{
-                  width: "100%",
-                }}
-              >
-                <Button
-                  size="small"
-                  variant="contained"
-                  color="success"
-                  startIcon={<AddRounded />}
-                  onClick={handleCreateInvoice}
-                  loading={isCreating}
-                  disabled={!canCreate || isCreating}
-                  sx={{ width: "100%" }}
-                >
-                  Crear factura
-                </Button>
-              </Stack>
-            )}
-          </Stack>
-
           <Box
             sx={{
               width: "100%",
-              flex: "1 1 auto",
+              flex: isMobile ? "0 0 auto" : "1 1 auto",
               minHeight: 0,
               minWidth: 0,
               height: { lg: "100%" },
-              display: { xs: "none", lg: "grid" },
+              display: { xs: "flex", lg: "grid" },
+              flexDirection: "column",
               gridTemplateColumns: {
                 lg: "minmax(0, 85fr) minmax(220px, 15fr)",
               },
@@ -2837,7 +2743,7 @@ export default function InvoiceFormPage() {
             }}
           >
             <Stack
-              spacing={2.25}
+              spacing={{ xs: 1.5, sm: 2.25 }}
               sx={{
                 minHeight: 0,
                 minWidth: 0,
@@ -2865,6 +2771,7 @@ export default function InvoiceFormPage() {
                       size="small"
                       label="Cliente"
                       value={invoiceClientName}
+                      multiline={isMobile}
                       disabled
                       sx={readableDisabledFieldSx}
                     />
@@ -2910,23 +2817,25 @@ export default function InvoiceFormPage() {
                 <Typography variant="subtitle1" fontWeight={600}>
                   Productos
                 </Typography>
-                <Button
-                  ref={desktopAddProductButtonRef}
-                  size="small"
-                  variant="contained"
-                  color="primary"
-                  startIcon={<AddRounded />}
-                  onClick={canAddProductRow ? handleAddRow : undefined}
-                  disabled={!canAddProductRow || isProductsFetching}
-                  tabIndex={canAddProductRow ? 0 : -1}
-                  aria-hidden={!isEditable}
-                  sx={{
-                    visibility: isEditable ? "visible" : "hidden",
-                    pointerEvents: isEditable ? "auto" : "none",
-                  }}
-                >
-                  Agregar producto
-                </Button>
+                {isEditable && (
+                  <Button
+                    ref={addProductButtonRef}
+                    size="small"
+                    variant="contained"
+                    color="primary"
+                    startIcon={<AddRounded />}
+                    onClick={canAddProductRow ? handleAddRow : undefined}
+                    disabled={!canAddProductRow || isProductsFetching}
+                    tabIndex={canAddProductRow ? 0 : -1}
+                    aria-hidden={!isEditable}
+                    sx={{
+                      visibility: isEditable ? "visible" : "hidden",
+                      pointerEvents: isEditable ? "auto" : "none",
+                    }}
+                  >
+                    Agregar producto
+                  </Button>
+                )}
               </Stack>
 
               <ProductsTable
@@ -2934,7 +2843,7 @@ export default function InvoiceFormPage() {
                 editable={isEditable}
                 inputsDisabled={!canEditProducts}
                 rowErrors={canEditProducts ? productRowErrors : []}
-                addProductButtonRef={desktopAddProductButtonRef}
+                addProductButtonRef={addProductButtonRef}
                 focusAddedRowId={addedProductRowId}
                 productOptions={productOptions}
                 productsLoading={isProductsFetching}

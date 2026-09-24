@@ -407,7 +407,7 @@ export default function ListaDePrecios() {
     <Box
       component="section"
       sx={{
-        px: 2,
+        px: { xs: 0.5, sm: 2 },
         py: 1,
         flex: 1,
         minHeight: 0,
@@ -695,7 +695,7 @@ export default function ListaDePrecios() {
           )}
 
         {isLoadingPriceListData ? (
-          <TableLoadingSkeleton columns={4} rows={7} />
+          <TableLoadingSkeleton columns={isMobile ? 2 : 4} rows={7} />
         ) : (
           <TableContainer
             sx={{
@@ -709,16 +709,38 @@ export default function ListaDePrecios() {
               overflowX: "auto",
             }}
           >
-            <Table size="small" stickyHeader sx={{ minWidth: 760 }}>
+            <Table
+              size="small"
+              stickyHeader
+              sx={{
+                minWidth: isMobile ? 0 : 760,
+                width: "100%",
+                tableLayout: isMobile ? "fixed" : "auto",
+                "& .MuiTableCell-root": {
+                  px: { xs: 0.75, sm: 2 },
+                  overflowWrap: "anywhere",
+                  fontSize: { xs: "0.75rem", sm: "0.875rem" },
+                },
+                "& .MuiTableCell-root:last-child": { whiteSpace: "nowrap" },
+              }}
+            >
               <TableHead>
                 <TableRow>
                   <TableCell>Producto</TableCell>
-                  <TableCell>Tipo</TableCell>
-                  <TableCell>Unidad</TableCell>
+                  {!isMobile && <TableCell>Tipo</TableCell>}
+                  {!isMobile && <TableCell>Unidad</TableCell>}
                   <TableCell
                     align="right"
                     sx={{
                       ...priceColumnSx,
+                      ...(isMobile
+                        ? {
+                            position: "static",
+                            width: "44%",
+                            minWidth: 0,
+                            maxWidth: "none",
+                          }
+                        : {}),
                       zIndex: 3,
                       backgroundColor: "#F8FAFC",
                     }}
@@ -732,8 +754,12 @@ export default function ListaDePrecios() {
                   priceListRows.map((row) => (
                     <TableRow key={row.id}>
                       <TableCell>{row.productName}</TableCell>
-                      <TableCell>{row.productTypesText}</TableCell>
-                      <TableCell>{row.measureUnitName}</TableCell>
+                      {!isMobile && (
+                        <TableCell>{row.productTypesText}</TableCell>
+                      )}
+                      {!isMobile && (
+                        <TableCell>{row.measureUnitName}</TableCell>
+                      )}
                       <TableCell
                         align="right"
                         role={
@@ -767,6 +793,14 @@ export default function ListaDePrecios() {
                         }
                         sx={{
                           ...priceColumnSx,
+                          ...(isMobile
+                            ? {
+                                position: "static",
+                                width: "44%",
+                                minWidth: 0,
+                                maxWidth: "none",
+                              }
+                            : {}),
                           py: 0.75,
                           zIndex: 1,
                           backgroundColor: "action.hover",
@@ -790,10 +824,10 @@ export default function ListaDePrecios() {
                       >
                         <Box
                           sx={{
-                            width: 120,
-                            minWidth: 120,
-                            maxWidth: 120,
-                            height: 24,
+                            width: isMobile ? "100%" : 120,
+                            minWidth: isMobile ? 0 : 120,
+                            maxWidth: isMobile ? "100%" : 120,
+                            height: isMobile ? 44 : 24,
                             ml: "auto",
                             display: "flex",
                             alignItems: "center",
@@ -806,6 +840,10 @@ export default function ListaDePrecios() {
                               autoFocus
                               size="small"
                               variant="standard"
+                              inputProps={{
+                                "aria-label": `Precio de ${row.productName}`,
+                                inputMode: "decimal",
+                              }}
                               value={editingPriceDraft}
                               valueIsNumericString
                               decimalSeparator=","
@@ -844,7 +882,7 @@ export default function ListaDePrecios() {
                               sx={{
                                 width: "100%",
                                 "& .MuiInputBase-root": {
-                                  height: 24,
+                                  height: isMobile ? 44 : 24,
                                 },
                                 "& .MuiInputBase-input": {
                                   py: 0,
@@ -867,7 +905,7 @@ export default function ListaDePrecios() {
                   ))
                 ) : (
                   <TableRow>
-                    <TableCell colSpan={4} align="center">
+                    <TableCell colSpan={isMobile ? 2 : 4} align="center">
                       No hay productos para los filtros seleccionados.
                     </TableCell>
                   </TableRow>

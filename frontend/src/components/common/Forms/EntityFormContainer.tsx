@@ -19,8 +19,10 @@ import {
   Typography,
 } from "@mui/material";
 import { FormikProps } from "formik";
+import { useUI } from "src/hooks";
 import { ReactNode } from "react";
 import { Input } from "src/types";
+import { formatUpdatedAt } from "src/utils/format";
 import { handleSetFormikValue } from "src/utils/FormUtils";
 import CustomAutocomplete from "src/components/common/Modals/Inputs/CustomAutocomplete";
 import CustomMultipleAutocomplete from "src/components/common/Modals/Inputs/CustomMultipleAutocomplete";
@@ -32,6 +34,7 @@ type EntityPageMode = "new" | "review" | "edit";
 interface EntityFormContainerProps {
   title: ReactNode;
   mode: EntityPageMode;
+  updatedAt?: string;
   inputs: Input[];
   formik: FormikProps<any>;
   onBack: () => void;
@@ -55,6 +58,7 @@ interface EntityFormContainerProps {
 export default function EntityFormContainer({
   title,
   mode,
+  updatedAt,
   inputs,
   formik,
   onBack,
@@ -74,6 +78,7 @@ export default function EntityFormContainer({
   contentSx,
   children,
 }: EntityFormContainerProps) {
+  const { isMobile } = useUI();
   const isReview = mode === "review";
   const isEdit = mode === "edit";
   const isNew = mode === "new";
@@ -85,7 +90,13 @@ export default function EntityFormContainer({
       <Container
         component="main"
         maxWidth={maxWidth}
-        sx={{ py: { xs: 2, md: 3 }, ...containerSx }}
+        sx={{
+          py: { xs: 1, md: 3 },
+          px: { xs: 1, sm: 3 },
+          minWidth: 0,
+          flexShrink: { xs: 0, sm: 1 },
+          ...containerSx,
+        }}
       >
         <Stack
           direction={{ xs: "column", sm: "row" }}
@@ -95,14 +106,31 @@ export default function EntityFormContainer({
           mb={1.5}
         >
           {typeof title === "string" ? (
-            <Typography variant="h6" fontWeight={600} color="text.primary">
+            <Typography
+              variant="h6"
+              fontWeight={600}
+              color="text.primary"
+              sx={{ minWidth: 0, overflowWrap: "anywhere" }}
+            >
               {title}
             </Typography>
           ) : (
             title
           )}
 
-          <Stack direction={{ xs: "column", sm: "row" }} spacing={1}>
+          <Stack
+            direction="row"
+            useFlexGap
+            spacing={1}
+            sx={{
+              flexWrap: "wrap",
+              minWidth: 0,
+              "& > .MuiButton-root": {
+                flex: { xs: "1 1 auto", sm: "0 0 auto" },
+                width: "auto",
+              },
+            }}
+          >
             {isReview && onEdit ? (
               <Button
                 size="small"
@@ -118,7 +146,7 @@ export default function EntityFormContainer({
 
             {isEdit ? (
               <>
-                {editLeadingActions}
+                {!isMobile && editLeadingActions}
                 <Button
                   size="small"
                   variant="contained"
@@ -140,11 +168,12 @@ export default function EntityFormContainer({
                   disabled={loading}
                   sx={{ width: { xs: "100%", sm: "auto" } }}
                 >
-                  Cancelar edición
+                  {isMobile ? "Cancelar" : "Cancelar edición"}
                 </Button>
               </>
             ) : null}
 
+            {isMobile && isEdit && editLeadingActions}
             {headerActions}
             {backAdjacentActions}
 
@@ -162,6 +191,16 @@ export default function EntityFormContainer({
           </Stack>
         </Stack>
 
+        {!isNew && updatedAt ? (
+          <Typography
+            variant="body2"
+            color="text.secondary"
+            sx={{ display: "block", mb: 1.5 }}
+          >
+            Actualizado: {formatUpdatedAt(updatedAt)}
+          </Typography>
+        ) : null}
+
         <Card
           variant="outlined"
           sx={{
@@ -170,12 +209,18 @@ export default function EntityFormContainer({
             ...cardSx,
           }}
         >
-          <CardContent sx={{ p: { xs: 2, md: 3 }, ...contentSx }}>
+          <CardContent
+            sx={{
+              p: { xs: 1.5, md: 3 },
+              "&:last-child": { pb: { xs: 1.5, md: 3 } },
+              ...contentSx,
+            }}
+          >
             {hasCustomContent ? (
               children
             ) : (
               <>
-                <Grid container spacing={2}>
+                <Grid container spacing={isMobile ? 1 : 2}>
                   {inputs.map((input) => {
                     if (input.hide) return null;
 
@@ -205,7 +250,9 @@ export default function EntityFormContainer({
                               options={effectiveInput.options}
                               loading={effectiveInput.loading}
                               getOptionLabel={effectiveInput.getOptionLabel}
-                              triggerSideEffect={effectiveInput.triggerSideEffect}
+                              triggerSideEffect={
+                                effectiveInput.triggerSideEffect
+                              }
                               fullWidth
                             />
                           )
@@ -217,7 +264,14 @@ export default function EntityFormContainer({
                             id={effectiveInput.id}
                             name={effectiveInput.id}
                             value={effectiveInput.value}
-                            multiline={effectiveInput.multiline}
+                            multiline={
+                              effectiveInput.multiline ||
+                              (isMobile &&
+                                isReview &&
+                                !effectiveInput.InputProps?.inputComponent &&
+                                (!effectiveInput.type ||
+                                  effectiveInput.type === "text"))
+                            }
                             type={effectiveInput.type ?? "text"}
                             onChange={(e) =>
                               handleSetFormikValue(e, formik, effectiveInput)
@@ -225,7 +279,8 @@ export default function EntityFormContainer({
                             autoComplete={effectiveInput.autoComplete ?? "off"}
                             error={!!effectiveInput.error}
                             helperText={
-                              effectiveInput.error ? effectiveInput.error : " "
+                              effectiveInput.error ||
+                              (isMobile ? undefined : " ")
                             }
                             variant="outlined"
                             size="small"

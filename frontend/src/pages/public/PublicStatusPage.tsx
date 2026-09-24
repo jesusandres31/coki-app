@@ -21,7 +21,11 @@ export const PublicStatusPage = ({
   message,
   linkLabel,
 }: PublicStatusPageProps): JSX.Element => (
-  <Container component="main" maxWidth="sm" sx={{ py: { xs: 6, md: 10 } }}>
+  <Container
+    component="main"
+    maxWidth="sm"
+    sx={{ py: { xs: 3, md: 10 }, overflowWrap: "anywhere" }}
+  >
     <CssBaseline />
     <Card variant="outlined" sx={{ maxWidth: 520, mx: "auto" }}>
       <CardContent sx={{ py: 5 }}>
@@ -37,7 +41,11 @@ export const PublicStatusPage = ({
           <Typography variant="body1" color="text.primary" align="center">
             {message}
           </Typography>
-          <Link color="primary" href="/">
+          <Link
+            color="primary"
+            href="/"
+            sx={{ minHeight: 44, display: "inline-flex", alignItems: "center" }}
+          >
             {linkLabel}
           </Link>
         </Stack>

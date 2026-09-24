@@ -17,6 +17,9 @@ export interface IColumn<T> {
   label: string;
   minWidth?: number;
   width?: number | string;
+  hideOnMobile?: boolean;
+  mobileWidth?: number | string;
+  mobileLabel?: string;
   align?: "right" | "left";
   render?: (item: T) => JSX.Element | string | null | undefined;
   tooltip?: (item: T) => JSX.Element | string | null | undefined;
@@ -103,7 +106,7 @@ export interface Input {
  */
 type RTKQueryFetchFn<T> = (
   arg: T,
-  preferCacheValue?: boolean | undefined
+  preferCacheValue?: boolean | undefined,
 ) => QueryActionCreatorResult<
   QueryDefinition<
     T,
@@ -145,5 +148,5 @@ export interface DataGridRowAction {
   icon: React.ReactNode;
   onClick: (item: DataItem) => void;
   hideOnMobile?: boolean;
+  mobileLabel?: string;
 }
-

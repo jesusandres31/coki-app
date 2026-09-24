@@ -1,3 +1,4 @@
+import { useUI } from "src/hooks";
 import { ReactNode, useEffect, useRef, useState } from "react";
 import {
   Button,
@@ -40,6 +41,7 @@ export default function ConfirmationDialog({
   onCancel,
   onConfirm,
 }: ConfirmationDialogProps) {
+  const { isMobile } = useUI();
   const [isConfirming, setIsConfirming] = useState(false);
   const confirmLockRef = useRef(false);
   const isProcessing = loading || isConfirming;
@@ -67,6 +69,18 @@ export default function ConfirmationDialog({
   return (
     <Dialog
       open={open}
+      fullScreen={isMobile && Boolean(children)}
+      sx={{
+        "& .MuiDialog-paper": {
+          m: isMobile && !children ? 1 : undefined,
+          width: isMobile && !children ? "calc(100% - 16px)" : undefined,
+        },
+        "& .MuiDialogTitle-root": {
+          px: { xs: 2, sm: 3 },
+          overflowWrap: "anywhere",
+        },
+        "& .MuiDialogContent-root": { px: { xs: 2, sm: 3 } },
+      }}
       onClose={isProcessing ? undefined : onCancel}
       fullWidth
       maxWidth={maxWidth}
@@ -76,7 +90,18 @@ export default function ConfirmationDialog({
         {message ? <DialogContentText>{message}</DialogContentText> : null}
         {children}
       </DialogContent>
-      <DialogActions>
+      <DialogActions
+        sx={{
+          p: 2,
+          gap: 1,
+          flexWrap: "wrap",
+          "& .MuiButton-root": {
+            minHeight: 32,
+            flex: { xs: "1 1 100px", sm: "0 0 auto" },
+            m: 0,
+          },
+        }}
+      >
         {showCancel ? (
           <Button
             variant="text"

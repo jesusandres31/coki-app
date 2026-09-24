@@ -18,6 +18,7 @@ import CustomTablePagination from "./content/CustomTablePagination";
 import CustomTableBody from "./content/CustomTableBody";
 import CustomTableToolbar from "./content/CustomTableToolbar";
 import { formatNulls } from "src/utils/format";
+import { useUI } from "src/hooks";
 import { SEARCH } from "src/constants";
 
 const styles = {
@@ -54,6 +55,7 @@ interface DataGridProps {
   onQueryChange?: (query: GetList) => void;
   toolbarInfoElement?: ReactNode;
   toolbarElement?: ReactNode;
+  createAction?: { label: string; onClick: () => void };
   rowActions?: DataGridRowAction[];
   onCollapseChange?: (itemId: string, collapsed: boolean) => void;
 }
@@ -71,9 +73,19 @@ export default function DataGrid({
   onQueryChange,
   toolbarInfoElement,
   toolbarElement,
+  createAction,
   rowActions,
   onCollapseChange,
 }: DataGridProps) {
+  const { isMobile } = useUI();
+  const visibleColumns = columns.filter(
+    (column) => !isMobile || !column.hideOnMobile,
+  );
+  const visibleRowActions = rowActions?.filter(
+    (action) => !isMobile || !action.hideOnMobile,
+  );
+  // On mobile the detail page replaces the expandable desktop preview.
+  const visibleDetailColumns = isMobile ? undefined : detailColumns;
   const [page, setPage] = useState(initialQuery?.page ?? 1);
   const [filter, setFilter] = useState(initialQuery?.filter ?? "");
   const [debouncedFilter, setDebouncedFilter] = useState(
@@ -87,7 +99,7 @@ export default function DataGrid({
   );
 
   const items = data?.items ?? [];
-  const isCollapsible = Boolean(detailColumns);
+  const isCollapsible = Boolean(visibleDetailColumns);
   const isServerMode = Boolean(onQueryChange);
 
   const handleSetFilter = (value: string) => {
@@ -218,6 +230,7 @@ export default function DataGrid({
           searchPlaceholder={searchPlaceholder}
           toolbarInfoElement={toolbarInfoElement}
           toolbarElement={toolbarElement}
+          createAction={createAction}
         />
       )}
 
@@ -236,20 +249,19 @@ export default function DataGrid({
             sx={{
               borderCollapse: "separate",
               tableLayout: "fixed",
+              width: "100%",
+              "& .MuiTableCell-root": { px: { xs: 0.75, sm: 2 } },
             }}
           >
             <CustomTableHead
-              columns={columns}
+              columns={visibleColumns}
               items={dataForRender.items}
               selectedItems={selectedItems}
               order={order}
               orderBy={orderBy}
               isCollapsible={isCollapsible}
-              hasRowActions={Boolean(rowActions?.length)}
-              rowActionsCount={rowActions?.length ?? 0}
-              mobileRowActionsCount={
-                rowActions?.filter((action) => !action.hideOnMobile).length ?? 0
-              }
+              hasRowActions={Boolean(visibleRowActions?.length)}
+              rowActionsCount={visibleRowActions?.length ?? 0}
               hasCheckbox={hasCheckbox}
               handleSelectAll={handleSelectAll}
               handleSortTable={handleSort}
@@ -257,12 +269,12 @@ export default function DataGrid({
             />
             <CustomTableBody
               items={dataForRender.items}
-              columns={columns}
+              columns={visibleColumns}
               selectedItems={selectedItems}
-              detailColumns={detailColumns}
+              detailColumns={visibleDetailColumns}
               collapseItem={collapseItem}
               hasCheckbox={hasCheckbox}
-              rowActions={rowActions}
+              rowActions={visibleRowActions}
               handleToggleSelect={handleToggleSelect}
               handleToggleCollapse={handleToggleCollapse}
               styles={styles}
@@ -282,9 +294,9 @@ export default function DataGrid({
       ) : isFetching ? (
         <TableLoadingSkeleton
           columns={
-            columns.length +
-            1 + // checkbox column (or placeholder)
-            (rowActions?.length ? 1 : 0) +
+            visibleColumns.length +
+            (hasCheckbox ? 1 : 0) +
+            (visibleRowActions?.length ? 1 : 0) +
             (isCollapsible ? 1 : 0)
           }
           rows={Math.min(data?.perPage ?? initialQuery?.perPage ?? 20, 10)}

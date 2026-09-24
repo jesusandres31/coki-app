@@ -200,7 +200,7 @@ export default function Drawer({ noTable }: DrawerProps) {
     breadcrumbs.length > 0 ? breadcrumbs : [fallbackBreadcrumb];
 
   return (
-    <Box sx={{ height: "100vh", display: "flex" }}>
+    <Box sx={{ height: "100dvh", display: "flex" }}>
       <CssBaseline />
       <AppBar
         position="fixed"
@@ -232,7 +232,6 @@ export default function Drawer({ noTable }: DrawerProps) {
                     ? { display: "none" }
                     : {
                         mr: 2.5,
-                        pl: 1.5,
                       }),
                   color: "inherit",
                 }}
@@ -300,6 +299,10 @@ export default function Drawer({ noTable }: DrawerProps) {
         component="main"
         sx={{
           flexGrow: 1,
+          minWidth: 0,
+          display: "flex",
+          flexDirection: "column",
+          "& > .MuiToolbar-root": { flexShrink: 0 },
           p: noTable ? 0 : { xs: 1.25, sm: 1.75 },
           overflow: "hidden",
           backgroundColor: "background.default",
@@ -308,7 +311,18 @@ export default function Drawer({ noTable }: DrawerProps) {
         }}
       >
         <Toolbar variant="dense" />
-        <Box sx={{ px: 3, pt: 2.5, mb: -0.5 }}>
+        <Box
+          sx={{
+            px: { xs: 1, sm: 3 },
+            pt: { xs: 1, sm: 2.5 },
+            flexShrink: 0,
+            minWidth: 0,
+            "& .MuiBreadcrumbs-li": { minWidth: 0, overflowWrap: "anywhere" },
+            "& .MuiTypography-root, & a": {
+              fontSize: { xs: "0.875rem", sm: "1rem" },
+            },
+          }}
+        >
           <Breadcrumbs
             aria-label="breadcrumb"
             separator={<NavigateNextRounded fontSize="small" />}
@@ -346,10 +360,13 @@ export default function Drawer({ noTable }: DrawerProps) {
         {noTable ? (
           <Box
             sx={{
-              maxHeight: `calc(100vh - ${APPBAR_HEIGHT}px)`,
+              maxHeight: `calc(100dvh - ${APPBAR_HEIGHT}px)`,
+              flex: 1,
+              minHeight: 0,
+              minWidth: 0,
               overflowY: "auto",
               backgroundColor: "background.default",
-              p: { xs: 1.5, sm: 2 },
+              p: { xs: 0, sm: 2 },
               height: "100%",
             }}
           >

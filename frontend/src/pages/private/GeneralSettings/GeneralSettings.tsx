@@ -88,7 +88,13 @@ export default function GeneralSettings() {
         <Container
           component="main"
           maxWidth="lg"
-          sx={{ py: 3, width: "100%", mx: "auto" }}
+          sx={{
+            py: { xs: 1, sm: 3 },
+            px: { xs: 1, sm: 3 },
+            width: "100%",
+            mx: "auto",
+            overflowWrap: "anywhere",
+          }}
         >
           <Card variant="outlined" sx={feedbackCardSx}>
             <Loading />
@@ -104,7 +110,13 @@ export default function GeneralSettings() {
         <Container
           component="main"
           maxWidth="lg"
-          sx={{ py: 3, width: "100%", mx: "auto" }}
+          sx={{
+            py: { xs: 1, sm: 3 },
+            px: { xs: 1, sm: 3 },
+            width: "100%",
+            mx: "auto",
+            overflowWrap: "anywhere",
+          }}
         >
           <Card variant="outlined" sx={feedbackCardSx}>
             <Box sx={{ textAlign: "center" }}>
@@ -121,7 +133,13 @@ export default function GeneralSettings() {
       <Container
         component="main"
         maxWidth="lg"
-        sx={{ py: 3, width: "100%", mx: "auto" }}
+        sx={{
+          py: { xs: 1, sm: 3 },
+          px: { xs: 1, sm: 3 },
+          width: "100%",
+          mx: "auto",
+          overflowWrap: "anywhere",
+        }}
       >
         <Card variant="outlined" sx={cardSx}>
           <Stack spacing={3} sx={{ p: { xs: 2, md: 3 } }}>

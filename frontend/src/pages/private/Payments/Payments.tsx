@@ -9,7 +9,7 @@ import { useRouter } from "src/hooks";
 import { AppRoutes } from "src/config";
 import { ClientsResponse } from "src/types/pocketbase-types";
 import { Column, DataGridRowAction, GetList } from "src/types";
-import { MoneyValue } from "src/utils/format";
+import { formatUpdatedAt, MoneyValue } from "src/utils/format";
 import { paymentsBreadcrumbFlow } from "./breadcrumbFlow";
 import PaymentMovementDialog from "./PaymentMovementDialog";
 
@@ -43,6 +43,7 @@ export default function Payments() {
       },
       {
         id: "balance",
+        mobileWidth: "44%",
         label: "Saldo",
         align: "right",
         minWidth: 160,
@@ -50,6 +51,14 @@ export default function Payments() {
         render: (item: ClientsResponse) => (
           <MoneyValue value={item.balance ?? 0} />
         ),
+      },
+      {
+        id: "updated",
+        hideOnMobile: true,
+        label: "Actualizado",
+        align: "left",
+        minWidth: 190,
+        render: (item: ClientsResponse) => formatUpdatedAt(item.updated),
       },
     ],
     [],
@@ -59,12 +68,14 @@ export default function Payments() {
     () => [
       {
         id: "add-payment-account-movement",
+        hideOnMobile: true,
         label: "Registrar movimiento",
         icon: <AddCardRounded fontSize="small" color="info" />,
         onClick: (item) => setClientForPaymentMovement(item as ClientsResponse),
       },
       {
         id: "payment-history",
+        mobileLabel: "Ir a detalle",
         label: "Ver historial",
         icon: <OpenInNewRounded fontSize="small" color="primary" />,
         onClick: (item) => handleGoTo(`${AppRoutes.Payments}/${item.id}`),
