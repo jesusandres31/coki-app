@@ -4,11 +4,6 @@ import * as Yup from "yup";
 import { NumericFormat } from "react-number-format";
 import {
   Autocomplete,
-  Button,
-  Dialog,
-  DialogActions,
-  DialogContent,
-  DialogTitle,
   InputAdornment,
   MenuItem,
   Stack,
@@ -26,6 +21,7 @@ import { setSnackbar } from "src/slices/uiSlice";
 import { ClientsResponse } from "src/types/pocketbase-types";
 import { formatMoney } from "src/utils/format";
 import { FORM_MSG, FORM_VLDN } from "src/utils/FormUtils";
+import ConfirmationDialog from "src/components/common/ConfirmationDialog";
 
 interface PaymentMovementFormValues {
   clientId: string;
@@ -238,13 +234,22 @@ export default function PaymentMovementDialog({
     onClose();
   };
 
+  const confirmationMessage = selectedClient
+    ? `¿Confirmás ${isRectification ? "rectificar el saldo" : "registrar este movimiento"} para el cliente "${selectedClient.name}"?`
+    : `¿Confirmás ${isRectification ? "rectificar el saldo" : "registrar este movimiento"}?`;
+
   return (
-    <Dialog open={open} onClose={handleClose} maxWidth="sm" fullWidth>
-      <DialogTitle>
-        {isRectification ? "Rectificar saldo" : "Registrar movimiento"}
-      </DialogTitle>
-      <DialogContent sx={{ pt: 2.5 }}>
-        <Stack spacing={1.5} sx={{ pt: 1 }}>
+    <ConfirmationDialog
+      open={open}
+      title={isRectification ? "Rectificar saldo" : "Registrar movimiento"}
+      message={confirmationMessage}
+      loading={isCreating}
+      confirmDisabled={isLoadingPaymentDialogData}
+      confirmColor="success"
+      onCancel={handleClose}
+      onConfirm={() => formik.submitForm()}
+    >
+      <Stack spacing={1.5} sx={{ pt: 2 }}>
           {allowClientSelect ? (
             <Autocomplete
               fullWidth
@@ -387,28 +392,7 @@ export default function PaymentMovementDialog({
               maxLength: FORM_VLDN.LONG_STRING.max,
             }}
           />
-        </Stack>
-      </DialogContent>
-      <DialogActions sx={{ px: 3, pb: 2.5, pt: 1 }}>
-        <Button
-          variant="text"
-          color="inherit"
-          sx={{ color: "text.secondary" }}
-          onClick={handleClose}
-          disabled={isCreating}
-        >
-          Cancelar
-        </Button>
-        <Button
-          autoFocus
-          variant="contained"
-          onClick={() => void formik.submitForm()}
-          loading={isCreating}
-          disabled={isCreating || isLoadingPaymentDialogData}
-        >
-          {isRectification ? "Rectificar" : "Registrar"}
-        </Button>
-      </DialogActions>
-    </Dialog>
+      </Stack>
+    </ConfirmationDialog>
   );
 }

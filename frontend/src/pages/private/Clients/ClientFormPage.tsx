@@ -18,6 +18,7 @@ import {
   buildDeleteHeaderAction,
   buildNameInput,
   extractApiMessage,
+  requestFormConfirmation,
   renderEntityFormPage,
   renderFormPageState,
   useDetailPageMode,
@@ -38,6 +39,7 @@ export default function ClientFormPage() {
   const { mode, isEditMode, setEditMode, setReviewMode } =
     useDetailPageMode(isNewMode);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [saveDialogOpen, setSaveDialogOpen] = useState(false);
 
   const { data: client, isFetching, error } = useGetClientByIdQuery(clientId || "", {
     skip: !clientId,
@@ -85,8 +87,31 @@ export default function ClientFormPage() {
     validateOnChange: false,
     validateOnBlur: false,
     onSubmit: async (values) => {
-      if (isNewMode) {
-        const created = await createClient({
+      try {
+        if (isNewMode) {
+          const created = await createClient({
+            data: {
+              name: values.name.trim(),
+              address: values.address.trim(),
+              phone: values.phone.trim(),
+            },
+          }).unwrap();
+
+          dispatch(
+            setSnackbar({
+              message: "Cliente creado satisfactoriamente.",
+              type: "success",
+            }),
+          );
+          setSaveDialogOpen(false);
+          handleGoTo(`${AppRoutes.Clients}/${created.id}?mode=review`);
+          return;
+        }
+
+        if (!clientId) return;
+
+        await updateClient({
+          id: clientId,
           data: {
             name: values.name.trim(),
             address: values.address.trim(),
@@ -96,34 +121,28 @@ export default function ClientFormPage() {
 
         dispatch(
           setSnackbar({
-            message: "Cliente creado satisfactoriamente.",
+            message: "Cliente actualizado satisfactoriamente.",
             type: "success",
           }),
         );
-        handleGoTo(`${AppRoutes.Clients}/${created.id}?mode=review`);
-        return;
+        setSaveDialogOpen(false);
+        handleGoTo(AppRoutes.Clients);
+      } catch (error) {
+        dispatch(
+          setSnackbar({
+            message:
+              extractApiMessage(error) ||
+              `No se pudo ${isNewMode ? "crear" : "actualizar"} el cliente.`,
+            type: "error",
+          }),
+        );
       }
-
-      if (!clientId) return;
-
-      await updateClient({
-        id: clientId,
-        data: {
-          name: values.name.trim(),
-          address: values.address.trim(),
-          phone: values.phone.trim(),
-        },
-      }).unwrap();
-
-      dispatch(
-        setSnackbar({
-          message: "Cliente actualizado satisfactoriamente.",
-          type: "success",
-        }),
-      );
-      handleGoTo(AppRoutes.Clients);
     },
   });
+
+  const handleRequestSave = () => {
+    void requestFormConfirmation(formik, () => setSaveDialogOpen(true));
+  };
 
   const handleDelete = async () => {
     if (!clientId) return;
@@ -194,14 +213,21 @@ export default function ClientFormPage() {
     onEdit: isNewMode ? undefined : setEditMode,
     onCancelEdit: isNewMode ? undefined : setReviewMode,
     loading: isNewMode ? isCreating : isUpdating,
+    onRequestSubmit: handleRequestSave,
+    saveConfirmation: {
+      open: saveDialogOpen,
+      title: isNewMode ? "Crear cliente" : "Guardar cambios del cliente",
+      message: `¿Confirmás ${isNewMode ? "crear" : "actualizar"} el cliente "${formik.values.name.trim()}"?`,
+      onClose: () => setSaveDialogOpen(false),
+    },
     headerActions: reviewHeaderActions,
     deleteDialog: {
       open: deleteDialogOpen,
       title: "Eliminar cliente",
-      message: "¿Seguro que querés eliminar este cliente?",
+      message: `¿Confirmás eliminar el cliente "${client?.name || clientId || ""}"?`,
       isDeleting,
       onClose: () => setDeleteDialogOpen(false),
-      onConfirm: () => void handleDelete(),
+      onConfirm: handleDelete,
     },
   });
 }

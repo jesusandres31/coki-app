@@ -21,11 +21,7 @@ import {
   ProductsResponse,
   VInvoicesResponse,
 } from "src/types/pocketbase-types";
-import {
-  formatDate,
-  formatPercent,
-  MoneyValue,
-} from "src/utils/format";
+import { formatDate, formatPercent, MoneyValue } from "src/utils/format";
 import { useRouter } from "src/hooks";
 import { AppRoutes } from "src/config";
 import { useAppDispatch } from "src/app/store";
@@ -41,16 +37,16 @@ import {
   openInvoicePdfTab,
 } from "./pdf";
 
-interface InvoiceListRow
-  extends InvoicesResponse<{ client?: ClientsResponse }> {
+interface InvoiceListRow extends InvoicesResponse<{
+  client?: ClientsResponse;
+}> {
   invoice_products?: InvoiceProductListRow[];
   invoice_products_loading?: boolean;
 }
 
-interface InvoiceProductListRow
-  extends InvoicesProductsResponse<{
-    product?: ProductsResponse<{ measure_unit?: MeasureunitsResponse }>;
-  }> {}
+interface InvoiceProductListRow extends InvoicesProductsResponse<{
+  product?: ProductsResponse<{ measure_unit?: MeasureunitsResponse }>;
+}> {}
 
 const getInvoiceClientName = (invoice: InvoiceListRow) => {
   const expandedName = invoice.expand?.client?.name;
@@ -219,11 +215,7 @@ export default function Invoices() {
         setPrintingInvoiceId("");
       }
     },
-    [
-      dispatch,
-      getInvoiceProducts,
-      printingInvoiceId,
-    ],
+    [dispatch, getInvoiceProducts, printingInvoiceId],
   );
 
   const columns: Column = useMemo(
@@ -240,17 +232,16 @@ export default function Invoices() {
         label: "Cliente",
         align: "left",
         minWidth: 220,
-        render: (item: InvoiceListRow) =>
-          getInvoiceClientName(item),
+        render: (item: InvoiceListRow) => getInvoiceClientName(item),
         disableSort: true,
       },
-      {
-        id: "discount",
-        label: "Descuento",
-        minWidth: 140,
-        disableSort: true,
-        render: (item: InvoiceListRow) => formatPercent(item.discount),
-      },
+      // {
+      //   id: "discount",
+      //   label: "Descuento",
+      //   minWidth: 140,
+      //   disableSort: true,
+      //   render: (item: InvoiceListRow) => formatPercent(item.discount),
+      // },
       {
         id: "total",
         label: "Total",

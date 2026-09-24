@@ -1,15 +1,11 @@
 import { useEffect, useState } from "react";
 import {
-  Button,
-  Dialog,
-  DialogActions,
-  DialogContent,
-  DialogTitle,
   InputAdornment,
   Stack,
   TextField,
 } from "@mui/material";
 import { NumericFormat } from "react-number-format";
+import ConfirmationDialog from "src/components/common/ConfirmationDialog";
 import { formatMoney } from "src/utils/format";
 
 export interface ProductCatalogPriceDialogProduct {
@@ -24,7 +20,7 @@ interface ProductCatalogPriceDialogProps {
   product: ProductCatalogPriceDialogProduct | null;
   loading?: boolean;
   onClose: () => void;
-  onConfirm: (price: number) => void;
+  onConfirm: (price: number) => void | Promise<void>;
 }
 
 export default function ProductCatalogPriceDialog({
@@ -46,79 +42,61 @@ export default function ProductCatalogPriceDialog({
   const canConfirm = Boolean(product) && price !== "" && normalizedPrice >= 0;
 
   return (
-    <Dialog
+    <ConfirmationDialog
       open={open}
-      onClose={loading ? undefined : onClose}
-      fullWidth
+      title="Actualizar precio general"
+      message={`¿Confirmás actualizar el precio general del producto "${product?.name || ""}"?`}
+      loading={loading}
+      confirmDisabled={!canConfirm}
+      confirmColor="success"
+      onCancel={onClose}
+      onConfirm={() => onConfirm(normalizedPrice)}
       maxWidth="xs"
     >
-      <DialogTitle>Editar precio general</DialogTitle>
-      <DialogContent>
-        <Stack spacing={2} sx={{ pt: 1 }}>
-          <TextField
-            label="Producto"
-            value={product?.name || ""}
-            size="small"
-            disabled
-            fullWidth
-          />
-          <TextField
-            label="Unidad de medida"
-            value={product?.measureUnitName || "-"}
-            size="small"
-            disabled
-            fullWidth
-          />
-          <NumericFormat
-            customInput={TextField}
-            label="Precio"
-            value={price}
-            valueIsNumericString
-            size="small"
-            fullWidth
-            decimalSeparator=","
-            thousandSeparator="."
-            allowedDecimalSeparators={[",", "."]}
-            decimalScale={3}
-            allowNegative={false}
-            InputProps={{
-              startAdornment: (
-                <InputAdornment
-                  position="start"
-                  sx={{ mr: 0.75, minWidth: 14, justifyContent: "center" }}
-                >
-                  $
-                </InputAdornment>
-              ),
-            }}
-            helperText={`Actual: ${formatMoney(product?.unitPrice ?? 0)}`}
-            onValueChange={(values) => {
-              setPrice(values.value === "" ? "" : (values.floatValue ?? 0));
-            }}
-          />
-        </Stack>
-      </DialogContent>
-      <DialogActions>
-        <Button
-          variant="text"
-          color="inherit"
-          sx={{ color: "text.secondary" }}
+      <Stack spacing={2} sx={{ pt: 2 }}>
+        <TextField
+          label="Producto"
+          value={product?.name || ""}
+          size="small"
+          disabled
+          fullWidth
+        />
+        <TextField
+          label="Ud. medida"
+          value={product?.measureUnitName || "-"}
+          size="small"
+          disabled
+          fullWidth
+        />
+        <NumericFormat
+          customInput={TextField}
+          label="Precio"
+          value={price}
+          valueIsNumericString
+          size="small"
+          fullWidth
+          decimalSeparator=","
+          thousandSeparator="."
+          allowedDecimalSeparators={[",", "."]}
+          decimalScale={3}
+          allowNegative={false}
           disabled={loading}
-          onClick={onClose}
-        >
-          Cancelar
-        </Button>
-        <Button
-          autoFocus
-          variant="contained"
-          color="success"
-          loading={loading}
-          disabled={loading || !canConfirm}
-          onClick={() => onConfirm(normalizedPrice)}
-        >
-          Confirmar
-        </Button>
-      </DialogActions>
-    </Dialog>
+          InputProps={{
+            startAdornment: (
+              <InputAdornment
+                position="start"
+                sx={{ mr: 0.75, minWidth: 14, justifyContent: "center" }}
+              >
+                $
+              </InputAdornment>
+            ),
+          }}
+          helperText={`Actual: ${formatMoney(product?.unitPrice ?? 0)}`}
+          onValueChange={(values) => {
+            setPrice(values.value === "" ? "" : (values.floatValue ?? 0));
+          }}
+        />
+      </Stack>
+    </ConfirmationDialog>
   );
 }

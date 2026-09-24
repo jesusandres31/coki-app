@@ -111,10 +111,10 @@ export default function ProductTypes() {
       <DeleteEntityDialog
         open={Boolean(productTypeToDelete)}
         title="Eliminar tipo de producto"
-        message="¿Seguro que querés eliminar este tipo de producto?"
+        message={`¿Confirmás eliminar el tipo de producto "${productTypeToDelete?.name || ""}"?`}
         isDeleting={isDeleting}
         onClose={() => setProductTypeToDelete(null)}
-        onConfirm={() => void handleDelete()}
+        onConfirm={handleDelete}
       />
     </>
   );

@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import {
   Box,
   Card,
@@ -16,6 +16,7 @@ import {
 } from "src/app/services/invoiceService";
 import { useAppDispatch } from "src/app/store";
 import { ErrorMsg, Loading } from "src/components/common";
+import ConfirmationDialog from "src/components/common/ConfirmationDialog";
 import PageContainer from "src/components/common/PageContainer/PageContainer";
 import { configKey } from "src/config";
 import {
@@ -40,6 +41,9 @@ const feedbackCardSx = {
 
 export default function GeneralSettings() {
   const dispatch = useAppDispatch();
+  const [pendingRetrieveLastPrice, setPendingRetrieveLastPrice] = useState<
+    boolean | null
+  >(null);
   const { data: appConfig, isFetching, error } = useGetConfigQuery();
   const [updateConfig, { isLoading: isUpdating }] = useUpdateConfigMutation();
 
@@ -50,14 +54,14 @@ export default function GeneralSettings() {
     };
   }, [dispatch]);
 
-  const handleRetrieveLastPriceChange = async (checked: boolean) => {
-    if (!appConfig) return;
+  const handleConfirmRetrieveLastPriceChange = async () => {
+    if (!appConfig || pendingRetrieveLastPrice === null) return;
 
     try {
       await updateConfig({
         id: appConfig.id,
         data: {
-          retrieve_last_price: checked,
+          retrieve_last_price: pendingRetrieveLastPrice,
         },
       }).unwrap();
 
@@ -67,6 +71,7 @@ export default function GeneralSettings() {
           type: "success",
         }),
       );
+      setPendingRetrieveLastPrice(null);
     } catch {
       dispatch(
         setSnackbar({
@@ -146,7 +151,7 @@ export default function GeneralSettings() {
                   <Switch
                     checked={Boolean(appConfig.retrieve_last_price)}
                     onChange={(_, checked) =>
-                      void handleRetrieveLastPriceChange(checked)
+                      setPendingRetrieveLastPrice(checked)
                     }
                     disabled={isUpdating}
                     inputProps={{
@@ -174,6 +179,15 @@ export default function GeneralSettings() {
           </Stack>
         </Card>
       </Container>
+      <ConfirmationDialog
+        open={pendingRetrieveLastPrice !== null}
+        title="Actualizar configuración general"
+        message={`¿Confirmás ${pendingRetrieveLastPrice ? "activar" : "desactivar"} la recuperación del último precio de productos por cliente?`}
+        loading={isUpdating}
+        confirmColor="success"
+        onCancel={() => setPendingRetrieveLastPrice(null)}
+        onConfirm={handleConfirmRetrieveLastPriceChange}
+      />
     </PageContainer>
   );
 }

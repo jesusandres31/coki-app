@@ -26,11 +26,6 @@ import {
   TableRow,
   Autocomplete,
   Checkbox,
-  Dialog,
-  DialogActions,
-  DialogContent,
-  DialogContentText,
-  DialogTitle,
   FormControlLabel,
   InputAdornment,
   Popper,
@@ -59,6 +54,7 @@ import {
   useUpdateInvoiceMutation,
 } from "src/app/services/invoiceService";
 import { ErrorMsg, Loading } from "src/components/common";
+import ConfirmationDialog from "src/components/common/ConfirmationDialog";
 import EntityFormContainer from "src/components/common/Forms/EntityFormContainer";
 import { withLoadingInputProps } from "src/components/common/Inputs/loadingInputProps";
 import PageContainer from "src/components/common/PageContainer/PageContainer";
@@ -1599,37 +1595,18 @@ export default function InvoiceFormPage() {
     useState<(ProductCatalogPriceDialogProduct & { rowId: string }) | null>(
       null,
     );
+  const [productRowIdToRemove, setProductRowIdToRemove] = useState<string | null>(
+    null,
+  );
   const [retrieveLastPriceEnabled, setRetrieveLastPriceEnabled] =
     useState(false);
   const [addedProductRowId, setAddedProductRowId] = useState("");
   const mobileAddProductButtonRef = useRef<HTMLButtonElement>(null);
   const desktopAddProductButtonRef = useRef<HTMLButtonElement>(null);
-  const invoiceConfirmButtonRef = useRef<HTMLButtonElement>(null);
-  const deleteInvoiceConfirmButtonRef = useRef<HTMLButtonElement>(null);
 
   useEffect(() => {
     setMode(isDetailRoute ? requestedDetailMode : "new");
   }, [isDetailRoute, requestedDetailMode]);
-
-  useEffect(() => {
-    if (!invoiceConfirmationAction) return;
-
-    const frameId = requestAnimationFrame(() => {
-      invoiceConfirmButtonRef.current?.focus();
-    });
-
-    return () => cancelAnimationFrame(frameId);
-  }, [invoiceConfirmationAction]);
-
-  useEffect(() => {
-    if (!deleteDialogOpen) return;
-
-    const frameId = requestAnimationFrame(() => {
-      deleteInvoiceConfirmButtonRef.current?.focus();
-    });
-
-    return () => cancelAnimationFrame(frameId);
-  }, [deleteDialogOpen]);
 
   useEffect(() => {
     setIsInvoiceDeleted(false);
@@ -1933,8 +1910,14 @@ export default function InvoiceFormPage() {
         setInvoiceConfirmationAction(null);
         clearActiveInvoiceDraft();
         setSearchParams({ mode: "review" });
-      } catch {
-        // Error feedback is already handled by RTK middleware.
+      } catch (error) {
+        dispatch(
+          setSnackbar({
+            message:
+              extractApiMessage(error) || "No se pudo actualizar la factura.",
+            type: "error",
+          }),
+        );
       }
     },
   });
@@ -2142,12 +2125,11 @@ export default function InvoiceFormPage() {
 
   const handleConfirmInvoiceAction = () => {
     if (invoiceConfirmationAction === "create") {
-      void newFormik.submitForm();
-      return;
+      return newFormik.submitForm();
     }
 
     if (invoiceConfirmationAction === "update") {
-      void editFormik.submitForm();
+      return editFormik.submitForm();
     }
   };
 
@@ -2239,16 +2221,12 @@ export default function InvoiceFormPage() {
           title: "Crear factura",
           message:
             "¿Seguro que querés crear esta factura? Se registrará con los productos, descuentos y pagos configurados.",
-          confirmLabel: "Crear factura",
-          color: "success" as const,
           loading: isCreating,
         }
       : invoiceConfirmationAction === "update"
         ? {
             title: "Guardar cambios",
             message: `¿Seguro que querés actualizar la factura "${getShortInvoiceId(invoice?.id || "")}"? Los cambios reemplazarán los datos actuales.`,
-            confirmLabel: "Guardar cambios",
-            color: "success" as const,
             loading: isUpdating,
           }
         : null;
@@ -2322,8 +2300,32 @@ export default function InvoiceFormPage() {
     if (!canEditProducts) return;
     if (latestRowsRef.current.length <= 1) return;
 
-    updateActiveRows((rows) => rows.filter((row) => row.id !== id));
+    setProductRowIdToRemove(id);
   };
+
+  const handleConfirmRemoveRow = () => {
+    if (!productRowIdToRemove) return;
+
+    updateActiveRows((rows) =>
+      rows.filter((row) => row.id !== productRowIdToRemove),
+    );
+    setProductRowIdToRemove(null);
+    dispatch(
+      setSnackbar({
+        message: "Producto quitado de la factura.",
+        type: "success",
+      }),
+    );
+  };
+
+  const productRowToRemove = activeFormik.values.rows.find(
+    (row) => row.id === productRowIdToRemove,
+  );
+  const productRowName = productRowToRemove
+    ? productById.get(productRowToRemove.product)?.name ||
+      productRowToRemove.product ||
+      "producto"
+    : "producto";
 
   const handleUpdateCatalogPrice = async (unitPrice: number) => {
     if (!catalogPriceProduct) return;
@@ -3047,92 +3049,34 @@ export default function InvoiceFormPage() {
         product={catalogPriceProduct}
         loading={isUpdatingProduct}
         onClose={() => setCatalogPriceProduct(null)}
-        onConfirm={(unitPrice) => void handleUpdateCatalogPrice(unitPrice)}
+        onConfirm={handleUpdateCatalogPrice}
       />
-      <Dialog
+      <ConfirmationDialog
+        open={Boolean(productRowIdToRemove)}
+        title="Quitar producto de la factura"
+        message={`¿Confirmás quitar el producto "${productRowName}" de esta factura?`}
+        confirmColor="error"
+        onCancel={() => setProductRowIdToRemove(null)}
+        onConfirm={handleConfirmRemoveRow}
+      />
+      <ConfirmationDialog
         open={Boolean(invoiceConfirmationDialog)}
-        onClose={
-          invoiceConfirmationDialog?.loading
-            ? undefined
-            : () => setInvoiceConfirmationAction(null)
-        }
-        onKeyDown={(event) => {
-          if (event.key !== "Enter" || invoiceConfirmationDialog?.loading) {
-            return;
-          }
-
-          event.preventDefault();
-          handleConfirmInvoiceAction();
-        }}
-      >
-        <DialogTitle>{invoiceConfirmationDialog?.title}</DialogTitle>
-        <DialogContent>
-          <DialogContentText>
-            {invoiceConfirmationDialog?.message}
-          </DialogContentText>
-        </DialogContent>
-        <DialogActions>
-          <Button
-            variant="text"
-            color="inherit"
-            sx={{ color: "text.secondary" }}
-            onClick={() => setInvoiceConfirmationAction(null)}
-            disabled={invoiceConfirmationDialog?.loading}
-          >
-            Cancelar
-          </Button>
-          <Button
-            ref={invoiceConfirmButtonRef}
-            autoFocus
-            color={invoiceConfirmationDialog?.color}
-            variant="contained"
-            onClick={handleConfirmInvoiceAction}
-            loading={invoiceConfirmationDialog?.loading}
-            disabled={invoiceConfirmationDialog?.loading}
-          >
-            {invoiceConfirmationDialog?.confirmLabel}
-          </Button>
-        </DialogActions>
-      </Dialog>
-      <Dialog
+        title={invoiceConfirmationDialog?.title || "Confirmar factura"}
+        message={invoiceConfirmationDialog?.message}
+        loading={invoiceConfirmationDialog?.loading}
+        confirmColor="success"
+        onCancel={() => setInvoiceConfirmationAction(null)}
+        onConfirm={handleConfirmInvoiceAction}
+      />
+      <ConfirmationDialog
         open={deleteDialogOpen}
-        onClose={isDeleting ? undefined : () => setDeleteDialogOpen(false)}
-        onKeyDown={(event) => {
-          if (event.key !== "Enter" || isDeleting) return;
-
-          event.preventDefault();
-          void handleDeleteInvoice();
-        }}
-      >
-        <DialogTitle>Eliminar factura</DialogTitle>
-        <DialogContent>
-          <DialogContentText>
-            {`¿Seguro que querés eliminar la factura "${getShortInvoiceId(invoice?.id || "")}"? Esta acción marcará la factura y sus productos como eliminados, sin borrar los datos de la base.`}
-          </DialogContentText>
-        </DialogContent>
-        <DialogActions>
-          <Button
-            variant="text"
-            color="inherit"
-            sx={{ color: "text.secondary" }}
-            onClick={() => setDeleteDialogOpen(false)}
-            disabled={isDeleting}
-          >
-            Cancelar
-          </Button>
-          <Button
-            ref={deleteInvoiceConfirmButtonRef}
-            autoFocus
-            color="error"
-            variant="contained"
-            onClick={() => void handleDeleteInvoice()}
-            loading={isDeleting}
-            disabled={isDeleting}
-          >
-            Eliminar factura
-          </Button>
-        </DialogActions>
-      </Dialog>
+        title="Eliminar factura"
+        message={`¿Confirmás eliminar la factura "${getShortInvoiceId(invoice?.id || "")}"? Esta acción marcará la factura y sus productos como eliminados, sin borrar los datos de la base.`}
+        loading={isDeleting}
+        confirmColor="error"
+        onCancel={() => setDeleteDialogOpen(false)}
+        onConfirm={handleDeleteInvoice}
+      />
     </>
   );
 }

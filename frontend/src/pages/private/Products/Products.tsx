@@ -11,7 +11,11 @@ import {
   useGetProductsListQuery,
 } from "src/app/services/invoiceService";
 import { useAppDispatch } from "src/app/store";
-import { resetBreadcrumbs, setBreadcrumbs, setSnackbar } from "src/slices/uiSlice";
+import {
+  resetBreadcrumbs,
+  setBreadcrumbs,
+  setSnackbar,
+} from "src/slices/uiSlice";
 import { useRouter } from "src/hooks";
 import { AppRoutes } from "src/config";
 import { ProductsResponse } from "src/types/pocketbase-types";
@@ -40,8 +44,7 @@ export default function Products() {
   }, [dispatch]);
 
   const { data, error, isFetching } = useGetProductsListQuery(queryArgs);
-  const [deleteProduct, { isLoading: isDeleting }] =
-    useDeleteProductMutation();
+  const [deleteProduct, { isLoading: isDeleting }] = useDeleteProductMutation();
   const { data: measureUnits = [], isFetching: isFetchingMeasureUnits } =
     useGetMeasureUnitsQuery();
   const { data: productTypesList, isFetching: isFetchingProductTypes } =
@@ -105,7 +108,7 @@ export default function Products() {
       },
       {
         id: "measure_unit",
-        label: "Unidad de medida",
+        label: "Ud. medida",
         // align: "left",
         minWidth: 200,
         disableSort: true,
@@ -114,7 +117,7 @@ export default function Products() {
       },
       {
         id: "product_type",
-        label: "Tipos de producto",
+        label: "Tipo Prod.",
         // align: "left",
         minWidth: 260,
         disableSort: true,
@@ -177,10 +180,10 @@ export default function Products() {
       <DeleteEntityDialog
         open={Boolean(productToDelete)}
         title="Eliminar producto"
-        message="¿Seguro que querés eliminar este producto?"
+        message={`¿Confirmás eliminar el producto "${productToDelete?.name || ""}"?`}
         isDeleting={isDeleting}
         onClose={() => setProductToDelete(null)}
-        onConfirm={() => void handleDelete()}
+        onConfirm={handleDelete}
       />
     </>
   );

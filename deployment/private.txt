@@ -1,7 +1,0 @@
--  test user: 
-test@test.com
-usrpsswd.rsync
-
--  admin: 
-admin@admin.com
-admpsswd.rsync

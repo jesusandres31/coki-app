@@ -17,6 +17,7 @@ import {
   buildDeleteHeaderAction,
   buildNameInput,
   extractApiMessage,
+  requestFormConfirmation,
   renderEntityFormPage,
   renderFormPageState,
   useDetailPageMode,
@@ -35,6 +36,7 @@ export default function ProductTypeFormPage() {
   const { mode, isEditMode, setEditMode, setReviewMode } =
     useDetailPageMode(isNewMode);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [saveDialogOpen, setSaveDialogOpen] = useState(false);
 
   const {
     data: productType,
@@ -85,8 +87,31 @@ export default function ProductTypeFormPage() {
     validateOnChange: false,
     validateOnBlur: false,
     onSubmit: async (values) => {
-      if (isNewMode) {
-        const created = await createProductType({
+      try {
+        if (isNewMode) {
+          const created = await createProductType({
+            data: {
+              name: values.name.trim(),
+            },
+          }).unwrap();
+
+          dispatch(
+            setSnackbar({
+              message: "Tipo de producto creado satisfactoriamente.",
+              type: "success",
+            }),
+          );
+          setSaveDialogOpen(false);
+          handleGoTo(
+            `${AppRoutes.ConfigProductTypes}/${created.id}?mode=review`,
+          );
+          return;
+        }
+
+        if (!productTypeId) return;
+
+        await updateProductType({
+          id: productTypeId,
           data: {
             name: values.name.trim(),
           },
@@ -94,32 +119,28 @@ export default function ProductTypeFormPage() {
 
         dispatch(
           setSnackbar({
-            message: "Tipo de producto creado satisfactoriamente.",
+            message: "Tipo de producto actualizado satisfactoriamente.",
             type: "success",
           }),
         );
-        handleGoTo(`${AppRoutes.ConfigProductTypes}/${created.id}?mode=review`);
-        return;
+        setSaveDialogOpen(false);
+        handleGoTo(AppRoutes.ConfigProductTypes);
+      } catch (error) {
+        dispatch(
+          setSnackbar({
+            message:
+              extractApiMessage(error) ||
+              `No se pudo ${isNewMode ? "crear" : "actualizar"} el tipo de producto.`,
+            type: "error",
+          }),
+        );
       }
-
-      if (!productTypeId) return;
-
-      await updateProductType({
-        id: productTypeId,
-        data: {
-          name: values.name.trim(),
-        },
-      }).unwrap();
-
-      dispatch(
-        setSnackbar({
-          message: "Tipo de producto actualizado satisfactoriamente.",
-          type: "success",
-        }),
-      );
-      handleGoTo(AppRoutes.ConfigProductTypes);
     },
   });
+
+  const handleRequestSave = () => {
+    void requestFormConfirmation(formik, () => setSaveDialogOpen(true));
+  };
 
   const handleDelete = async () => {
     if (!productTypeId) return;
@@ -173,14 +194,23 @@ export default function ProductTypeFormPage() {
     onEdit: isNewMode ? undefined : setEditMode,
     onCancelEdit: isNewMode ? undefined : setReviewMode,
     loading: isNewMode ? isCreating : isUpdating,
+    onRequestSubmit: handleRequestSave,
+    saveConfirmation: {
+      open: saveDialogOpen,
+      title: isNewMode
+        ? "Crear tipo de producto"
+        : "Guardar cambios del tipo de producto",
+      message: `¿Confirmás ${isNewMode ? "crear" : "actualizar"} el tipo de producto "${formik.values.name.trim()}"?`,
+      onClose: () => setSaveDialogOpen(false),
+    },
     headerActions: reviewHeaderActions,
     deleteDialog: {
       open: deleteDialogOpen,
       title: "Eliminar tipo de producto",
-      message: "¿Seguro que querés eliminar este tipo de producto?",
+      message: `¿Confirmás eliminar el tipo de producto "${productType?.name || productTypeId || ""}"?`,
       isDeleting,
       onClose: () => setDeleteDialogOpen(false),
-      onConfirm: () => void handleDelete(),
+      onConfirm: handleDelete,
     },
   });
 }

@@ -14,15 +14,23 @@ import {
 import { useAppDispatch } from "src/app/store";
 import { AppRoutes } from "src/config";
 import { useRouter } from "src/hooks";
-import { resetBreadcrumbs, setBreadcrumbs, setSnackbar } from "src/slices/uiSlice";
+import {
+  resetBreadcrumbs,
+  setBreadcrumbs,
+  setSnackbar,
+} from "src/slices/uiSlice";
 import { Input } from "src/types";
-import { MeasureunitsResponse, ProductTypesResponse } from "src/types/pocketbase-types";
+import {
+  MeasureunitsResponse,
+  ProductTypesResponse,
+} from "src/types/pocketbase-types";
 import { FORM_MSG, FORM_VLDN, NumericFormatFloat } from "src/utils/FormUtils";
 import { getMeasureUnitDisplayName } from "src/utils/measureUnits";
 import {
   buildDeleteHeaderAction,
   buildNameInput,
   extractApiMessage,
+  requestFormConfirmation,
   renderEntityFormPage,
   renderFormPageState,
   useDetailPageMode,
@@ -39,31 +47,30 @@ interface ProductFormValues {
 export default function ProductFormPage() {
   const { productId } = useParams();
   const dispatch = useAppDispatch();
-  const {
-    handleGoTo,
-    handleGoToOrigin,
-    navigationOrigin,
-    navigationState,
-  } = useRouter();
+  const { handleGoTo, handleGoToOrigin, navigationOrigin, navigationState } =
+    useRouter();
   const isNewMode = !productId;
   const { mode, isEditMode, setEditMode, setReviewMode } =
     useDetailPageMode(isNewMode);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [saveDialogOpen, setSaveDialogOpen] = useState(false);
 
-  const { data: product, isFetching, error } = useGetProductByIdQuery(productId || "", {
+  const {
+    data: product,
+    isFetching,
+    error,
+  } = useGetProductByIdQuery(productId || "", {
     skip: !productId,
   });
   const { data: measureUnits = [], isFetching: isMeasureUnitsFetching } =
     useGetMeasureUnitsQuery();
-  const {
-    data: productTypesResponse,
-    isFetching: isProductTypesFetching,
-  } = useGetProductTypesListQuery({
-    page: 1,
-    perPage: 500,
-    order: "asc",
-    orderBy: "name",
-  });
+  const { data: productTypesResponse, isFetching: isProductTypesFetching } =
+    useGetProductTypesListQuery({
+      page: 1,
+      perPage: 500,
+      order: "asc",
+      orderBy: "name",
+    });
   const [createProduct, { isLoading: isCreating }] = useCreateProductMutation();
   const [updateProduct, { isLoading: isUpdating }] = useUpdateProductMutation();
   const [deleteProduct, { isLoading: isDeleting }] = useDeleteProductMutation();
@@ -132,8 +139,32 @@ export default function ProductFormPage() {
     validateOnChange: false,
     validateOnBlur: false,
     onSubmit: async (values) => {
-      if (isNewMode) {
-        const created = await createProduct({
+      try {
+        if (isNewMode) {
+          const created = await createProduct({
+            data: {
+              name: values.name.trim(),
+              unit_price: Number(values.unit_price || 0),
+              measure_unit: values.measure_unit,
+              product_type: values.product_type,
+            },
+          }).unwrap();
+
+          dispatch(
+            setSnackbar({
+              message: "Producto creado satisfactoriamente.",
+              type: "success",
+            }),
+          );
+          setSaveDialogOpen(false);
+          handleGoTo(`${AppRoutes.Products}/${created.id}?mode=review`);
+          return;
+        }
+
+        if (!productId) return;
+
+        await updateProduct({
+          id: productId,
           data: {
             name: values.name.trim(),
             unit_price: Number(values.unit_price || 0),
@@ -144,35 +175,28 @@ export default function ProductFormPage() {
 
         dispatch(
           setSnackbar({
-            message: "Producto creado satisfactoriamente.",
+            message: "Producto actualizado satisfactoriamente.",
             type: "success",
           }),
         );
-        handleGoTo(`${AppRoutes.Products}/${created.id}?mode=review`);
-        return;
+        setSaveDialogOpen(false);
+        handleGoToOrigin(AppRoutes.Products);
+      } catch (error) {
+        dispatch(
+          setSnackbar({
+            message:
+              extractApiMessage(error) ||
+              `No se pudo ${isNewMode ? "crear" : "actualizar"} el producto.`,
+            type: "error",
+          }),
+        );
       }
-
-      if (!productId) return;
-
-      await updateProduct({
-        id: productId,
-        data: {
-          name: values.name.trim(),
-          unit_price: Number(values.unit_price || 0),
-          measure_unit: values.measure_unit,
-          product_type: values.product_type,
-        },
-      }).unwrap();
-
-      dispatch(
-        setSnackbar({
-          message: "Producto actualizado satisfactoriamente.",
-          type: "success",
-        }),
-      );
-      handleGoToOrigin(AppRoutes.Products);
     },
   });
+
+  const handleRequestSave = () => {
+    void requestFormConfirmation(formik, () => setSaveDialogOpen(true));
+  };
 
   const selectedMeasureUnit =
     measureUnits.find((item) => item.id === formik.values.measure_unit) || null;
@@ -204,7 +228,7 @@ export default function ProductFormPage() {
     },
     {
       required: true,
-      label: "Unidad de medida",
+      label: "Ud. medida",
       id: "measure_unit",
       value: formik.values.measure_unit,
       error: formik.errors.measure_unit,
@@ -279,14 +303,21 @@ export default function ProductFormPage() {
     onEdit: isNewMode ? undefined : setEditMode,
     onCancelEdit: isNewMode ? undefined : setReviewMode,
     loading: isNewMode ? isCreating : isUpdating,
+    onRequestSubmit: handleRequestSave,
+    saveConfirmation: {
+      open: saveDialogOpen,
+      title: isNewMode ? "Crear producto" : "Guardar cambios del producto",
+      message: `¿Confirmás ${isNewMode ? "crear" : "actualizar"} el producto "${formik.values.name.trim()}"?`,
+      onClose: () => setSaveDialogOpen(false),
+    },
     headerActions: reviewHeaderActions,
     deleteDialog: {
       open: deleteDialogOpen,
       title: "Eliminar producto",
-      message: "¿Seguro que querés eliminar este producto?",
+      message: `¿Confirmás eliminar el producto "${product?.name || productId || ""}"?`,
       isDeleting,
       onClose: () => setDeleteDialogOpen(false),
-      onConfirm: () => void handleDelete(),
+      onConfirm: handleDelete,
     },
   });
 }

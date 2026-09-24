@@ -4,6 +4,7 @@ import { DeleteRounded } from "@mui/icons-material";
 import { Box, Button, Card, Container } from "@mui/material";
 import { FormikProps } from "formik";
 import { ErrorMsg, Loading } from "src/components/common";
+import ConfirmationDialog from "src/components/common/ConfirmationDialog";
 import DeleteEntityDialog from "src/components/common/DeleteEntityDialog";
 import EntityFormContainer from "src/components/common/Forms/EntityFormContainer";
 import PageContainer from "src/components/common/PageContainer/PageContainer";
@@ -34,6 +35,29 @@ export const extractApiMessage = (error: unknown): string | undefined => {
   if (!maybeData || typeof maybeData !== "object") return undefined;
   const maybeMessage = (maybeData as { message?: unknown }).message;
   return typeof maybeMessage === "string" ? maybeMessage : undefined;
+};
+
+const touchFormikErrors = (errors: unknown): unknown => {
+  if (Array.isArray(errors)) return errors.map(touchFormikErrors);
+  if (typeof errors !== "object" || !errors) return true;
+
+  return Object.fromEntries(
+    Object.entries(errors).map(([key, value]) => [key, touchFormikErrors(value)]),
+  );
+};
+
+export const requestFormConfirmation = async (
+  formik: FormikProps<any>,
+  onValid: () => void,
+) => {
+  const errors = await formik.validateForm();
+
+  if (Object.keys(errors).length > 0) {
+    await formik.setTouched(touchFormikErrors(errors) as any, false);
+    return;
+  }
+
+  onValid();
 };
 
 export const useDetailPageMode = (isNewMode: boolean) => {
@@ -113,6 +137,13 @@ interface RenderEntityFormPageArgs {
   onEdit?: () => void;
   onCancelEdit?: () => void;
   loading: boolean;
+  onRequestSubmit: () => void;
+  saveConfirmation: {
+    open: boolean;
+    title: string;
+    message: string;
+    onClose: () => void;
+  };
   deleteDialog: {
     open: boolean;
     title: string;
@@ -135,6 +166,8 @@ export const renderEntityFormPage = ({
   onEdit,
   onCancelEdit,
   loading,
+  onRequestSubmit,
+  saveConfirmation,
   deleteDialog,
   headerActions,
 }: RenderEntityFormPageArgs) => (
@@ -147,11 +180,20 @@ export const renderEntityFormPage = ({
       onBack={onBack ?? (() => handleGoTo(backRoute))}
       onEdit={onEdit}
       onCancelEdit={onCancelEdit}
-      onSubmit={() => void formik.submitForm()}
+      onSubmit={onRequestSubmit}
       loading={loading}
       submitDisabled={loading}
       submitLabel={mode === "new" ? "Crear" : "Guardar"}
       headerActions={headerActions}
+    />
+    <ConfirmationDialog
+      open={saveConfirmation.open}
+      title={saveConfirmation.title}
+      message={saveConfirmation.message}
+      loading={loading}
+      confirmColor="success"
+      onCancel={saveConfirmation.onClose}
+      onConfirm={() => formik.submitForm()}
     />
     <DeleteEntityDialog
       open={deleteDialog.open}

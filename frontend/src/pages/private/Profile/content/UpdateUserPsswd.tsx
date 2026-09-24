@@ -43,10 +43,21 @@ export default function UpdateUserPsswd({
         passwordConfirm: values.passwordConfirm,
       };
 
-      await updateUser({ id: authUser.id, data }).unwrap();
-      dispatch(setSnackbar({ message: FORM_MSG.changePsswd }));
-      handleClose();
-      handleSignOut();
+      try {
+        await updateUser({ id: authUser.id, data }).unwrap();
+        dispatch(
+          setSnackbar({ message: FORM_MSG.changePsswd, type: "success" }),
+        );
+        handleClose();
+        handleSignOut();
+      } catch {
+        dispatch(
+          setSnackbar({
+            message: "No se pudo actualizar la contraseña.",
+            type: "error",
+          }),
+        );
+      }
     },
     validationSchema: Yup.object({
       oldPassword: Yup.string()
@@ -74,9 +85,7 @@ export default function UpdateUserPsswd({
     }
   }, [open]);
 
-  const hanleConfirm = async () => {
-    formik.handleSubmit();
-  };
+  const hanleConfirm = () => formik.submitForm();
 
   const _handleClose = () => {
     handleClose();
@@ -136,6 +145,7 @@ export default function UpdateUserPsswd({
       formik={formik}
       title="Cambiar contraseña"
       confBtnLabel="Confirmar"
+      confirmationMessage={`¿Confirmás actualizar la contraseña de la cuenta "${authUser?.username || "usuario"}"?`}
       variant="standard"
     />
   );

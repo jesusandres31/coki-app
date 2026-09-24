@@ -4,3 +4,4 @@ export { default as ProtectedRoute } from "./ProtectedRoute";
 export { default as Drawer } from "./Drawer/Drawer";
 export { default as Loading } from "./Loading";
 export { default as TableLoadingSkeleton } from "./TableLoadingSkeleton";
+export { default as ConfirmationDialog } from "./ConfirmationDialog";

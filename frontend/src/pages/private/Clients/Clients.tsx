@@ -137,10 +137,10 @@ export default function Clients() {
       <DeleteEntityDialog
         open={Boolean(clientToDelete)}
         title="Eliminar cliente"
-        message="¿Seguro que querés eliminar este cliente?"
+        message={`¿Confirmás eliminar el cliente "${clientToDelete?.name || ""}"?`}
         isDeleting={isDeleting}
         onClose={() => setClientToDelete(null)}
-        onConfirm={() => void handleDelete()}
+        onConfirm={handleDelete}
       />
     </>
   );
