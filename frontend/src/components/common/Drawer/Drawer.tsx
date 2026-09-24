@@ -110,6 +110,7 @@ const CustomDrawer = styled(MuiDrawer, {
 const DrawerContent = () => {
   const theme = useTheme();
   const dispatch = useAppDispatch();
+  const { isMobile } = useUI();
   const { openDrawer } = useUISelector((state) => state.ui);
 
   return (
@@ -165,7 +166,7 @@ const DrawerContent = () => {
           variant="caption"
           color="text.disabled"
           noWrap
-          title={`Version ${version}`}
+          title={isMobile ? undefined : `Version ${version}`}
           sx={{
             fontSize: 11,
             letterSpacing: 0,

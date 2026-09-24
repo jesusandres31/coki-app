@@ -33,6 +33,7 @@ import { getListArgsInitialState } from "src/constants";
 import { setSnackbar } from "src/slices/uiSlice";
 import { GetList } from "src/types";
 import { ProductsResponse } from "src/types/pocketbase-types";
+import { useUI } from "src/hooks";
 import { formatMoney, MoneyValue } from "src/utils/format";
 import { buildMeasureUnitNameById } from "src/utils/measureUnits";
 import { openPriceListPdfInViewer, openPriceListPdfTab } from "../pdf";
@@ -67,6 +68,7 @@ const priceColumnSx = {
 
 export default function ListaDePrecios() {
   const dispatch = useAppDispatch();
+  const { isMobile } = useUI();
   const [isPrintingPriceList, setIsPrintingPriceList] = useState(false);
   const [includeAllPriceListProducts, setIncludeAllPriceListProducts] =
     useState(true);
@@ -597,7 +599,7 @@ export default function ListaDePrecios() {
             variant="body2"
             color="text.primary"
             fontWeight={700}
-            title={priceListFilterSummary}
+            title={isMobile ? undefined : priceListFilterSummary}
             sx={{
               minWidth: 0,
               overflow: "hidden",
@@ -759,7 +761,7 @@ export default function ListaDePrecios() {
                               }
                         }
                         title={
-                          editingPriceProductId === row.id
+                          isMobile || editingPriceProductId === row.id
                             ? undefined
                             : "Click para editar el precio en esta sesión"
                         }
