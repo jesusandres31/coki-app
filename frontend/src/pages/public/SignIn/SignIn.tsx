@@ -27,6 +27,8 @@ import { useAuth } from "src/hooks";
 import { FORM_MSG, FORM_VLDN } from "src/utils/FormUtils";
 // import logo from "src/assets/logo.png";
 
+const LOGIN_EMAIL = "test@test.com";
+
 export default function SignIn() {
   const {
     handleSignIn,
@@ -38,7 +40,7 @@ export default function SignIn() {
 
   const formik = useFormik<SignInRequest>({
     initialValues: {
-      email: "",
+      email: LOGIN_EMAIL,
       password: "",
     },
     validationSchema: Yup.object({
@@ -65,7 +67,7 @@ export default function SignIn() {
         ),
     }),
     onSubmit: async (data) => {
-      await handleSignIn(data);
+      await handleSignIn({ ...data, email: LOGIN_EMAIL });
       formik.setValues(formik.initialValues);
       handleResetError();
     },
@@ -109,12 +111,8 @@ export default function SignIn() {
               label="Email o usuario"
               name="email"
               autoComplete="email"
-              autoFocus
+              disabled
               value={formik.values.email}
-              onChange={(e) => {
-                formik.setFieldValue("email", removeSpace(e.target.value));
-                handleResetError();
-              }}
               error={!!formik.errors.email}
               helperText={formik.errors.email ? formik.errors.email : " "}
               variant="outlined"
@@ -131,6 +129,7 @@ export default function SignIn() {
               name="password"
               type={showPassword ? "text" : "password"}
               autoComplete="current-password"
+              autoFocus
               value={formik.values.password}
               onChange={(e) => {
                 formik.setFieldValue("password", removeSpace(e.target.value));
