@@ -83,14 +83,33 @@ export default function CustomTablePagination({
             display: { xs: "none", sm: "block" },
           },
           "& .MuiTablePagination-actions": {
-            ml: { xs: 1, sm: 2 },
-            "& button": { width: 32, height: 32 },
+            display: { xs: "contents", sm: "flex" },
+            ml: { sm: 2 },
+            "& button": {
+              width: 32,
+              height: 32,
+            },
+            "& button:first-of-type": {
+              gridColumn: { xs: 1 },
+              gridRow: { xs: 1 },
+            },
+            "& button:last-of-type": {
+              gridColumn: { xs: 3 },
+              gridRow: { xs: 1 },
+            },
+          },
+          "& .MuiTablePagination-displayedRows": {
+            gridColumn: { xs: 2 },
+            gridRow: { xs: 1 },
+            justifySelf: { xs: "center", sm: "auto" },
           },
           "& .MuiTablePagination-toolbar": {
             minHeight: 40,
+            display: { xs: "grid", sm: "flex" },
+            gridTemplateColumns: { xs: "32px minmax(0, 1fr) 32px" },
             justifyContent: { xs: "center", sm: "flex-end" },
-            flexWrap: "wrap",
-            px: { xs: 1, sm: 2 },
+            flexWrap: { sm: "wrap" },
+            px: { xs: 2, sm: 2 },
           },
         }}
       />

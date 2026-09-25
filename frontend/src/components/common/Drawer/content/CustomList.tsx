@@ -12,7 +12,7 @@ import {
   Collapse,
 } from "@mui/material";
 import { ExpandLessRounded, ExpandMoreRounded } from "@mui/icons-material";
-import { useRouter } from "src/hooks";
+import { useRouter, useUI } from "src/hooks";
 import { IMenuItem } from "src/types";
 import { toggleOpenDrawer, useUISelector } from "src/slices/uiSlice";
 import { removeForeslash, translateTitle } from "../utils";
@@ -30,6 +30,7 @@ export default function CustomList({
   isNested,
 }: CustomListProps) {
   const { handleGoTo, route } = useRouter();
+  const { isMobile } = useUI();
   const { openDrawer } = useUISelector((state) => state.ui);
   const dispatch = useAppDispatch();
   const theme = useTheme();
@@ -185,6 +186,9 @@ export default function CustomList({
                 onClick={(e) => {
                   if (item.to) {
                     handleGoTo(item.to);
+                    if (isMobile && openDrawer) {
+                      dispatch(toggleOpenDrawer());
+                    }
                   } else {
                     handleCollapse(e, itemKey);
                   }
