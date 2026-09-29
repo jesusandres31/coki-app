@@ -236,6 +236,7 @@ export default function VirtualizedPriceListGrid({
             width: ACTIONS_COLUMN_WIDTH,
             minWidth: ACTIONS_COLUMN_WIDTH,
             maxWidth: ACTIONS_COLUMN_WIDTH,
+            boxSizing: "border-box",
             bgcolor: "#F8FAFC",
             pl: 1,
             pr: 1,
@@ -306,6 +307,7 @@ export default function VirtualizedPriceListGrid({
             width: ACTIONS_COLUMN_WIDTH,
             minWidth: ACTIONS_COLUMN_WIDTH,
             maxWidth: ACTIONS_COLUMN_WIDTH,
+            boxSizing: "border-box",
             py: 0.25,
             pl: 1,
             pr: 1,
@@ -370,7 +372,17 @@ export default function VirtualizedPriceListGrid({
           </Box>
         ) : isInitialError ? (
           <CustomGrid>
-            <Box role="status" sx={{ textAlign: "center" }}>
+            <Box
+              role="status"
+              sx={{
+                width: "100%",
+                display: "flex",
+                flexDirection: "column",
+                alignItems: "center",
+                justifyContent: "center",
+                textAlign: "center",
+              }}
+            >
               <ErrorMsg message="No se pudo cargar la lista de precios." />
               <Button
                 sx={{ mt: 2 }}
