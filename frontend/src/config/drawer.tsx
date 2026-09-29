@@ -23,6 +23,11 @@ export const DRAWER_SECTIONS: DrawerSection[] = [
     title: "Menu",
     menuItems: [
       {
+        text: "Lista de precios",
+        icon: <PriceCheckRounded />,
+        to: AppRoutes.PriceList,
+      },
+      {
         text: "Facturación",
         icon: <DescriptionRounded />,
         to: AppRoutes.Invoices,

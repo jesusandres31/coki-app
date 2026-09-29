@@ -29,6 +29,7 @@ export enum AppRoutes {
   Unauthorized = "/unauthorized",
   // private routes
   Profile = "/profile",
+  PriceList = "/price-list",
   Invoices = "/invoices",
   InvoicesNew = "/invoices/new",
   InvoicesDetail = "/invoices/:invoiceId",
@@ -60,5 +61,8 @@ export const configKey = {
   TOKEN_PREFIX: "Bearer",
   COMPANY: "cokiapp",
 };
+
+export const getDefaultLandingPage = (isMobile: boolean): AppRoutes =>
+  isMobile ? AppRoutes.PriceList : configKey.LANDING_PAGE;
 
 export * from "./measureunits";

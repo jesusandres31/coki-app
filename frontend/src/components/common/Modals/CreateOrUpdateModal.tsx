@@ -22,6 +22,8 @@ interface CreateOrUpdateModalProps {
   title?: string;
   confBtnLabel?: string;
   noCancelBtn?: boolean;
+  fullScreenOnMobile?: boolean;
+  fieldsTopSpacing?: number;
   variant?: TextFieldVariants;
   confirmationMessage?: string;
 }
@@ -38,6 +40,8 @@ export default function CreateOrUpdateModal({
   title,
   confBtnLabel = "",
   noCancelBtn = false,
+  fullScreenOnMobile = true,
+  fieldsTopSpacing = 2,
   variant = "outlined",
   confirmationMessage,
 }: CreateOrUpdateModalProps) {
@@ -55,11 +59,17 @@ export default function CreateOrUpdateModal({
       loading={loading}
       confirmLabel={confBtnLabel || "Confirmar"}
       showCancel={!noCancelBtn}
+      fullScreenOnMobile={fullScreenOnMobile}
       onCancel={handleClose}
       onConfirm={hanleConfirm}
       maxWidth={maxWidth}
     >
-      <Grid container spacing={1.5} alignItems="flex-start" sx={{ pt: 2 }}>
+      <Grid
+        container
+        spacing={1.5}
+        alignItems="flex-start"
+        sx={{ pt: fieldsTopSpacing }}
+      >
         {inputs.map((input) => {
           if (input.hide) return null;
 

@@ -7,12 +7,15 @@ import {
   Loading,
   ProtectedRoute,
 } from "src/components/common";
-import { AppRoutes, configKey } from "src/config";
-import { useAuth, useAuthSessionRefresh, useRouter } from "src/hooks";
+import { AppRoutes, getDefaultLandingPage } from "src/config";
+import { useAuth, useAuthSessionRefresh, useRouter, useUI } from "src/hooks";
 import { Box } from "@mui/material";
 
 const Profile = lazy(() =>
   import("src/pages").then((module) => ({ default: module.Profile })),
+);
+const PriceList = lazy(() =>
+  import("src/pages").then((module) => ({ default: module.PriceList })),
 );
 const Invoices = lazy(() =>
   import("src/pages").then((module) => ({ default: module.Invoices })),
@@ -58,6 +61,10 @@ const privateRoutes = [
   {
     route: AppRoutes.Profile,
     render: <Profile />,
+  },
+  {
+    route: AppRoutes.PriceList,
+    render: <PriceList />,
   },
   {
     route: AppRoutes.Invoices,
@@ -120,11 +127,6 @@ const privateRoutes = [
     render: <ProductDetail />,
   },
   {
-    // Preserve links to the former standalone price list.
-    route: "/price-list",
-    render: <Navigate to={AppRoutes.Products} replace />,
-  },
-  {
     route: AppRoutes.Config,
     render: <Navigate to={AppRoutes.ConfigGeneralSettings} replace />,
   },
@@ -148,6 +150,7 @@ const privateRoutes = [
 
 function App(): JSX.Element {
   const { isLoggedIn } = useAuth();
+  const { isMobile } = useUI();
   const { isLayoutRoutes } = useRouter();
   useAuthSessionRefresh();
 
@@ -190,7 +193,11 @@ function App(): JSX.Element {
           <Route
             path={AppRoutes.Login}
             element={
-              isLoggedIn ? <Navigate to={configKey.LANDING_PAGE} /> : <SignIn />
+              isLoggedIn ? (
+                <Navigate to={getDefaultLandingPage(isMobile)} replace />
+              ) : (
+                <SignIn />
+              )
             }
           />
 

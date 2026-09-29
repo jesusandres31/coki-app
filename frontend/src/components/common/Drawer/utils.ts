@@ -5,6 +5,9 @@ import { AppRoutes } from "src/config";
  */
 export const translateTitle = (title?: string) => {
   const route = title || "";
+  if (route.startsWith(AppRoutes.PriceList)) {
+    return "Lista de precios";
+  }
   if (route.startsWith(AppRoutes.Invoices)) {
     return "Facturación";
   }

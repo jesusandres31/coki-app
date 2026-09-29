@@ -21,6 +21,7 @@ export interface ConfirmationDialogProps {
   confirmColor?: "primary" | "success" | "error" | "warning";
   cancelLabel?: string;
   showCancel?: boolean;
+  fullScreenOnMobile?: boolean;
   maxWidth?: DialogProps["maxWidth"];
   onCancel: () => void;
   onConfirm: () => void | Promise<void>;
@@ -37,6 +38,7 @@ export default function ConfirmationDialog({
   confirmColor = "primary",
   cancelLabel = "Cancelar",
   showCancel = true,
+  fullScreenOnMobile = true,
   maxWidth = "sm",
   onCancel,
   onConfirm,
@@ -69,7 +71,7 @@ export default function ConfirmationDialog({
   return (
     <Dialog
       open={open}
-      fullScreen={isMobile && Boolean(children)}
+      fullScreen={fullScreenOnMobile && isMobile && Boolean(children)}
       sx={{
         "& .MuiDialog-paper": {
           m: isMobile && !children ? 1 : undefined,

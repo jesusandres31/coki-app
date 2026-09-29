@@ -4,11 +4,12 @@ import { ClientResponseError } from "pocketbase";
 import { useAppDispatch } from "src/app/store";
 import { authApi } from "src/app/services/authService";
 import { logout } from "src/app/auth";
-import { AppRoutes, configKey } from "src/config";
+import { AppRoutes, getDefaultLandingPage } from "src/config";
 import { SignInRequest, SignUpResponse } from "src/interfaces";
 import { pb } from "src/libs";
 import { setSnackbar } from "src/slices/uiSlice";
 import { RolesResponse, UsersResponse } from "src/types/pocketbase-types";
+import { useUI } from "./useUI";
 
 const isPocketBaseId = (value: unknown): value is string =>
   typeof value === "string" && /^[a-z0-9]{15}$/i.test(value);
@@ -16,6 +17,7 @@ const isPocketBaseId = (value: unknown): value is string =>
 export const useAuth = () => {
   const navigate = useNavigate();
   const dispatch = useAppDispatch();
+  const { isMobile } = useUI();
   const [, setAuthRevision] = useState(0);
   const [signIn, { isLoading: isSigningIn }] = authApi.useSignInMutation();
   const [isSigningInWithGoogle, setIsSigningInWithGoogle] = useState(false);
@@ -117,7 +119,7 @@ export const useAuth = () => {
 
   const handleSignIn = async (data: SignInRequest) => {
     await signIn(data).unwrap();
-    navigate(configKey.LANDING_PAGE);
+    navigate(getDefaultLandingPage(isMobile));
   };
 
   const handleGoogleSignIn = () => {
@@ -132,7 +134,7 @@ export const useAuth = () => {
         query: { expand: "role" },
       })
       .then(() => {
-        navigate(configKey.LANDING_PAGE);
+        navigate(getDefaultLandingPage(isMobile));
       })
       .catch((error: unknown) => {
         const message =
