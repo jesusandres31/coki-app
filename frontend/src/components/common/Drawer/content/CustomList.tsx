@@ -10,6 +10,7 @@ import {
   useTheme,
   ListSubheader,
   Collapse,
+  Tooltip,
 } from "@mui/material";
 import { ExpandLessRounded, ExpandMoreRounded } from "@mui/icons-material";
 import { useRouter, useUI } from "src/hooks";
@@ -181,6 +182,15 @@ export default function CustomList({
                 display: "block",
               }}
             >
+              <Tooltip
+                title={
+                  !openDrawer && !isMobile
+                    ? item.text || translateTitle(removeForeslash(item.to))
+                    : ""
+                }
+                placement="right"
+                arrow
+              >
               <ListItemButton
                 // selected={isSelected(item) || isNestedSelected(item)}
                 onClick={(e) => {
@@ -249,6 +259,7 @@ export default function CustomList({
                   </div>
                 )}
               </ListItemButton>
+              </Tooltip>
             </ListItem>
             {item.nestedItems && (
               <Collapse in={openCollapse} timeout="auto" unmountOnExit>

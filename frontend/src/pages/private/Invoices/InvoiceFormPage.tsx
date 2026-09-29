@@ -214,6 +214,8 @@ const productTableEditableFields: ProductTableEditableField[] = [
 
 const invoiceProductsActionColumnWidth = 56;
 const invoiceProductsTotalColumnWidth = 112;
+const invoiceProductsEditableTableMinWidth = 780;
+const invoiceProductsReadonlyTableMinWidth = 660;
 const invoiceDecimalScale = 3;
 const invoiceDecimalStep = "0.001";
 const invoiceDraftStoragePrefix = "coki:invoice-draft";
@@ -758,6 +760,17 @@ function ProductsTable({
     value: string;
   } | null>(null);
   const controlsDisabled = !editable || inputsDisabled;
+  const tableMinWidth = editable
+    ? invoiceProductsEditableTableMinWidth
+    : invoiceProductsReadonlyTableMinWidth;
+  const showActionColumn = editable;
+  const actionColumnWidth = invoiceProductsActionColumnWidth;
+  const actionColumnSx = {
+    ...invoiceProductsActionColumnSx,
+    width: actionColumnWidth,
+    minWidth: actionColumnWidth,
+    maxWidth: actionColumnWidth,
+  };
   const bodyCellSx = {
     py: 0.5,
     verticalAlign: "middle",
@@ -795,14 +808,6 @@ function ProductsTable({
   const singleLineHelperTextProps = isMobile
     ? { sx: { whiteSpace: "normal", overflowWrap: "anywhere" } }
     : productRowHelperTextProps;
-  const showActionColumn = editable;
-  const actionColumnWidth = invoiceProductsActionColumnWidth;
-  const actionColumnSx = {
-    ...invoiceProductsActionColumnSx,
-    width: actionColumnWidth,
-    minWidth: actionColumnWidth,
-    maxWidth: actionColumnWidth,
-  };
   const getFieldKey = (rowId: string, field: ProductTableEditableField) =>
     `${rowId}:${field}`;
   const setFieldRef =
@@ -1411,7 +1416,7 @@ function ProductsTable({
           size="small"
           stickyHeader
           sx={{
-            minWidth: editable ? 860 : 800,
+            minWidth: tableMinWidth,
             tableLayout: "fixed",
           }}
         >
