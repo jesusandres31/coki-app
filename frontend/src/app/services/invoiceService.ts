@@ -41,6 +41,7 @@ const paymentAccountMovementTypesTag = ApiTag.PaymentAccountMovementTypes;
 const typedPb = pb as TypedPocketBase;
 const MAX_DISCOUNT_PERCENT = 100;
 const DATA_PAGE_SIZE = 100;
+const PRICE_LIST_PAGE_SIZE = 40;
 const pbNoAutoCancelOptions = { requestKey: null } as const;
 
 export type PaymentAccountMovementTypeName = "payment" | "debt" | "adjustment";
@@ -131,6 +132,12 @@ interface UpdateProductReq {
 
 interface CreateProductReq {
   data: Create<"products">;
+}
+
+export interface GetProductsInfiniteReq {
+  filter?: string;
+  order?: "asc" | "desc";
+  orderBy?: string;
 }
 
 interface UpdateProductTypeReq {
@@ -628,6 +635,28 @@ export const invoiceApi = mainApi.injectEndpoints({
       },
       providesTags: [productsTag],
     }),
+    getPriceListProducts: build.infiniteQuery<
+      ListResult<ProductsResponse>,
+      GetProductsInfiniteReq,
+      number
+    >({
+      infiniteQueryOptions: {
+        initialPageParam: 1,
+        getNextPageParam: (lastPage) =>
+          lastPage.page < lastPage.totalPages ? lastPage.page + 1 : undefined,
+      },
+      queryFn: async ({ queryArg, pageParam }) => {
+        const requestedSort = pbSort(queryArg.order, queryArg.orderBy);
+        const res = await typedPb
+          .collection("products")
+          .getList(pageParam, PRICE_LIST_PAGE_SIZE, {
+            filter: pbFilter(queryArg.filter, ["name"]),
+            sort: requestedSort ? `${requestedSort},+id` : "+id",
+          });
+        return { data: res };
+      },
+      providesTags: [productsTag],
+    }),
     getProductById: build.query<ProductsResponse, string>({
       queryFn: async (_arg) => {
         const res = await getActiveRecordById<ProductsResponse>("products", _arg);
@@ -1083,6 +1112,7 @@ export const {
   useGetProductTypeByIdQuery,
   useGetProductTypesListQuery,
   useGetProductsQuery,
+  useGetPriceListProductsInfiniteQuery,
   useGetProductsListQuery,
   useUpdateClientMutation,
   useUpdateInvoiceMutation,

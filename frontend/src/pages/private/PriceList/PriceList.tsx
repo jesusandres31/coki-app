@@ -1,21 +1,24 @@
-import { EditRounded } from "@mui/icons-material";
 import { InputAdornment } from "@mui/material";
 import { useFormik } from "formik";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import * as Yup from "yup";
-import { useUpdateProductMutation } from "src/app/services/invoiceService";
+import {
+  GetProductsInfiniteReq,
+  invoiceApi,
+  useUpdateProductMutation,
+} from "src/app/services/invoiceService";
 import { useAppDispatch } from "src/app/store";
 import CreateOrUpdateModal from "src/components/common/Modals/CreateOrUpdateModal";
-import ProductListGrid from "src/pages/private/Products/ProductListGrid";
 import {
   resetBreadcrumbs,
   setBreadcrumbs,
   setSnackbar,
 } from "src/slices/uiSlice";
-import { DataGridRowAction, Input } from "src/types";
+import { Input } from "src/types";
 import { ProductsResponse } from "src/types/pocketbase-types";
 import { FORM_MSG, FORM_VLDN, NumericFormatFloat } from "src/utils/FormUtils";
 import { extractApiMessage } from "../formPageUtils";
+import VirtualizedPriceListGrid from "./VirtualizedPriceListGrid";
 
 interface PriceFormValues {
   unit_price: number | string;
@@ -25,6 +28,12 @@ export default function PriceList() {
   const dispatch = useAppDispatch();
   const [productToEdit, setProductToEdit] =
     useState<ProductsResponse | null>(null);
+  const [priceListQuery, setPriceListQuery] =
+    useState<GetProductsInfiniteReq>({
+      filter: "",
+      order: "asc",
+      orderBy: "name",
+    });
   const [updateProduct, { isLoading: isUpdating }] =
     useUpdateProductMutation();
 
@@ -56,10 +65,27 @@ export default function PriceList() {
       if (!productToEdit) return;
 
       try {
-        await updateProduct({
+        const updatedProduct = await updateProduct({
           id: productToEdit.id,
           data: { unit_price: Number(values.unit_price) },
         }).unwrap();
+
+        dispatch(
+          invoiceApi.util.updateQueryData(
+            "getPriceListProducts",
+            priceListQuery,
+            (draft) => {
+              draft.pages.forEach((page) => {
+                const productIndex = page.items.findIndex(
+                  (product) => product.id === updatedProduct.id,
+                );
+                if (productIndex >= 0) {
+                  page.items[productIndex] = updatedProduct;
+                }
+              });
+            },
+          ),
+        );
 
         dispatch(
           setSnackbar({
@@ -87,19 +113,6 @@ export default function PriceList() {
     setProductToEdit(null);
   };
 
-  const rowActions: DataGridRowAction[] = useMemo(
-    () => [
-      {
-        id: "edit-price",
-        label: "Editar",
-        mobileLabel: "Editar",
-        icon: <EditRounded fontSize="small" color="info" />,
-        onClick: (item) => setProductToEdit(item as ProductsResponse),
-      },
-    ],
-    [],
-  );
-
   const inputs: Input[] = [
     {
       required: true,
@@ -118,7 +131,10 @@ export default function PriceList() {
 
   return (
     <>
-      <ProductListGrid rowActions={rowActions} />
+      <VirtualizedPriceListGrid
+        onEdit={setProductToEdit}
+        onQueryChange={setPriceListQuery}
+      />
       <CreateOrUpdateModal
         open={Boolean(productToEdit)}
         title="Editar precio"
