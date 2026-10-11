@@ -2,7 +2,6 @@ import dayjs, { Dayjs } from "dayjs";
 import { ProductsResponse, VInvoicesResponse } from "src/types/pocketbase-types";
 import { getRecordDisplayName, parseJsonValue, toNumber } from "src/utils/data";
 import { formatDecimal } from "src/utils/format";
-import { getInvoiceStateLabel, getInvoiceStateName } from "src/utils/invoiceState";
 
 export { parseJsonValue, toNumber } from "src/utils/data";
 
@@ -58,16 +57,6 @@ export const parseInvoiceProducts = (
   const parsed = parseJsonValue<unknown>(invoice.invoice_products);
   if (!parsed) return [];
   return Array.isArray(parsed) ? (parsed as InvoiceProductRow[]) : [];
-};
-
-export const getInvoiceStateValue = (invoice: VInvoicesResponse) => {
-  const stateValue = (invoice as VInvoicesResponse & { state?: unknown }).state;
-  return getInvoiceStateName(stateValue);
-};
-
-export const getStateLabel = (invoice: VInvoicesResponse) => {
-  const stateValue = (invoice as VInvoicesResponse & { state?: unknown }).state;
-  return getInvoiceStateLabel(stateValue);
 };
 
 export const getInvoiceDateIso = (invoiceDate: string) => {

@@ -16,7 +16,6 @@ export const ApiTag = {
   Invoices: "invoices",
   InvoicesProducts: "invoices_products",
   InvoicesView: "v_invoices",
-  InvoiceStates: "invoicestates",
   PaymentAccountMovements: "payment_account_movements",
   PaymentAccountMovementTypes: "payment_account_movement_types",
 };

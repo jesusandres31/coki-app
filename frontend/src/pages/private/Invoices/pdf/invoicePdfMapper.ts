@@ -5,7 +5,6 @@ import {
 } from "src/types/pocketbase-types";
 import { getRecordDisplayName, parseJsonValue, toNumber } from "src/utils/data";
 import { formatDate } from "src/utils/format";
-import { getInvoiceStateLabel } from "src/utils/invoiceState";
 import { buildMeasureUnitNameById } from "src/utils/measureUnits";
 import { InvoicePdfItem, InvoicePdfModel } from "./model";
 
@@ -110,9 +109,6 @@ export const buildInvoicePdfModel = ({
     invoiceId: invoice.id,
     date: invoice.date ? formatDate(invoice.date) : "-",
     clientName: getRecordDisplayName(invoice.client),
-    stateLabel: getInvoiceStateLabel(
-      (invoice as VInvoicesResponse & { state?: unknown }).state,
-    ),
     discountPercent,
     subtotal,
     total,

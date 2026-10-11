@@ -2,11 +2,11 @@ import { ListResult, RecordListOptions } from "pocketbase";
 import dayjs from "dayjs";
 import { pb } from "src/libs";
 import { GetList } from "src/types";
+import { normalizePbDateTime } from "src/utils/format";
 import {
   ClientsResponse,
   ConfigsResponse,
   Create,
-  InvoicestatesResponse,
   InvoicesProductsResponse,
   InvoicesResponse,
   MeasureunitsResponse,
@@ -30,7 +30,6 @@ import {
 const invoiceTag = ApiTag.Invoices;
 const invoiceProductsTag = ApiTag.InvoicesProducts;
 const invoicesViewTag = ApiTag.InvoicesView;
-const invoiceStatesTag = ApiTag.InvoiceStates;
 const clientsTag = ApiTag.Clients;
 const productsTag = ApiTag.Products;
 const productTypesTag = ApiTag.ProductTypes;
@@ -59,7 +58,6 @@ export interface CreateInvoiceReq {
   date: string;
   discount: number;
   items: CreateInvoiceItemReq[];
-  state?: "draft" | "open" | "void";
   paidNow?: boolean;
   paidAmount?: number;
 }
@@ -81,9 +79,21 @@ export interface GetLastProductPriceForClientReq {
   excludeInvoiceId?: string;
 }
 
+export type LastProductPriceSource = "client" | "catalog";
+
 export interface LastProductPriceForClient {
   unitPrice: number;
+  source: LastProductPriceSource;
+  clientPrice: number;
+  clientPriceDate: string;
+  catalogPrice: number;
+  catalogPriceUpdatedAt: string;
 }
+
+const parsePbDateTime = (value?: string) => {
+  const time = value ? Date.parse(normalizePbDateTime(value)) : NaN;
+  return Number.isNaN(time) ? null : time;
+};
 
 interface UpdateClientReq {
   id: string;
@@ -293,16 +303,20 @@ const createAccountMovement = async (
   return movement;
 };
 
-const getOpenInvoiceState = () =>
-  typedPb
-    .collection("invoicestates")
-    .getFirstListItem(`name = "open"`, pbNoAutoCancelOptions);
+// Invoices imported from the previous system never generated debt, so their
+// edits and deletions must not touch the client balance. Only invoices with a
+// debt movement of their own are tracked ("Factura {id}" on creation, plus
+// "Ajuste factura {id}", "Cambio de estado factura {id}", etc.).
+const invoiceGeneratedDebt = async (invoiceId: string) => {
+  const movements = await typedPb
+    .collection("payment_account_movements")
+    .getList(1, 1, {
+      filter: `type.name = "debt" && description ~ "factura ${escapePbFilterValue(invoiceId)}"`,
+      fields: "id",
+      ...pbNoAutoCancelOptions,
+    });
 
-const isOpenInvoiceState = async (stateId: string | undefined) => {
-  if (!stateId) return false;
-
-  const openState = await getOpenInvoiceState();
-  return stateId === openState.id;
+  return movements.totalItems > 0;
 };
 
 const applyClientBalanceDelta = async (
@@ -355,7 +369,6 @@ type PaginatedCollection =
   | "clients"
   | "invoices"
   | "invoices_products"
-  | "invoicestates"
   | "measureunits"
   | "payment_account_movement_types"
   | "products"
@@ -491,18 +504,6 @@ export const invoiceApi = mainApi.injectEndpoints({
         return { data: res };
       },
       providesTags: [clientsTag],
-    }),
-    getInvoiceStates: build.query<InvoicestatesResponse[], void>({
-      queryFn: async () => {
-        const res = await getRecordsByPages<InvoicestatesResponse>(
-          "invoicestates",
-          {
-            sort: "+name",
-          },
-        );
-        return { data: res };
-      },
-      providesTags: [invoiceStatesTag],
     }),
     getClientsList: build.query<ListResult<ClientsResponse>, GetList>({
       queryFn: async (_arg) => {
@@ -710,14 +711,12 @@ export const invoiceApi = mainApi.injectEndpoints({
       queryFn: async (_arg) => {
         const clientId = escapePbFilterValue(_arg.clientId);
         const productId = escapePbFilterValue(_arg.productId);
-        const openState = await getOpenInvoiceState();
         const excludeInvoiceId = _arg.excludeInvoiceId
           ? escapePbFilterValue(_arg.excludeInvoiceId)
           : "";
 
         const invoiceProductFilter = [
           `invoice.client = "${clientId}"`,
-          `invoice.state = "${escapePbFilterValue(openState.id)}"`,
           `invoice.deleted = ""`,
           `product = "${productId}"`,
           activeRecordFilter,
@@ -725,40 +724,63 @@ export const invoiceApi = mainApi.injectEndpoints({
         ]
           .filter(Boolean)
           .join(" && ");
-        const invoiceProducts = await typedPb
-          .collection("invoices_products")
-          .getList(1, 1, {
+        const [invoiceProducts, product] = await Promise.all([
+          typedPb.collection("invoices_products").getList(1, 1, {
             filter: invoiceProductFilter,
             sort: "-invoice.date,-created",
-            fields: "unit_price",
+            fields: "unit_price,updated",
+            skipTotal: true,
             requestKey: null,
-          });
+          }),
+          // Without the catalog data the client's last price still applies.
+          typedPb
+            .collection("products")
+            .getOne(_arg.productId, {
+              fields: "unit_price,price_updated_at",
+              requestKey: null,
+            })
+            .catch(() => null),
+        ]);
         const lastItem = invoiceProducts.items[0];
 
-        if (lastItem) {
-          return {
-            data: {
-              unitPrice: Number(lastItem.unit_price ?? 0),
-            },
-          };
+        if (!lastItem) {
+          return { data: null };
         }
 
-        return { data: null };
+        const clientPrice = Number(lastItem.unit_price ?? 0);
+        // updateInvoice only rewrites lines that changed, so "updated" is when
+        // this price was last charged (created, or edited afterwards).
+        const clientPriceDate = lastItem.updated;
+        const catalogPrice = product
+          ? Number(product.unit_price ?? 0)
+          : clientPrice;
+        const catalogPriceUpdatedAt = product?.price_updated_at ?? "";
+        const catalogUpdatedTime = parsePbDateTime(catalogPriceUpdatedAt);
+        const clientPriceTime = parsePbDateTime(clientPriceDate);
+        // The newest price wins: a catalog update made after the client's
+        // last purchase overrides the price that client was last charged.
+        const source: LastProductPriceSource =
+          catalogUpdatedTime !== null &&
+          (clientPriceTime === null || catalogUpdatedTime > clientPriceTime)
+            ? "catalog"
+            : "client";
+
+        return {
+          data: {
+            unitPrice: source === "catalog" ? catalogPrice : clientPrice,
+            source,
+            clientPrice,
+            clientPriceDate,
+            catalogPrice,
+            catalogPriceUpdatedAt,
+          },
+        };
       },
-      providesTags: [invoiceProductsTag],
+      providesTags: [invoiceProductsTag, productsTag],
     }),
     createInvoice: build.mutation<CreateInvoiceRes, CreateInvoiceReq>({
       queryFn: async (_arg) => {
-        // 1. Resolve invoice state record by name
-        const stateName = (_arg.state ?? "open").trim();
-        const stateRecord = await typedPb
-          .collection("invoicestates")
-          .getFirstListItem(
-            `name = "${escapePbFilterValue(stateName)}"`,
-            pbNoAutoCancelOptions,
-          );
-
-        // 2. Compute totals
+        // 1. Compute totals
         const invoiceItems = _arg.items.map((item) => ({
           ...item,
           total: getItemTotal(item),
@@ -770,16 +792,15 @@ export const invoiceApi = mainApi.injectEndpoints({
           subtotal * (1 - discountPercent / 100),
         );
 
-        // 3. Create invoice record
+        // 2. Create invoice record
         const invoice = await typedPb.collection("invoices").create({
           client: _arg.client,
           date: _arg.date,
           discount: discountPercent,
           total: invoiceTotal,
-          state: stateRecord.id,
         });
 
-        // 4. Create invoice product records
+        // 3. Create invoice product records
         const invoiceProducts = await Promise.all(
           invoiceItems.map((item) =>
             typedPb.collection("invoices_products").create(
@@ -796,11 +817,10 @@ export const invoiceApi = mainApi.injectEndpoints({
           ),
         );
 
-        // 5. Account movements (only for "open" invoices with a positive total)
+        // 4. Account movements (only for invoices with a positive total)
         const paymentMovements: PaymentAccountMovementsResponse[] = [];
-        const shouldUpdateAccount = String(stateRecord.name || "") === "open";
 
-        if (shouldUpdateAccount && invoiceTotal > 0) {
+        if (invoiceTotal > 0) {
           const debtMovement = await createAccountMovement(
             _arg.client,
             "debt",
@@ -837,21 +857,15 @@ export const invoiceApi = mainApi.injectEndpoints({
     updateInvoice: build.mutation<InvoicesResponse, UpdateInvoiceReq>({
       queryFn: async (_arg, _api, _options) => {
         const currentInvoice = await typedPb.collection("invoices").getOne(_arg.id);
-        const requestedState =
-          typeof _arg.data.state === "string" ? _arg.data.state.trim() : "";
-        const currentState =
-          typeof currentInvoice.state === "string"
-            ? currentInvoice.state.trim()
-            : "";
-        const fallbackState = requestedState || currentState
-          ? null
-          : await getOpenInvoiceState();
-        const nextState = requestedState || currentState || fallbackState?.id;
-        const currentInvoiceIsActive = !hasDeletedValue(currentInvoice.deleted);
-        const previousStateIsOpen =
-          currentInvoiceIsActive && (await isOpenInvoiceState(currentState));
-        const nextStateIsOpen =
-          currentInvoiceIsActive && (await isOpenInvoiceState(nextState));
+        // A zero-total invoice made in this app has no debt movement yet, but
+        // it still counts once its total grows. Imported invoices have no
+        // created_by.
+        const isZeroTotalAppInvoice =
+          Number(currentInvoice.total ?? 0) === 0 &&
+          Boolean(currentInvoice.created_by);
+        const shouldSyncAccount =
+          !hasDeletedValue(currentInvoice.deleted) &&
+          (isZeroTotalAppInvoice || (await invoiceGeneratedDebt(_arg.id)));
 
         const invoiceDiscountPercent =
           _arg.data.discount === undefined
@@ -893,10 +907,22 @@ export const invoiceApi = mainApi.injectEndpoints({
               total: item.total,
             };
 
-            if (item.id && existingItemsById.has(item.id)) {
+            const existingItem = item.id
+              ? existingItemsById.get(item.id)
+              : undefined;
+
+            if (existingItem) {
+              const unchanged =
+                existingItem.product === payload.product &&
+                Number(existingItem.amount ?? 0) === payload.amount &&
+                Number(existingItem.unit_price ?? 0) === payload.unit_price &&
+                Number(existingItem.discount ?? 0) === payload.discount &&
+                Number(existingItem.total ?? 0) === payload.total;
+              if (unchanged) continue;
+
               await typedPb
                 .collection("invoices_products")
-                .update(item.id, payload);
+                .update(existingItem.id, payload);
               continue;
             }
 
@@ -929,30 +955,17 @@ export const invoiceApi = mainApi.injectEndpoints({
 
         const res = await typedPb.collection("invoices").update(_arg.id, {
           ..._arg.data,
-          state: nextState,
           discount: invoiceDiscountPercent,
           total,
         });
 
-        if (previousStateIsOpen && nextStateIsOpen) {
+        if (shouldSyncAccount) {
           await syncInvoiceBalanceChange(
             _arg.id,
             String(currentInvoice.client || ""),
             String(res.client || ""),
             Number(currentInvoice.total ?? 0),
             Number(res.total ?? 0),
-          );
-        } else if (previousStateIsOpen && !nextStateIsOpen) {
-          await applyClientBalanceDelta(
-            String(currentInvoice.client || ""),
-            -Number(currentInvoice.total ?? 0),
-            `Cambio de estado factura ${_arg.id}`,
-          );
-        } else if (!previousStateIsOpen && nextStateIsOpen) {
-          await applyClientBalanceDelta(
-            String(res.client || ""),
-            Number(res.total ?? 0),
-            `Cambio de estado factura ${_arg.id}`,
           );
         }
 
@@ -972,7 +985,7 @@ export const invoiceApi = mainApi.injectEndpoints({
         const currentInvoice = await typedPb.collection("invoices").getOne(_arg);
         const shouldSyncAccount =
           !hasDeletedValue(currentInvoice.deleted) &&
-          (await isOpenInvoiceState(String(currentInvoice.state || "")));
+          (await invoiceGeneratedDebt(_arg));
         const existingItems = await getRecordsByPages<InvoicesProductsResponse>(
           "invoices_products",
           {
@@ -1101,7 +1114,6 @@ export const {
   useLazyGetInvoiceProductsByInvoiceIdQuery,
   useLazyGetLastProductPriceForClientQuery,
   useGetInvoicesByDateRangeQuery,
-  useGetInvoiceStatesQuery,
   useGetInvoicesViewQuery,
   useGetMeasureUnitsQuery,
   useGetPaymentAccountMovementsListQuery,

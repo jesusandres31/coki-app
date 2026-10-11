@@ -3,6 +3,10 @@ import { FORM_VLDN } from "./FormUtils";
 import { Box, Chip } from "@mui/material";
 
 // dates
+// PocketBase returns "YYYY-MM-DD HH:mm:ss.sssZ"; Safari needs the "T".
+export const normalizePbDateTime = (value: string) =>
+  value.trim().replace(" ", "T");
+
 const dateOnlyPattern = /^(\d{4})-(\d{2})-(\d{2})$/;
 const utcDateAtMidnightPattern =
   /^(\d{4})-(\d{2})-(\d{2})[ T]00:00(?::00(?:\.000)?)?Z?$/;

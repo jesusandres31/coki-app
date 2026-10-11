@@ -49,6 +49,7 @@ import {
   useUpdateProductMutation,
   useUpdateInvoiceMutation,
 } from "src/app/services/invoiceService";
+import type { LastProductPriceForClient } from "src/app/services/invoiceService";
 import { ErrorMsg, Loading } from "src/components/common";
 import ConfirmationDialog from "src/components/common/ConfirmationDialog";
 import EntityFormContainer from "src/components/common/Forms/EntityFormContainer";
@@ -83,6 +84,7 @@ import { getShortInvoiceId } from "src/components/common/pdf";
 import ProductCatalogPriceDialog, {
   ProductCatalogPriceDialogProduct,
 } from "./components/ProductCatalogPriceDialog";
+import PriceSourceAdornment from "./components/PriceSourceAdornment";
 
 type InvoicePageMode = "new" | "review" | "edit";
 type InvoicePaymentMode = "none" | "full" | "partial";
@@ -156,6 +158,7 @@ interface ProductsTableProps {
   productsLoading?: boolean;
   showCatalogPriceHint?: boolean;
   priceLoadingRowIds?: Set<string>;
+  priceSuggestionByRowId?: Map<string, LastProductPriceForClient>;
   addProductButtonRef?: RefObject<HTMLButtonElement>;
   focusAddedRowId?: string;
   onRowChange?: (
@@ -741,6 +744,7 @@ function ProductsTable({
   productsLoading = false,
   showCatalogPriceHint = false,
   priceLoadingRowIds = new Set<string>(),
+  priceSuggestionByRowId = new Map<string, LastProductPriceForClient>(),
   addProductButtonRef,
   focusAddedRowId = "",
   onRowChange,
@@ -981,6 +985,9 @@ function ProductsTable({
     rows.map((row, rowIndex) => {
       const rowError = rowErrors[rowIndex] || {};
       const isPriceLoading = priceLoadingRowIds.has(row.id);
+      const priceSuggestion = editable
+        ? priceSuggestionByRowId.get(row.id)
+        : undefined;
       const isKgUnit = isKgMeasureUnitName(row.measureUnitName);
       const canEditCatalogPrice =
         editable && Boolean(row.productId) && Boolean(onEditCatalogPrice);
@@ -1142,6 +1149,17 @@ function ProductsTable({
                         $
                       </InputAdornment>
                     ),
+                    endAdornment:
+                      priceSuggestion && !isPriceLoading ? (
+                        <PriceSourceAdornment
+                          suggestion={priceSuggestion}
+                          unitPrice={row.unitPrice}
+                          disabled={controlsDisabled}
+                          onUsePrice={(unitPrice) =>
+                            onRowChange?.(row.id, "unitPrice", unitPrice)
+                          }
+                        />
+                      ) : undefined,
                   },
                   isPriceLoading,
                 )}
@@ -1774,6 +1792,11 @@ export default function InvoiceFormPage() {
   const [priceLoadingRowIds, setPriceLoadingRowIds] = useState<Set<string>>(
     () => new Set(),
   );
+  const [priceSuggestionByRowId, setPriceSuggestionByRowId] = useState(
+    () => new Map<string, LastProductPriceForClient>(),
+  );
+  // rowId -> "clientId:productId" whose price suggestion was already requested.
+  const priceSuggestionRequestedRef = useRef(new Map<string, string>());
   const priceRequestKeyByRowIdRef = useRef(new Map<string, number>());
   const priceRequestSeqRef = useRef(0);
   const latestRowsRef = useRef<InvoiceProductInput[]>([]);
@@ -1877,7 +1900,6 @@ export default function InvoiceFormPage() {
           date: normalizedDate,
           discount: values.discount,
           ...paymentPayload,
-          state: "open",
           items: values.rows.map((row) => ({
             product: row.product,
             amount: Number(row.amount),
@@ -2299,6 +2321,65 @@ export default function InvoiceFormPage() {
     isEditable && Boolean(selectedInvoiceClientId) && hasInvoiceDate;
   const canAddProductRow =
     canEditProducts && isCompleteInvoiceRow(lastInvoiceRow);
+
+  // Suggestions only live in memory, so rows restored from a draft or loaded
+  // for edit fetch theirs here, without touching the price already in the row.
+  useEffect(() => {
+    if (!isEditable || !retrieveLastPriceEnabled || !selectedInvoiceClientId) {
+      return;
+    }
+
+    activeFormik.values.rows.forEach((row) => {
+      if (!row.product) return;
+
+      const key = `${selectedInvoiceClientId}:${row.product}`;
+      const previousKey = priceSuggestionRequestedRef.current.get(row.id);
+      if (previousKey === key) return;
+      priceSuggestionRequestedRef.current.set(row.id, key);
+
+      // A suggestion for another client must not linger while (or if) the
+      // new one fails to load.
+      if (previousKey) {
+        setPriceSuggestionByRowId((current) => {
+          if (!current.has(row.id)) return current;
+          const next = new Map(current);
+          next.delete(row.id);
+          return next;
+        });
+      }
+
+      triggerGetLastProductPriceForClient({
+        clientId: selectedInvoiceClientId,
+        productId: row.product,
+        excludeInvoiceId: invoiceId,
+      })
+        .unwrap()
+        .then((lastPrice) => {
+          if (priceSuggestionRequestedRef.current.get(row.id) !== key) return;
+
+          setPriceSuggestionByRowId((current) => {
+            const next = new Map(current);
+            if (lastPrice) next.set(row.id, lastPrice);
+            else next.delete(row.id);
+            return next;
+          });
+        })
+        .catch(() => {
+          // The row keeps its price; the indicator is just not shown. Forget
+          // the request so the next rows change retries it.
+          if (priceSuggestionRequestedRef.current.get(row.id) === key) {
+            priceSuggestionRequestedRef.current.delete(row.id);
+          }
+        });
+    });
+  }, [
+    activeFormik.values.rows,
+    invoiceId,
+    isEditable,
+    retrieveLastPriceEnabled,
+    selectedInvoiceClientId,
+    triggerGetLastProductPriceForClient,
+  ]);
   const pageTitle = isNewMode
     ? "Crear factura"
     : `Factura "${getShortInvoiceId(invoice?.id || "")}"`;
@@ -2425,6 +2506,19 @@ export default function InvoiceFormPage() {
         },
       }).unwrap();
 
+      const { rowId } = catalogPriceProduct;
+      setPriceSuggestionByRowId((current) => {
+        const suggestion = current.get(rowId);
+        if (!suggestion) return current;
+        return new Map(current).set(rowId, {
+          ...suggestion,
+          unitPrice,
+          source: "catalog",
+          catalogPrice: unitPrice,
+          catalogPriceUpdatedAt: new Date().toISOString(),
+        });
+      });
+
       updateActiveRows((rows) =>
         rows.map((row) =>
           row.id === catalogPriceProduct.rowId
@@ -2471,6 +2565,18 @@ export default function InvoiceFormPage() {
       );
       const requestKey = priceRequestSeqRef.current + 1;
       priceRequestSeqRef.current = requestKey;
+      setPriceSuggestionByRowId((current) => {
+        if (!current.has(id)) return current;
+        const next = new Map(current);
+        next.delete(id);
+        return next;
+      });
+      if (shouldRetrieveLastPrice) {
+        priceSuggestionRequestedRef.current.set(
+          id,
+          `${selectedInvoiceClientId}:${productId}`,
+        );
+      }
 
       updateActiveRows((rows) =>
         rows.map((row) =>
@@ -2505,6 +2611,9 @@ export default function InvoiceFormPage() {
         }
 
         if (lastPrice) {
+          setPriceSuggestionByRowId((current) =>
+            new Map(current).set(id, lastPrice),
+          );
           updateActiveRows((rows) =>
             rows.map((row) =>
               row.id === id
@@ -2854,6 +2963,9 @@ export default function InvoiceFormPage() {
                 productsLoading={isProductsFetching}
                 showCatalogPriceHint={retrieveLastPriceEnabled}
                 priceLoadingRowIds={priceLoadingRowIds}
+                priceSuggestionByRowId={
+                  retrieveLastPriceEnabled ? priceSuggestionByRowId : undefined
+                }
                 onRowChange={handleRowChange}
                 onAddedRowFocus={() => setAddedProductRowId("")}
                 onRemoveRow={handleRemoveRow}

@@ -12,7 +12,6 @@ export interface InvoicePdfModel {
   invoiceId: string;
   date: string;
   clientName: string;
-  stateLabel: string;
   discountPercent: number;
   subtotal: number;
   total: number;

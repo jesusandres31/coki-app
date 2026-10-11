@@ -156,10 +156,6 @@ $unitUnit = Upsert-Record -Collection "measureunits" -Id "testunitpiece01" -Data
   updated_by = $appUser.id
 }
 
-$openState = Upsert-Record -Collection "invoicestates" -Id "tststateopen001" -Data @{ name = "open" }
-$draftState = Upsert-Record -Collection "invoicestates" -Id "tststatedraft01" -Data @{ name = "draft" }
-$voidState = Upsert-Record -Collection "invoicestates" -Id "tststatevoid001" -Data @{ name = "void" }
-
 $bakeryType = Upsert-Record -Collection "product_types" -Id "testptypebakery" -Data @{ name = "Panificados" }
 $pastryType = Upsert-Record -Collection "product_types" -Id "testptypepastry" -Data @{ name = "Pasteleria" }
 $beverageType = Upsert-Record -Collection "product_types" -Id "testptypebevers" -Data @{ name = "Bebidas" }
@@ -211,41 +207,41 @@ foreach ($movementType in $movementTypesResponse.items) {
 
 $invoices = @(
   @{
-    id = "testinvoice0001"; client = "testclient00001"; date = "2026-08-04 12:00:00.000Z"; discount = 0; state = $openState.id; paid = 5000
+    id = "testinvoice0001"; client = "testclient00001"; date = "2026-08-04 12:00:00.000Z"; discount = 0; paid = 5000
     items = @(
       @{ id = "testlineitem001"; product = "testproduct0001"; amount = 5; price = 2500; discount = 0 },
       @{ id = "testlineitem002"; product = "testproduct0002"; amount = 2; price = 3200; discount = 5 }
     )
   },
   @{
-    id = "testinvoice0002"; client = "testclient00002"; date = "2026-08-07 12:00:00.000Z"; discount = 10; state = $openState.id; paid = 27000
+    id = "testinvoice0002"; client = "testclient00002"; date = "2026-08-07 12:00:00.000Z"; discount = 10; paid = 27000
     items = @(
       @{ id = "testlineitem003"; product = "testproduct0003"; amount = 24; price = 800; discount = 0 },
       @{ id = "testlineitem004"; product = "testproduct0004"; amount = 12; price = 900; discount = 0 }
     )
   },
   @{
-    id = "testinvoice0003"; client = "testclient00003"; date = "2026-08-10 12:00:00.000Z"; discount = 0; state = $draftState.id; paid = 0
+    id = "testinvoice0003"; client = "testclient00003"; date = "2026-08-10 12:00:00.000Z"; discount = 0; paid = 0
     items = @(
       @{ id = "testlineitem005"; product = "testproduct0005"; amount = 1; price = 18000; discount = 0 },
       @{ id = "testlineitem006"; product = "testproduct0008"; amount = 4; price = 2800; discount = 0 }
     )
   },
   @{
-    id = "testinvoice0004"; client = "testclient00004"; date = "2026-08-12 12:00:00.000Z"; discount = 0; state = $openState.id; paid = 0
+    id = "testinvoice0004"; client = "testclient00004"; date = "2026-08-12 12:00:00.000Z"; discount = 0; paid = 0
     items = @(
       @{ id = "testlineitem007"; product = "testproduct0005"; amount = 1; price = 18000; discount = 5 },
       @{ id = "testlineitem008"; product = "testproduct0006"; amount = 6; price = 2500; discount = 0 }
     )
   },
   @{
-    id = "testinvoice0005"; client = "testclient00005"; date = "2026-08-13 12:00:00.000Z"; discount = 0; state = $voidState.id; paid = 0
+    id = "testinvoice0005"; client = "testclient00005"; date = "2026-08-13 12:00:00.000Z"; discount = 0; paid = 0
     items = @(
       @{ id = "testlineitem009"; product = "testproduct0001"; amount = 8; price = 2500; discount = 0 }
     )
   },
   @{
-    id = "testinvoice0006"; client = "testclient00001"; date = "2026-08-15 12:00:00.000Z"; discount = 0; state = $openState.id; paid = 10000
+    id = "testinvoice0006"; client = "testclient00001"; date = "2026-08-15 12:00:00.000Z"; discount = 0; paid = 10000
     items = @(
       @{ id = "testlineitem010"; product = "testproduct0007"; amount = 3; price = 6500; discount = 0 },
       @{ id = "testlineitem011"; product = "testproduct0008"; amount = 6; price = 2800; discount = 0 }
@@ -267,7 +263,6 @@ foreach ($invoiceSpec in $invoices) {
     date       = $invoiceSpec.date
     discount   = $invoiceSpec.discount
     total      = $invoiceTotal
-    state      = $invoiceSpec.state
     created_by = $appUser.id
     updated_by = $appUser.id
   }
@@ -286,21 +281,19 @@ foreach ($invoiceSpec in $invoices) {
     }
   }
 
-  if ($invoiceSpec.state -eq $openState.id) {
-    $debtId = "testmovement{0:D3}" -f $movementSequence
-    $movementSequence++
-    $null = Ensure-Movement -Id $debtId -ClientId $invoiceSpec.client -TypeId $movementTypeByName.debt -Amount $invoiceTotal -Description "Factura $($invoiceSpec.id)"
+  $debtId = "testmovement{0:D3}" -f $movementSequence
+  $movementSequence++
+  $null = Ensure-Movement -Id $debtId -ClientId $invoiceSpec.client -TypeId $movementTypeByName.debt -Amount $invoiceTotal -Description "Factura $($invoiceSpec.id)"
 
-    if ($invoiceSpec.paid -gt 0) {
-      $paymentId = "testmovement{0:D3}" -f $movementSequence
-      $movementSequence++
-      $null = Ensure-Movement -Id $paymentId -ClientId $invoiceSpec.client -TypeId $movementTypeByName.payment -Amount $invoiceSpec.paid -Description "Pago factura $($invoiceSpec.id)"
-    }
+  if ($invoiceSpec.paid -gt 0) {
+    $paymentId = "testmovement{0:D3}" -f $movementSequence
+    $movementSequence++
+    $null = Ensure-Movement -Id $paymentId -ClientId $invoiceSpec.client -TypeId $movementTypeByName.payment -Amount $invoiceSpec.paid -Description "Pago factura $($invoiceSpec.id)"
   }
 }
 
 $summary = [ordered]@{}
-foreach ($collection in @("users", "clients", "products", "invoices", "invoices_products", "roles", "measureunits", "invoicestates", "product_types", "configs", "payment_account_movements", "payment_account_movement_types")) {
+foreach ($collection in @("users", "clients", "products", "invoices", "invoices_products", "roles", "measureunits", "product_types", "configs", "payment_account_movements", "payment_account_movement_types")) {
   $response = Invoke-PocketBase -Method Get -Path "/api/collections/$collection/records?perPage=1" -Headers $headers
   $summary[$collection] = $response.totalItems
 }

@@ -36,7 +36,6 @@ import {
   formatPickerDate,
   formatQuantity,
   getInvoiceDateIso,
-  getInvoiceStateValue,
   getTodayIso,
   normalizeIsoDate,
   parseInvoiceProducts,
@@ -121,7 +120,6 @@ export default function ListaDeRepartoPorDias() {
   const deliveryInvoices = useMemo(
     () =>
       deliveryInvoicesRaw.filter((invoice) => {
-        if (getInvoiceStateValue(invoice) !== "open") return false;
         const invoiceDate = getInvoiceDateIso(invoice.date);
         if (!invoiceDate) return false;
         return selectedDaysSet.has(invoiceDate);

@@ -8,7 +8,6 @@ import {
   Button,
   Card,
   CardContent,
-  Chip,
   Divider,
   Stack,
   Table,
@@ -33,9 +32,7 @@ import {
   formatQuantity,
   getClientName,
   getPresetRange,
-  getStateLabel,
   getTodayIso,
-  getInvoiceStateValue,
   parseInvoiceProducts,
   parsePickerDate,
   resolveDateRange,
@@ -96,26 +93,18 @@ export default function VentasPorPeriodo() {
     skip: !salesDateRange,
   });
 
-  const openSalesInvoices = useMemo(
-    () =>
-      salesInvoicesRaw.filter(
-        (invoice) => getInvoiceStateValue(invoice) === "open",
-      ),
-    [salesInvoicesRaw],
-  );
-
   const salesSummary = useMemo(() => {
     let total = 0;
     let soldUnits = 0;
 
-    openSalesInvoices.forEach((invoice) => {
+    salesInvoicesRaw.forEach((invoice) => {
       total += toNumber(invoice.total);
       parseInvoiceProducts(invoice).forEach((item) => {
         soldUnits += Math.max(0, toNumber(item.amount));
       });
     });
 
-    const invoices = openSalesInvoices.length;
+    const invoices = salesInvoicesRaw.length;
 
     return {
       total,
@@ -123,7 +112,7 @@ export default function VentasPorPeriodo() {
       soldUnits,
       averageTicket: invoices > 0 ? total / invoices : 0,
     };
-  }, [openSalesInvoices]);
+  }, [salesInvoicesRaw]);
 
   return (
     <Box
@@ -228,7 +217,7 @@ export default function VentasPorPeriodo() {
         {salesDateRange && (
           <Typography variant="body2" color="text.secondary">
             Período: {formatDate(salesDateRange.from)} -{" "}
-            {formatDate(salesDateRange.to)} (solo facturas confirmadas)
+            {formatDate(salesDateRange.to)}
           </Typography>
         )}
 
@@ -256,7 +245,7 @@ export default function VentasPorPeriodo() {
               <Card variant="outlined" sx={{ flex: 1 }}>
                 <CardContent sx={{ p: 1.5 }}>
                   <Typography variant="caption" color="text.secondary">
-                    Facturas confirmadas
+                    Facturas
                   </Typography>
                   <Typography variant="h6" fontWeight={700}>
                     {salesSummary.invoices}
@@ -320,7 +309,6 @@ export default function VentasPorPeriodo() {
                       Fecha
                     </TableCell>
                     <TableCell>Cliente</TableCell>
-                    {!isMobile && <TableCell>Estado</TableCell>}
                     {!isMobile && (
                       <TableCell align="right">Productos</TableCell>
                     )}
@@ -333,8 +321,8 @@ export default function VentasPorPeriodo() {
                   </TableRow>
                 </TableHead>
                 <TableBody>
-                  {openSalesInvoices.length > 0 ? (
-                    openSalesInvoices.map((invoice) => {
+                  {salesInvoicesRaw.length > 0 ? (
+                    salesInvoicesRaw.map((invoice) => {
                       const invoiceProducts = parseInvoiceProducts(invoice);
 
                       return (
@@ -343,14 +331,6 @@ export default function VentasPorPeriodo() {
                           <TableCell>{getClientName(invoice)}</TableCell>
                           {!isMobile && (
                             <>
-                              <TableCell>
-                                <Chip
-                                  size="small"
-                                  variant="outlined"
-                                  label={getStateLabel(invoice)}
-                                  color="success"
-                                />
-                              </TableCell>
                               <TableCell align="right">
                                 {formatQuantity(
                                   invoiceProducts.reduce(
@@ -370,8 +350,8 @@ export default function VentasPorPeriodo() {
                     })
                   ) : (
                     <TableRow>
-                      <TableCell colSpan={isMobile ? 3 : 5} align="center">
-                        No hay ventas confirmadas en el período elegido.
+                      <TableCell colSpan={isMobile ? 3 : 4} align="center">
+                        No hay ventas en el período elegido.
                       </TableCell>
                     </TableRow>
                   )}

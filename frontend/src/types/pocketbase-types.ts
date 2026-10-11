@@ -212,6 +212,7 @@ export type ProductsRecord = {
 	id: string
 	measure_unit: RecordIdString
 	name: string
+	price_updated_at?: IsoDateString
 	product_type?: RecordIdString[]
 	unit_price?: number
 	updated: IsoAutoDateString
